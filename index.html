@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Book Idle</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icones/jogo-192.png">
+  <link rel="apple-touch-icon" href="img/icones/jogo-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0a080e">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ===== Moldura do jogo: tudo fica dentro dela (tamanho de celular em pé) ===== -->
+  <div id="jogo" class="jogo">
+
+  <!-- ===== Fundo: paisagem do mundo/mapa atual ===== -->
+  <canvas id="fundo-mundo" class="fundo-mundo"></canvas>
+  <div id="fundo-imagem" class="fundo-mundo escondido"></div>
+  <div class="fundo-escurecer"></div>
+
+  <!-- ===== Barra do topo: recursos ===== -->
+  <header class="barra-topo">
+    <!-- Nome do personagem, reino e estágio (no lugar do logo) -->
+    <div class="topo-personagem">
+      <div><span class="inicio-nome" id="inicio-nome"></span> <small id="inicio-estagio"></small></div>
+      <div class="topo-reino" id="inicio-reino"></div>
+    </div>
+    <div class="recursos">
+      <span title="Cultivo"><img class="icone-px" src="img/icones/cultivo.png" alt=""> <b id="topo-cultivo">0</b> <small>+<span id="topo-ps">0</span>/s</small></span>
+      <span title="Pedras Espirituais"><img class="icone-px" src="img/icones/pedra.png" alt=""> <b id="topo-pedras">0</b></span>
+      <span title="Essência da Alma" id="topo-essencia-caixa" class="escondido"><img class="icone-px" src="img/icones/essencia.png" alt=""> <b id="topo-essencia">0</b></span>
+    </div>
+    <button class="botao-icone" data-aba="opcoes" title="Opções"><img class="icone-px" src="img/icones/aba_opcoes.png" alt="Opções"></button>
+  </header>
+
+  <!-- ===== Tela inicial: o personagem no mundo ===== -->
+  <main class="inicio">
+    <div class="inicio-local" id="inicio-local"></div>
+
+    <div class="moldura-sprite" id="moldura-sprite">
+      <div class="aura-cultivo" aria-hidden="true"></div>
+      <canvas id="sprite" width="32" height="32"></canvas>
+    </div>
+
+    <div class="cartao inicio-cultivo">
+      <div class="linha pequeno"><span>Próximo: <b id="inicio-proximo"></b></span><span id="inicio-tempo"></span></div>
+      <div class="barra"><div class="barra-preenchida" id="inicio-barra"></div></div>
+      <div class="requisito" id="inicio-requisito"></div>
+      <div class="botoes">
+        <button id="inicio-meditar">🧘 Meditar</button>
+        <button id="inicio-avancar" class="principal">Avançar</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Barra de abas (embaixo) ===== -->
+  <nav class="barra-abas" id="abas">
+    <button data-aba="personagem"><img class="icone-px icone-aba" src="img/icones/aba_personagem.png" alt="">Personagem</button>
+    <button data-aba="cultivo"><img class="icone-px icone-aba" src="img/icones/aba_cultivo.png" alt="">Cultivo</button>
+    <button data-aba="combate"><img class="icone-px icone-aba" src="img/icones/aba_combate.png" alt="">Combate</button>
+    <button data-aba="mochila"><img class="icone-px icone-aba" src="img/icones/aba_mochila.png" alt="">Mochila</button>
+    <button data-aba="mapa"><img class="icone-px icone-aba" src="img/icones/aba_mapa.png" alt="">Mapa</button>
+    <button data-aba="blackbook"><img class="icone-px icone-aba" src="img/icones/livro.png" alt="">Black Book</button>
+  </nav>
+
+  <!-- =========================================================
+       PAINÉIS: cada aba abre em tela cheia, como uma janela.
+       ========================================================= -->
+
+  <!-- ===== Personagem ===== -->
+  <section class="painel" id="aba-personagem">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_personagem.png" alt=""> Personagem</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="cartao personagem">
+        <div class="moldura-sprite pequena" id="moldura-sprite-pers">
+          <div class="circulos" aria-hidden="true"><div class="circulo externo"></div><div class="circulo interno"></div></div>
+          <canvas id="sprite-pers" width="32" height="32"></canvas>
+        </div>
+        <div class="personagem-info">
+          <dl class="ficha">
+            <dt>Nome</dt><dd id="pers-nome" class="destaque"></dd>
+            <dt>Classe</dt><dd id="pers-classe"></dd>
+            <dt>Região</dt><dd id="pers-regiao"></dd>
+            <dt>Reino</dt><dd id="pers-reino" class="destaque"></dd>
+            <dt>Estágio</dt><dd id="pers-estagio"></dd>
+          </dl>
+          <div class="bloco-poder">
+            <div class="rotulo">Poder Total</div>
+            <div id="pers-poder" class="poder"></div>
+            <div class="poder-partes" id="pers-poder-detalhe"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao cartao-classe" id="pers-classe-cartao"></div>
+
+      <h3>Atributos</h3>
+      <div class="atributos" id="lista-atributos"></div>
+      <p class="pequeno dica"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno.</p>
+      <p class="pequeno dica"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
+    </div>
+  </section>
+
+  <!-- ===== Cultivo ===== -->
+  <section class="painel" id="aba-cultivo">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_cultivo.png" alt=""> Cultivo</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="cartao">
+        <div class="linha"><span>Próximo:</span><strong id="cult-proximo"></strong></div>
+        <div class="barra"><div class="barra-preenchida" id="cult-barra"></div></div>
+        <div class="linha pequeno"><span id="cult-progresso"></span><span id="cult-tempo"></span></div>
+        <div class="requisito" id="cult-requisito"></div>
+        <div class="botoes">
+          <button id="botao-meditar">🧘 Meditar</button>
+          <button id="botao-avancar" class="principal">Avançar</button>
+        </div>
+        <label class="opcao">
+          <input type="checkbox" id="opcao-auto">
+          Avançar estágios automaticamente (rompimentos de reino são sempre manuais)
+        </label>
+      </div>
+
+      <div class="cartao">
+        <h3 id="cult-reino-nome"></h3>
+        <p id="cult-reino-desc"></p>
+      </div>
+
+      <h3>Caminho do Cultivo</h3>
+      <ol class="caminho" id="lista-caminho"></ol>
+    </div>
+  </section>
+
+  <!-- ===== Combate ===== -->
+  <section class="painel" id="aba-combate">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_combate.png" alt=""> Combate</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="bloqueado" id="combate-bloqueado">
+        ⚔️ O combate será liberado no <b>5º estágio do Corpo Temperado</b>.
+      </div>
+      <div id="combate-conteudo" class="escondido">
+        <div class="cartao">
+          <div class="linha pequeno"><span id="cb-mapa"></span><span id="cb-numero"></span></div>
+          <h3 id="cb-local"></h3>
+
+          <!-- Arena: cenário do mapa ao fundo, lutadores no "palco" -->
+          <div class="arena" id="arena">
+            <canvas id="arena-fundo" class="arena-fundo"></canvas>
+            <div class="arena-palco">
+              <div class="lutador" id="cb-lado-jogador">
+                <div class="corpo-lutador" id="cb-corpo-jogador">
+                  <div class="sombra-chao"></div>
+                  <canvas id="cb-sprite-jogador" width="32" height="32"></canvas>
+                  <div class="efeito" id="cb-efeito-jogador"></div>
+                </div>
+              </div>
+              <div class="versus">
+                <div>VS</div>
+                <div class="pequeno" id="cb-tempo"></div>
+              </div>
+              <div class="lutador" id="cb-lado-inimigo">
+                <div class="corpo-lutador" id="cb-corpo-inimigo">
+                  <div class="sombra-chao"></div>
+                  <canvas id="cb-sprite-inimigo" width="32" height="32"></canvas>
+                  <div class="efeito" id="cb-efeito-inimigo"></div>
+                </div>
+              </div>
+            </div>
+            <div class="aviso-chefe" id="aviso-chefe"></div>
+            <div class="arena-clarao" id="arena-clarao"></div>
+          </div>
+
+          <!-- Nomes e barras de vida: 4 linhas alinhadas (nome | poder e velocidade | barra | vida) -->
+          <div class="infos-lutadores">
+            <div class="info-lutador">
+              <div class="lutador-nome" id="cb-nome-jogador">Você</div>
+              <div class="lutador-stats">
+                <span class="poder-lutador">Poder <b id="cb-poder-jogador"></b></span>
+                <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-jogador"></span></span>
+              </div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida" id="cb-vida-jogador"></div></div>
+              <div class="pequeno lutador-vida" id="cb-vida-jogador-texto"></div>
+            </div>
+            <div class="info-lutador">
+              <div class="lutador-nome" id="cb-nome-inimigo"></div>
+              <div class="lutador-stats">
+                <span id="cb-tipo" class="etiqueta"></span>
+                <span class="poder-lutador">Poder <b id="cb-poder-inimigo"></b></span>
+                <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-inimigo"></span></span>
+              </div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida inimigo" id="cb-vida-inimigo"></div></div>
+              <div class="pequeno lutador-vida" id="cb-vida-inimigo-texto"></div>
+            </div>
+          </div>
+
+          <div class="linha pequeno"><span>Recompensa:</span><span id="cb-recompensa"></span></div>
+          <div class="botoes">
+            <button id="cb-anterior">◀ Fase anterior</button>
+            <button id="cb-proxima">Próxima fase ▶</button>
+          </div>
+          <label class="opcao">
+            <input type="checkbox" id="cb-auto">
+            Avançar para a próxima fase automaticamente ao vencer
+          </label>
+        </div>
+
+        <div class="cartao">
+          <h3>Registro de batalha</h3>
+          <ul class="registro" id="cb-registro"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Mochila ===== -->
+  <section class="painel" id="aba-mochila">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_mochila.png" alt=""> Mochila</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="bloqueado" id="mochila-bloqueado">
+        🎒 A Mochila será liberada no <b>5º estágio do Corpo Temperado</b>.
+      </div>
+      <div id="mochila-conteudo" class="escondido">
+        <!-- Boneco: 5 espaços à esquerda, personagem no meio, 5 à direita -->
+        <div class="boneco">
+          <div class="coluna-slots" id="slots-esquerda"></div>
+          <div class="boneco-centro">
+            <canvas id="mochila-sprite" width="32" height="32"></canvas>
+            <div class="rotulo">Poder Total</div>
+            <div class="poder" id="mochila-poder">0</div>
+            <div class="pequeno"><img class="icone-px" src="img/icones/pedra.png" alt=""> <b id="mochila-pedras">0</b></div>
+          </div>
+          <div class="coluna-slots" id="slots-direita"></div>
+        </div>
+
+        <!-- Detalhes do item clicado -->
+        <div class="cartao detalhe-item escondido" id="item-detalhe"></div>
+
+        <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
+        <!-- Abas por tipo de item -->
+        <div class="filtros" id="filtros-itens"></div>
+        <!-- Itens iguais (mesmo tipo e tier) aparecem empilhados -->
+        <div class="grade-itens" id="grade-itens"></div>
+
+        <label class="opcao">
+          <input type="checkbox" id="opcao-auto-equipar">
+          Vestir automaticamente os itens que aumentam o Poder Total
+        </label>
+        <button id="mesclar-tudo" class="principal largo">✨ Mesclar tudo</button>
+        <div class="botoes">
+          <button id="desmanchar-comuns">Desmanchar todos os Comuns</button>
+          <button id="desmanchar-incomuns">Desmanchar Comuns e Incomuns</button>
+        </div>
+        <p class="pequeno dica">
+          Clique numa pilha para <b>Equipar</b>, <b>Desmanchar</b> ou <b>Mesclar</b> (3 itens iguais viram 1 do grau seguinte; 3 itens ★5 viram 1 ★1 do tier seguinte).
+          <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
+          Se a mochila encher, os itens novos são desmanchados sozinhos. Equipamentos e Pedras zeram ao reencarnar.
+        </p>
+
+        <h3>Chances de drop</h3>
+        <div class="cartao" id="chances-drop"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Mapa ===== -->
+  <section class="painel" id="aba-mapa">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_mapa.png" alt=""> Mapa</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="bloqueado" id="mapa-bloqueado">
+        🗺️ O Mapa será liberado no <b>5º estágio do Corpo Temperado</b>.
+      </div>
+      <div id="mapa-conteudo" class="escondido">
+        <div class="cartao">
+          <h3 id="mapa-mundo-nome"></h3>
+          <p class="lema" id="mapa-mundo-lema"></p>
+          <p id="mapa-mundo-desc"></p>
+        </div>
+
+        <div class="grade-mapas" id="lista-mapas"></div>
+
+        <div class="cartao detalhe-mapa" id="mapa-detalhe">
+          <h3 id="md-nome"></h3>
+          <p id="md-desc"></p>
+          <div class="pequeno sistema-mapa" id="md-sistema"></div>
+          <div class="grade-fases" id="lista-fases"></div>
+        </div>
+
+        <h3>Mundos</h3>
+        <ol class="caminho" id="lista-mundos"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Black Book ===== -->
+  <section class="painel" id="aba-blackbook">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/livro.png" alt=""> Black Book</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="bloqueado" id="blackbook-bloqueado">
+        📕 O Black Book será liberado quando você completar o <b>Corpo Temperado</b>.
+      </div>
+      <div id="blackbook-conteudo" class="escondido">
+        <div class="cartao livro">
+          <p class="lema">"Toda vida chega ao fim. O que a alma conquistou, o Black Book guarda."</p>
+          <p>Quando uma fase ficar difícil demais, reencarne: você recomeça do zero, mas recebe
+            Essência da Alma de acordo com a fase mais distante que venceu. Use a Essência aqui
+            para fortalecer seus atributos para sempre e chegar mais longe na próxima vida.</p>
+        </div>
+
+        <div class="cartao">
+          <h3>🔄 Reencarnação</h3>
+          <div class="linha"><span>Fase mais distante nesta vida:</span><strong id="bb-fase"></strong></div>
+          <div class="linha"><span>Essência ao reencarnar agora:</span><strong id="bb-ganho" class="destaque"></strong></div>
+          <p class="pequeno dica">
+            ❌ Recomeça: Cultivo, reino, estágio, fases do mapa e Pedras Espirituais.<br>
+            ✔ Fica para sempre: Essência da Alma e melhorias do Black Book.
+          </p>
+          <button id="bb-reencarnar" class="principal rompimento largo">📕 Reencarnar</button>
+        </div>
+
+        <h3>Melhorias permanentes <small class="pequeno">— você tem ✨ <span id="bb-essencia">0</span> Essência da Alma</small></h3>
+        <div class="lista-melhorias" id="lista-melhorias"></div>
+
+        <h3>Registro das vidas</h3>
+        <div class="atributos">
+          <div class="atributo"><span>🔄 Reencarnações</span><strong id="bb-vezes">0</strong></div>
+          <div class="atributo"><span>🏔️ Mais longe (todas as vidas)</span><strong id="bb-recorde"></strong></div>
+          <div class="atributo"><span>✨ Essência ganha no total</span><strong id="bb-total">0</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Opções ===== -->
+  <section class="painel" id="aba-opcoes">
+    <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_opcoes.png" alt=""> Opções</h2><button class="botao-icone" data-fechar>✕</button></header>
+    <div class="painel-corpo">
+      <div class="cartao">
+        <p>O jogo salva sozinho a cada 10 segundos e ao fechar a página.</p>
+        <div class="botoes">
+          <button id="botao-salvar">💾 Salvar agora</button>
+          <button id="botao-resetar" class="perigo">Apagar progresso</button>
+        </div>
+        <p class="pequeno dica">Versão <span id="versao"></span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       CRIAÇÃO DE PERSONAGEM (aparece antes de começar a jogar)
+       ========================================================= -->
+  <div id="criacao" class="criacao escondido">
+    <div class="criacao-caixa">
+      <div class="criacao-titulo">
+        <img class="icone-px" src="img/icones/livro.png" alt="">
+        <h1>Black Book Idle</h1>
+      </div>
+      <p class="lema">"Do servo insignificante ao ápice do Mundo Inicial."</p>
+      <div class="criacao-passos"><span id="passo-1" class="ativo">1. Quem é você</span><span id="passo-2">2. Seu caminho</span></div>
+
+      <!-- Etapa 1: sexo e nome -->
+      <div id="criacao-etapa1">
+        <h2>Quem é você, cultivador?</h2>
+        <div class="escolha-sexo" id="escolha-sexo"></div>
+        <label class="campo-nome">
+          <span>Nome do personagem</span>
+          <input id="criacao-nome" type="text" maxlength="16" autocomplete="off" placeholder="Ex.: Lin Feng">
+        </label>
+        <div class="requisito" id="criacao-erro"></div>
+        <button id="criacao-continuar" class="principal largo">Continuar ▶</button>
+      </div>
+
+      <!-- Etapa 2: classe -->
+      <div id="criacao-etapa2" class="escondido">
+        <h2>Escolha seu caminho marcial</h2>
+        <div class="escolha-classe" id="escolha-classe"></div>
+        <div class="botoes">
+          <button id="criacao-voltar">◀ Voltar</button>
+          <button id="criacao-confirmar" class="principal" disabled>Iniciar jornada</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagem flutuante, clarão de rompimento e janela de eventos importantes -->
+  <div id="mensagem" class="mensagem"></div>
+  <div id="flash" class="flash"></div>
+  <div id="modal" class="modal escondido">
+    <div class="modal-caixa">
+      <h2 id="modal-titulo"></h2>
+      <p id="modal-texto"></p>
+      <button id="modal-botao" class="principal">Continuar</button>
+    </div>
+  </div>
+
+  </div><!-- fim da moldura do jogo -->
+
+  <!-- Se acontecer algum erro, mostra um aviso na tela em vez de travar em silêncio -->
+  <script>
+    function mostrarErro(texto) {
+      var caixa = document.getElementById('aviso-erro');
+      if (!caixa) {
+        caixa = document.createElement('div');
+        caixa.id = 'aviso-erro';
+        caixa.style.cssText = 'position:fixed;top:70px;left:16px;right:16px;z-index:99;padding:12px;' +
+          'background:#4a1414;color:#fff;border:1px solid #e05a4a;border-radius:8px;font:14px sans-serif';
+        document.body.appendChild(caixa);
+      }
+      caixa.textContent = '⚠️ Ocorreu um erro: ' + texto +
+        ' — Tente apertar Ctrl + F5. Se continuar, mande esta mensagem para o Claude.';
+    }
+    window.addEventListener('error', function (e) { mostrarErro(e.message); });
+    window.addEventListener('unhandledrejection', function (e) { mostrarErro(String(e.reason)); });
+  </script>
+  <!-- Aberto com clique duplo no index.html? O navegador bloqueia o jogo: explica o que fazer -->
+  <script>
+    if (location.protocol === 'file:') {
+      document.body.innerHTML =
+        '<div style="max-width:460px;margin:15vh auto;padding:24px;font-family:sans-serif;color:#eee;' +
+        'background:#1a1420;border:1px solid #d4a94a;border-radius:12px;line-height:1.5">' +
+        '<h2 style="color:#d4a94a;margin-top:0">Black Book Idle</h2>' +
+        '<p>O jogo não abre clicando no <b>index.html</b> (o navegador bloqueia por segurança).</p>' +
+        '<p>Feche esta aba e dê <b>clique duplo no arquivo JOGAR.bat</b>, na mesma pasta. ' +
+        'O jogo abre sozinho no navegador.</p>' +
+        '<p style="color:#aaa;font-size:0.9em">Se a pasta veio em um .zip, extraia primeiro ' +
+        '(botão direito → Extrair tudo).</p></div>';
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

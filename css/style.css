@@ -1,0 +1,1359 @@
+/* ===== Cores do jogo (mude aqui para mudar o tema inteiro) ===== */
+:root {
+  --fundo: #0f0c12;
+  --painel: rgba(27, 22, 32, 0.88);
+  --painel-solido: #1b1620;
+  --painel-claro: #262030;
+  --borda: #3a3045;
+  --texto: #ece4d4;
+  --texto-fraco: #a59a92;
+  --destaque: #d4a84a;
+  --rompimento: #e05a4a;
+  --perigo: #b0413e;
+  --vida: #4fbf5f;
+  --vida-inimigo: #d0483a;
+  --altura-topo: 50px;
+  --altura-abas: 60px;
+  /* Tamanho máximo da janela do jogo (formato de celular em pé) */
+  --largura-jogo: 540px;
+  --altura-jogo: 960px;
+}
+
+* { box-sizing: border-box; }
+
+/* Tudo que usa "rem" fica um pouco menor (padrão do navegador é 16px) */
+html { font-size: 15px; }
+
+/* A página só centraliza a janela do jogo */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07050a radial-gradient(circle at 50% 40%, #1c1222 0%, #07050a 70%);
+  color: var(--texto);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ===== Janela do jogo =====
+   "transform" faz as telas e janelas internas (position: fixed) ficarem
+   presas DENTRO da moldura, e não na janela inteira do navegador.
+   "container-type" permite ajustar o layout pelo tamanho da moldura. */
+.jogo {
+  position: relative;
+  width: min(100vw, var(--largura-jogo));
+  height: min(100vh, var(--altura-jogo));
+  overflow: hidden;
+  transform: translateZ(0);
+  container-type: inline-size;
+  container-name: jogo;
+  background: var(--fundo);
+  border: 1px solid #3a2a40;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px #000, 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 80px rgba(212, 168, 74, 0.08);
+}
+/* Em telas pequenas (celular), o jogo ocupa a tela toda, sem moldura */
+@media (max-width: 560px), (max-height: 640px) {
+  .jogo { border: none; border-radius: 0; box-shadow: none; }
+}
+
+h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; }
+
+/* ===== Ícones em pixel art (16×16, ampliados sem borrar) ===== */
+.icone-px {
+  width: 1.3em;
+  height: 1.3em;
+  image-rendering: pixelated;
+  vertical-align: -0.3em;
+}
+/* Ícones feitos em IA (64×64, img/icones/): são reduzidos na tela, então
+   a redução suave fica mais bonita que a "pixelada" */
+.icone-px[src^="img/icones/"], .icone-px[src^="img/equipamentos/"] { image-rendering: auto; }
+.botao-icone .icone-px { width: 24px; height: 24px; }
+h2 { margin: 0; font-size: 1.15rem; color: var(--destaque); }
+h3 { margin: 18px 0 8px; color: var(--destaque); font-size: 1rem; }
+.cartao h3:first-child { margin-top: 0; }
+.escondido { display: none !important; }
+
+/* ===== Fundo: paisagem em pixel art ===== */
+.fundo-mundo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;             /* preenche a tela sem distorcer */
+  image-rendering: pixelated;    /* mantém os pixels nítidos */
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+}
+.fundo-escurecer {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(10, 8, 14, 0.45), rgba(10, 8, 14, 0.1) 35%, rgba(10, 8, 14, 0.7));
+  z-index: -1;
+}
+
+/* ===== Barra do topo ===== */
+.barra-topo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--altura-topo);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: rgba(15, 12, 18, 0.8);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid var(--borda);
+  z-index: 30;
+}
+.topo-personagem { line-height: 1.25; white-space: nowrap; min-width: 0; flex-shrink: 1; overflow: hidden; }
+.topo-personagem > div { overflow: hidden; text-overflow: ellipsis; }
+.topo-personagem .inicio-nome { font-size: 1rem; }
+.topo-personagem small { font-size: 0.72rem; color: var(--texto-fraco); }
+.topo-reino { font-size: 0.8rem; font-weight: bold; color: var(--destaque); }
+.recursos { flex: 1; display: flex; justify-content: center; gap: 18px; font-size: 1.05rem; white-space: nowrap; }
+.recursos small { color: var(--texto-fraco); font-size: 0.75rem; }
+.botao-icone { background: none; border: none; font-size: 1.2rem; padding: 6px 10px; }
+
+/* ===== Tela inicial ===== */
+.inicio {
+  height: 100%;               /* ocupa a janela do jogo e rola por dentro se precisar */
+  overflow-y: auto;
+  margin: 0 auto;
+  padding: calc(var(--altura-topo) + 16px) 16px calc(var(--altura-abas) + 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;  /* personagem e painel ficam embaixo, no chão do cenário */
+  gap: 12px;
+}
+.inicio-local {
+  margin-bottom: auto;        /* o nome do local fica sozinho lá no topo */
+  font-size: 0.85rem;
+  color: var(--texto);
+  background: rgba(15, 12, 18, 0.6);
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+.inicio-cultivo { width: 100%; }
+
+
+/* ===== Barra de abas (embaixo) ===== */
+.barra-abas {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--altura-abas);
+  display: flex;
+  background: rgba(15, 12, 18, 0.94);
+  border-top: 1px solid var(--borda);
+  z-index: 30;
+}
+.barra-abas button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--texto-fraco);
+  font-size: 0.7rem;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+.barra-abas .icone-aba { width: 28px; height: 28px; vertical-align: 0; }
+.barra-abas button.ativa { color: var(--destaque); background: rgba(212, 168, 74, 0.12); box-shadow: inset 0 2px 0 var(--destaque); }
+.barra-abas button.trancada { opacity: 0.4; }
+
+/* ===== Painéis em tela cheia ===== */
+.painel {
+  position: fixed;
+  top: var(--altura-topo);
+  bottom: var(--altura-abas);
+  left: 0;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  background: rgba(15, 12, 18, 0.93);
+  backdrop-filter: blur(6px);
+  z-index: 25;
+}
+.painel.aberto { display: flex; animation: abrir 0.18s ease-out; }
+@keyframes abrir {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+/* O padding com max() centraliza o conteúdo em telas largas (máx. 760px) */
+.painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px max(16px, calc((100% - 760px) / 2));
+  border-bottom: 1px solid var(--borda);
+}
+.painel-corpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px max(16px, calc((100% - 760px) / 2)) 24px;
+}
+
+/* ===== Cartões ===== */
+.cartao {
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  color: var(--texto);
+}
+.cartao p { margin: 0; color: var(--texto-fraco); }
+.linha { display: flex; justify-content: space-between; gap: 8px; }
+.pequeno { font-size: 0.85rem; color: var(--texto-fraco); }
+.dica { margin-top: 8px; }
+.requisito { color: #ff8a7a; font-size: 0.85rem; margin-top: 8px; }
+.requisito:empty { display: none; }
+
+/* ===== Personagem ===== */
+.personagem { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.personagem-info { flex: 1; min-width: 180px; }
+.rotulo { font-size: 0.75rem; text-transform: uppercase; color: var(--texto-fraco); margin-top: 6px; }
+.destaque { color: var(--destaque); font-weight: bold; font-size: 1.15rem; }
+.poder { font-size: 1.4rem; font-weight: bold; }
+
+/* ---- Personagem meditando dentro do círculo de cultivo ----
+   O círculo é uma imagem branca (img/efeitos/circulo_*.png) usada como "máscara":
+   ele aparece com a cor do reino (--aura), que o JavaScript troca a cada reino. */
+.moldura-sprite {
+  --aura: #6fcf8a;
+  --tamanho-circulo: 270px;
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  /* luz suave atrás do personagem, na cor do reino */
+  background: radial-gradient(circle, color-mix(in srgb, var(--aura) 30%, transparent) 0%, transparent 68%);
+}
+.moldura-sprite canvas { width: 136px; height: 136px; position: relative; z-index: 1; } /* 68 px × 2 */
+.moldura-sprite.pequena { --tamanho-circulo: 220px; width: 150px; height: 150px; }
+.moldura-sprite.pequena canvas { width: 136px; height: 136px; }
+canvas { image-rendering: pixelated; }
+/* O painel de cultivo fica na frente do círculo (que é maior que a moldura) */
+.inicio-cultivo { position: relative; z-index: 2; }
+
+.circulos {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--tamanho-circulo);
+  height: var(--tamanho-circulo);
+  margin: calc(var(--tamanho-circulo) / -2) 0 0 calc(var(--tamanho-circulo) / -2);
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px var(--aura)) drop-shadow(0 0 8px var(--aura));  /* brilho */
+  animation: circulo-respirar 4s ease-in-out infinite;
+}
+.circulo {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--aura) 65%, white);   /* linhas claras na cor do reino */
+  -webkit-mask: url('../img/efeitos/circulo_externo.png') center / contain no-repeat;
+          mask: url('../img/efeitos/circulo_externo.png') center / contain no-repeat;
+  animation: circulo-girar 60s linear infinite;
+}
+.circulo.interno {
+  -webkit-mask-image: url('../img/efeitos/circulo_interno.png');
+          mask-image: url('../img/efeitos/circulo_interno.png');
+  animation-duration: 40s;
+  animation-direction: reverse;          /* o anel de dentro gira para o outro lado */
+}
+@keyframes circulo-girar { to { transform: rotate(360deg); } }
+@keyframes circulo-respirar {
+  0%, 100% { opacity: 0.55; transform: scale(0.97); }
+  50%      { opacity: 0.95; transform: scale(1.02); }
+}
+/* Aura de cultivo: chamas brancas atrás do personagem meditando.
+   img/efeitos/aura_cultivo.png = tira de 4 quadros brancos usada como máscara
+   (dá para trocar a cor em --cor-aura-cultivo). Os quadros trocam em 4 passos. */
+.aura-cultivo {
+  --tamanho-aura: 230px;
+  --cor-aura-cultivo: #ffffff;      /* chamas brancas (decisão do dono) */
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: var(--tamanho-aura);
+  height: var(--tamanho-aura);
+  margin-left: calc(var(--tamanho-aura) / -2);
+  pointer-events: none;
+  background: var(--cor-aura-cultivo);
+  -webkit-mask: url('../img/efeitos/aura_cultivo.png') 0 0 / 400% 100% no-repeat;
+          mask: url('../img/efeitos/aura_cultivo.png') 0 0 / 400% 100% no-repeat;
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px color-mix(in srgb, var(--aura) 50%, white));
+  opacity: 0.9;
+  animation: aura-chamas 0.6s steps(4) infinite;
+}
+/* Rompimento de reino na tela inicial (que não tem mais o círculo): as chamas explodem em luz */
+.moldura-sprite.rompendo .aura-cultivo { animation: aura-chamas 0.3s steps(4) infinite, aura-romper 1.2s ease-out; }
+@keyframes aura-romper {
+  0%   { transform: scale(0.9); }
+  30%  { transform: scale(1.3); filter: drop-shadow(0 0 20px #fff) brightness(2); }
+  100% { transform: scale(1); }
+}
+@keyframes aura-chamas {
+  from { -webkit-mask-position: 0 0; mask-position: 0 0; }
+  to   { -webkit-mask-position: 133.333% 0; mask-position: 133.333% 0; }
+}
+/* Rompimento de reino: o círculo explode em luz branca e acelera por um instante */
+.moldura-sprite.rompendo .circulos { animation: circulo-romper 1.2s ease-out, circulo-respirar 4s ease-in-out 1.2s infinite; }
+.moldura-sprite.rompendo .circulo { animation-duration: 3s; }
+@keyframes circulo-romper {
+  0%   { opacity: 1; transform: scale(0.9); filter: drop-shadow(0 0 0 #fff) brightness(1); }
+  30%  { opacity: 1; transform: scale(1.25); filter: drop-shadow(0 0 30px #fff) brightness(2.5); }
+  100% { opacity: 0.75; transform: scale(1); filter: drop-shadow(0 0 3px var(--aura)) drop-shadow(0 0 8px var(--aura)); }
+}
+/* Com uma aba aberta, o círculo da tela inicial fica escondido atrás dela: pausa a animação
+   (senão o desfoque do painel é recalculado a cada quadro e o combate fica lento) */
+.jogo:has(.painel.aberto) .circulos,
+.jogo:has(.painel.aberto) .circulo,
+.jogo:has(.painel.aberto) .aura-cultivo { animation-play-state: paused; }
+/* Quem pediu menos movimento no sistema: o círculo fica parado */
+@media (prefers-reduced-motion: reduce) {
+  .circulos, .circulo, .aura-cultivo { animation: none !important; }
+}
+
+.atributos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.atributo {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 8px 12px;
+  align-items: center;
+}
+.atributo > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atributo > strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.atributo > strong.atributo-trancado { font-size: 0.8rem; font-weight: normal; color: var(--texto-fraco); cursor: help; }
+
+/* ===== Black Book ===== */
+.livro { border-color: #6a3a3a; background: linear-gradient(180deg, rgba(60, 20, 24, 0.9), var(--painel)); }
+.livro p + p { margin-top: 8px; }
+.largo { width: 100%; margin-top: 12px; }
+.lista-melhorias { display: flex; flex-direction: column; gap: 8px; }
+.melhoria {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.melhoria-info { flex: 1; min-width: 0; }
+.melhoria-nivel { color: var(--destaque); font-size: 0.85rem; }
+.melhoria button { min-width: 150px; }
+
+/* ===== Barras ===== */
+.barra {
+  height: 14px;
+  background: var(--painel-claro);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+.barra-preenchida {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #6a4fb0, var(--destaque));
+  transition: width 0.1s linear;
+}
+.barra-vida { height: 10px; margin: 6px 0 2px; }
+.barra-preenchida.vida { background: var(--vida); }
+.barra-preenchida.vida.inimigo { background: var(--vida-inimigo); }
+
+/* ===== Botões ===== */
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--texto);
+  background: var(--painel-claro);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--destaque); }
+button:active:not(:disabled) { transform: scale(0.97); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.principal { border-color: var(--destaque); font-weight: bold; }
+button.principal.rompimento { border-color: var(--rompimento); color: #ffd0c8; }
+button.perigo { border-color: var(--perigo); }
+
+.botoes { display: flex; gap: 8px; margin-top: 10px; }
+.botoes button { flex: 1; }
+.opcao { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 0.85rem; color: var(--texto-fraco); cursor: pointer; }
+
+/* ===== Listas de progresso (Caminho do Cultivo e Mundos) ===== */
+.caminho { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.caminho li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--painel);
+  border: 1px solid var(--borda);
+}
+.caminho small { color: var(--texto-fraco); text-align: right; }
+.caminho .concluido { opacity: 0.6; }
+.caminho .atual { border-color: var(--destaque); color: var(--destaque); font-weight: bold; }
+.caminho .oculto { color: var(--texto-fraco); opacity: 0.4; }
+
+/* ===== Combate ===== */
+/* Arena: o cenário do mapa (pixel art) ao fundo e os lutadores no "palco" */
+.arena {
+  position: relative;
+  height: 210px;
+  margin: 12px 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  overflow: hidden;
+  background: #1a1420;
+}
+.arena-fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 70%;
+  image-rendering: pixelated;
+}
+/* Escurece a parte de baixo para os lutadores se destacarem */
+.arena::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(10, 8, 14, 0.15), rgba(10, 8, 14, 0.05) 50%, rgba(10, 8, 14, 0.55));
+  pointer-events: none;
+}
+.arena-palco {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  padding: 0 12px 18px;
+  z-index: 1;
+}
+.lutador { position: relative; text-align: center; min-width: 0; }
+.corpo-lutador { position: relative; display: inline-block; }
+.lutador canvas { width: 96px; height: 96px; display: block; margin: 0 auto; position: relative; z-index: 1; }
+/* Chefes e mini-chefes: maiores e com brilho vermelho */
+.lutador canvas.sprite-chefe { width: 128px; height: 128px; filter: drop-shadow(0 0 6px rgba(255, 58, 58, 0.8)); }
+/* Sombra no chão embaixo de cada lutador */
+.sombra-chao {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: -2px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+}
+.versus {
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  color: var(--destaque);
+  padding-bottom: 30px;
+  text-shadow: 0 2px 4px #000;
+}
+.versus .pequeno { color: #fff; text-shadow: 0 1px 3px #000; }
+
+/* Nomes e barras abaixo da arena */
+.infos-lutadores { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center; }
+.lutador-nome { font-weight: bold; font-size: 0.9rem; }
+.primeiro-ataque { text-align: center; font-size: 0.85rem; color: #9fdc9f; margin: 8px 0 10px; }
+.primeiro-ataque.desvantagem { color: #ff9a8a; }
+.barra-preenchida.vida { transition: width 0.25s ease-out; }
+
+.etiqueta {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--painel-claro);
+  border: 1px solid var(--borda);
+  font-weight: normal;
+}
+.etiqueta.tipo-elite, .etiqueta.tipo-eliteAvancada { border-color: #c9a24a; }
+.etiqueta.tipo-especialista { border-color: #6f9fff; }
+.etiqueta.tipo-miniChefe, .etiqueta.tipo-chefe { border-color: var(--rompimento); color: #ffd0c8; }
+
+/* ---- Avanço de quem ataca ---- */
+.avancando-direita  { animation: avancar-direita 0.3s ease-out; }
+.avancando-esquerda { animation: avancar-esquerda 0.3s ease-out; }
+@keyframes avancar-direita {
+  0%, 100% { transform: translateX(0); }
+  40%      { transform: translateX(28px); }
+}
+@keyframes avancar-esquerda {
+  0%, 100% { transform: translateX(0); }
+  40%      { transform: translateX(-28px); }
+}
+
+/* ---- Quem é atingido: pisca em branco e recua ---- */
+canvas.atingido { animation: atingido 0.3s ease-out; }
+@keyframes atingido {
+  0%   { transform: translateX(0);    filter: brightness(3) saturate(0); }
+  30%  { transform: translateX(6px);  filter: brightness(1.6); }
+  60%  { transform: translateX(-3px); filter: none; }
+  100% { transform: translateX(0); }
+}
+#cb-lado-jogador canvas.atingido { animation-name: atingido-jogador; }
+@keyframes atingido-jogador {
+  0%   { transform: translateX(0);     filter: brightness(3) saturate(0); }
+  30%  { transform: translateX(-6px);  filter: brightness(1.6) sepia(1) hue-rotate(-50deg); }
+  60%  { transform: translateX(3px);   filter: none; }
+  100% { transform: translateX(0); }
+}
+
+/* ---- Esquiva: desvia para trás deixando um rastro ---- */
+.esquivando-esquerda { animation: esquivar-esquerda 0.4s ease-out; }
+.esquivando-direita  { animation: esquivar-direita 0.4s ease-out; }
+@keyframes esquivar-esquerda {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  35%      { transform: translateX(-26px) skewX(8deg); opacity: 0.4; }
+}
+@keyframes esquivar-direita {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  35%      { transform: translateX(26px) skewX(-8deg); opacity: 0.4; }
+}
+
+/* ---- Efeito em pixel art sobre o alvo (folha com 3 quadros) ---- */
+.efeito {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.efeito.tocando { animation: tocar-efeito 0.3s steps(3) forwards; }
+@keyframes tocar-efeito {
+  0%   { opacity: 1; background-position: 0 0; }
+  99%  { opacity: 1; }
+  100% { opacity: 0; background-position: 150% 0; }
+}
+/* Efeitos feitos em IA: 4 quadros de 128 px, um pouco maiores e com redução suave */
+.efeito.quadros-4 {
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  background-size: 400% 100%;
+  image-rendering: auto;
+}
+.efeito.quadros-4.tocando { animation: tocar-efeito-4 0.4s steps(4) forwards; }
+@keyframes tocar-efeito-4 {
+  0%   { opacity: 1; background-position: 0 0; }
+  99%  { opacity: 1; }
+  100% { opacity: 0; background-position: 133.333% 0; }
+}
+
+/* ---- Arena treme no crítico ---- */
+.arena.tremendo { animation: arena-tremer 0.3s linear; }
+@keyframes arena-tremer {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 2px); }
+  40% { transform: translate(4px, -2px); }
+  60% { transform: translate(-3px, -1px); }
+  80% { transform: translate(3px, 1px); }
+}
+
+/* ---- Clarões da arena ---- */
+.arena-clarao { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 3; }
+.arena-clarao.clarao-critico { background: radial-gradient(circle at 70% 60%, rgba(255, 220, 120, 0.55), transparent 60%); animation: clarao 0.25s ease-out; }
+.arena-clarao.clarao-derrota { background: rgba(200, 30, 30, 0.45); animation: clarao 0.6s ease-out; }
+.arena-clarao.clarao-item    { background: radial-gradient(circle at 75% 55%, rgba(255, 255, 255, 0.5), transparent 55%); animation: clarao 0.6s ease-out; }
+@keyframes clarao { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- Inimigo derrotado: pisca, encolhe e se desfaz ---- */
+.morrendo { animation: morrer 0.8s ease-in forwards; }
+@keyframes morrer {
+  0%   { transform: scale(1);        opacity: 1; filter: brightness(3) saturate(0); }
+  25%  { transform: scale(1.08);     opacity: 1; filter: brightness(2); }
+  100% { transform: scale(0.4) translateY(20px); opacity: 0; filter: blur(2px) brightness(2); }
+}
+.particula {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+  z-index: 3;
+  animation: particula 0.8s ease-out forwards;
+}
+@keyframes particula {
+  0%   { transform: translate(0, 0); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+/* ---- Próximo inimigo entra deslizando ---- */
+.entrando { animation: entrar 0.45s ease-out; }
+@keyframes entrar {
+  0%   { transform: translateX(60px); opacity: 0; }
+  100% { transform: translateX(0);    opacity: 1; }
+}
+
+/* ---- Personagem derrotado: cai ---- */
+.caindo { animation: cair 0.9s ease-in; }
+@keyframes cair {
+  0%   { transform: rotate(0) translateY(0); opacity: 1; }
+  40%  { transform: rotate(-80deg) translate(-10px, 30px); opacity: 0.6; }
+  70%  { transform: rotate(-80deg) translate(-10px, 30px); opacity: 0; }
+  100% { transform: rotate(0) translateY(0); opacity: 1; }
+}
+
+/* ---- Números de dano ---- */
+.numero-dano {
+  position: absolute;
+  top: 10px;
+  transform: translateX(-50%);
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #fff;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px #000;
+  pointer-events: none;
+  animation: subir 1s ease-out forwards;
+  white-space: nowrap;
+  z-index: 4;
+}
+.numero-dano.critico { color: #ffcf4a; font-size: 1.4rem; animation-name: subir-critico; }
+.numero-dano.recebido { color: #ff7a6a; }
+.numero-dano.esquiva { color: #9fd8ff; }
+.numero-dano.cura { color: #7aef7a; }
+.numero-dano.critico.elemental { color: #ff9a3a; }
+/* Regeneração: brilho verde no personagem */
+/* Regeneração: aura verde contornando a silhueta do personagem (3 camadas de brilho:
+   contorno fino e nítido, brilho médio e halo suave), acende, pulsa e apaga. */
+/* Regeneração: aura verde contornando a silhueta do personagem (contorno nítido + halo suave).
+   Duas camadas de brilho (três ficavam pesadas para animar a cada turno). */
+#cb-sprite-jogador { will-change: filter; }
+canvas.curando { animation: curar 0.8s ease-in-out; }
+@keyframes curar {
+  0%, 100% { filter: none; }
+  35% { filter: drop-shadow(0 0 1.5px #b8ffc8) drop-shadow(0 0 7px rgba(60, 235, 110, 0.85)); }
+  70% { filter: drop-shadow(0 0 1px #b8ffc8) drop-shadow(0 0 5px rgba(60, 235, 110, 0.6)); }
+}
+@keyframes subir {
+  0%   { opacity: 1; margin-top: 6px; }
+  20%  { margin-top: -6px; }
+  100% { opacity: 0; margin-top: -40px; }
+}
+@keyframes subir-critico {
+  0%   { opacity: 1; margin-top: 6px;  transform: translateX(-50%) scale(1.6); }
+  25%  { transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; margin-top: -46px; transform: translateX(-50%) scale(1); }
+}
+
+/* ---- Recompensas sobem do inimigo derrotado ---- */
+.recompensa-flutuante {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 1px 3px #000;
+  pointer-events: none;
+  z-index: 4;
+  animation: recompensa 1.4s ease-out forwards;
+}
+.recompensa-flutuante.segunda { top: 45%; }
+.drop-flutuante {
+  top: 15%;
+  padding: 2px;
+  border: 2px solid var(--cor-raridade);
+  border-radius: 6px;
+  background: rgba(15, 12, 18, 0.8);
+  box-shadow: 0 0 12px var(--cor-raridade);
+}
+.drop-flutuante .icone-px { width: 32px; height: 32px; display: block; }
+@keyframes recompensa {
+  0%   { opacity: 0; margin-top: 10px; }
+  15%  { opacity: 1; margin-top: 0; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; margin-top: -40px; }
+}
+
+/* ---- Aviso de chefe ---- */
+.aviso-chefe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  padding: 8px;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #ffd0c8;
+  background: linear-gradient(90deg, transparent, rgba(120, 10, 10, 0.85), transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.aviso-chefe.aparecendo { animation: aviso-chefe 1.6s ease-out; }
+@keyframes aviso-chefe {
+  0%   { opacity: 0; transform: scaleX(0.2); }
+  15%  { opacity: 1; transform: scaleX(1.05); }
+  25%  { transform: scaleX(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.registro { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+.registro li { padding: 4px 0; border-bottom: 1px solid var(--borda); color: var(--texto-fraco); }
+.registro li.vitoria { color: #9fdc9f; }
+.registro li.derrota { color: #ff9a8a; }
+
+/* ===== Mochila ===== */
+/* Cores dos tiers: S dourado, A roxo, B azul escuro, C verde, D/F cinza */
+:root {
+  --tier-comum: #a8acb4;
+  --tier-incomum: #4ad04a;
+  --tier-raro: #4a7aff;
+  --tier-epico: #b050ff;
+  --tier-lendario: #ffd84a;
+}
+.raridade-comum    { --cor-raridade: var(--tier-comum); }
+.raridade-incomum  { --cor-raridade: var(--tier-incomum); }
+.raridade-raro     { --cor-raridade: var(--tier-raro); }
+.raridade-epico    { --cor-raridade: var(--tier-epico); }
+.raridade-lendario { --cor-raridade: var(--tier-lendario); }
+
+/* Boneco: espaços à esquerda e à direita, personagem no meio */
+.boneco {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.coluna-slots { display: flex; flex-direction: column; gap: 6px; }
+.boneco-centro { text-align: center; }
+.boneco-centro canvas { width: 128px; height: 128px; display: block; margin: 0 auto; }
+
+.slot-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  text-align: left;
+  background: var(--painel);
+  border: 2px solid var(--cor-raridade, var(--borda));
+  box-shadow: inset 0 0 12px -4px var(--cor-raridade, transparent);
+}
+.slot-item .icone-px { width: 32px; height: 32px; flex-shrink: 0; }
+.slot-item.vazio { border-style: dashed; border-color: var(--borda); box-shadow: none; }
+.slot-item:disabled { opacity: 1; cursor: default; }
+.slot-nome { font-size: 0.8rem; flex: 1; }
+.slot-aviso { font-size: 0.7rem; color: var(--texto-fraco); }
+.icone-px.fantasma { opacity: 0.25; filter: grayscale(1); }
+.selecionado { outline: 2px solid #fff; outline-offset: 1px; }
+
+.item-nivel {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+/* Grau do item (★1 a ★5), no canto de baixo à esquerda */
+.item-grau {
+  position: absolute;
+  left: 3px;
+  bottom: 1px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: #ffe08a;
+  text-shadow: 0 1px 2px #000, 0 0 2px #000;
+  z-index: 1;
+}
+.item-melhor { position: absolute; left: 3px; top: 1px; font-size: 0.7rem; color: #6fef6f; text-shadow: 0 1px 2px #000; }
+
+.grade-itens { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; margin-top: 10px; }
+.celula-item {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  background: var(--painel);
+  border: 2px solid var(--cor-raridade, var(--borda));
+  border-radius: 6px;
+  box-shadow: inset 0 0 12px -4px var(--cor-raridade, transparent);
+}
+.celula-item .icone-px { width: 32px; height: 32px; }
+.celula-item.vazia { border-width: 1px; box-shadow: none; }
+.grade-itens > p { grid-column: 1 / -1; margin: 4px 0; }   /* "Nenhum item guardado" ocupa a linha toda */
+
+/* Detalhes do item */
+.detalhe-item { border: 2px solid var(--cor-raridade); }
+.detalhe-topo { display: flex; gap: 12px; align-items: flex-start; }
+.detalhe-topo > div { flex: 1; }
+.icone-px.icone-grande { width: 64px; height: 64px; }
+.item-nome { font-weight: bold; font-size: 1.05rem; color: var(--cor-raridade); }
+.item-atributos { list-style: none; padding: 0; margin: 10px 0; }
+.item-atributos li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--borda); }
+.comparacao { font-weight: bold; margin: 6px 0; }
+.comparacao.melhor { color: #6fef6f; }
+.comparacao.pior { color: #ff8a7a; }
+
+/* Chances de drop */
+.lista-chances { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0; }
+.icone-px.icone-chance { width: 24px; height: 24px; }
+
+/* Abas por tipo de item */
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+.filtro .icone-px { width: 20px; height: 20px; }
+.filtro small { color: var(--texto-fraco); }
+.filtro.ativo { border-color: var(--destaque); color: var(--destaque); background: rgba(212, 168, 74, 0.12); }
+.filtro.vazio { opacity: 0.5; }
+
+/* Pilhas: quantidade no canto do item */
+.item-quantidade {
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  min-width: 18px;
+  padding: 0 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background: rgba(15, 12, 18, 0.85);
+  border: 1px solid var(--cor-raridade, var(--borda));
+  border-radius: 8px;
+}
+/* Pilha com 5 ou mais: dá para mesclar */
+.item-quantidade.pode-mesclar { color: #1a1220; background: var(--destaque); border-color: var(--destaque); }
+.detalhe-topo > .icone-pilha { position: relative; flex: none; }
+.botoes-pilha { flex-wrap: wrap; }
+.botao-mesclar .icone-px { width: 20px; height: 20px; }
+
+/* Itens no registro de batalha */
+.registro li.drop { color: var(--cor-raridade); }
+
+/* ===== Mapa ===== */
+.lema { font-style: italic; color: var(--destaque) !important; margin-bottom: 6px !important; }
+.grade-mapas { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.cartao-mapa {
+  --cor-mapa: #2f4a33;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  background: linear-gradient(180deg, var(--cor-mapa), var(--painel-solido));
+  text-align: center;
+}
+.cartao-mapa.selecionado { border-color: var(--destaque); box-shadow: 0 0 8px var(--destaque); }
+.cartao-mapa.completo small { color: #9fdc9f; }
+.icone-mapa { width: 40px; height: 40px; }
+.icone-mapa-trancado { font-size: 1.6rem; line-height: 40px; }
+.icone-fase { width: 24px; height: 24px; }
+.nome-mapa { font-size: 0.85rem; }
+
+.detalhe-mapa { background: linear-gradient(180deg, var(--cor-mapa, var(--painel-solido)), var(--painel-solido) 120px); }
+.sistema-mapa { margin-top: 6px; }
+.grade-fases { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 12px; }
+.botao-fase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+.botao-fase small { font-size: 0.7rem; color: var(--texto-fraco); line-height: 1.2; }
+.botao-fase .inimigo-fase { color: var(--texto); }
+.botao-fase.vencida { border-color: #4f8f5f; }
+.botao-fase.atual { border-color: var(--destaque); box-shadow: 0 0 6px var(--destaque); }
+.botao-fase.tipo-chefe, .botao-fase.tipo-miniChefe { background: #3a1f22; }
+
+/* ===== Conteúdo bloqueado ===== */
+.bloqueado {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--texto-fraco);
+  background: var(--painel);
+  border: 1px dashed var(--borda);
+  border-radius: 8px;
+}
+
+/* ===== Mensagem flutuante (acima da barra de abas) ===== */
+.mensagem {
+  position: fixed;
+  bottom: calc(var(--altura-abas) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  background: var(--painel-solido);
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 35;
+}
+.mensagem.visivel { opacity: 1; }
+
+/* ===== Aviso de nova versão (site publicado, js/site.js) ===== */
+.aviso-atualizacao {
+  position: fixed;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: rgba(20, 14, 24, 0.95);
+  color: var(--destaque);
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+/* ===== Criação de personagem ===== */
+.criacao {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow-y: auto;
+  padding: 24px 16px;
+  /* Fundo de IA (img/fundos/criacao.jpg): altar com o Black Book embaixo; o meio é escuro para os textos.
+     A imagem fica parada enquanto o conteúdo rola. */
+  background:
+    linear-gradient(rgba(10, 8, 14, 0.25), rgba(10, 8, 14, 0.45)),
+    url('../img/fundos/criacao.jpg') center bottom / cover no-repeat,
+    #0a080e;
+}
+.criacao-caixa {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.criacao-titulo { display: flex; justify-content: center; align-items: center; gap: 10px; }
+.criacao-titulo .icone-px { width: 40px; height: 40px; }
+.criacao-titulo h1 { margin: 0; color: var(--destaque); font-size: 2rem; letter-spacing: 1px; }
+.criacao h2 { margin: 18px 0 12px; }
+.criacao-passos { display: flex; justify-content: center; gap: 24px; color: var(--texto-fraco); font-size: 0.9rem; }
+.criacao-passos .ativo { color: var(--destaque); font-weight: bold; border-bottom: 2px solid var(--destaque); }
+
+.escolha-sexo { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+/* Classes em lista: personagem à esquerda, textos à direita */
+.escolha-classe { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.carta-classe {
+  display: grid !important;
+  grid-template-columns: 96px 1fr;
+  column-gap: 12px;
+  align-items: start;
+  text-align: left;
+}
+.carta-classe > canvas { grid-row: 1 / span 6; width: 96px !important; height: 96px !important; align-self: center; }
+.carta-classe > :not(canvas) { grid-column: 2; }
+.carta-classe .nome-classe, .carta-classe .titulo-classe { text-align: left; }
+.carta-escolha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px;
+  background: var(--painel);
+  border: 2px solid var(--borda);
+  border-radius: 10px;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.carta-escolha:hover { transform: translateY(-3px); }
+.carta-escolha.selecionada {
+  border-color: var(--destaque);
+  box-shadow: 0 0 16px rgba(212, 168, 74, 0.45);
+  background: rgba(60, 45, 20, 0.6);
+}
+.carta-escolha canvas { width: 128px; height: 128px; }
+.escolha-sexo .carta-escolha { width: 170px; }
+.escolha-sexo .carta-escolha canvas { width: 136px; height: 136px; } /* 68 px × 2 */
+.carta-classe { align-items: stretch; }
+.carta-classe canvas { align-self: center; }
+.carta-classe p { margin: 4px 0; font-size: 0.82rem; color: var(--texto-fraco); line-height: 1.4; }
+.nome-classe { font-family: Georgia, serif; font-size: 1.1rem; color: var(--destaque); text-align: center; }
+.titulo-classe { color: var(--texto-fraco); text-align: center; }
+.bonus-classe { list-style: none; padding: 0; margin: 6px 0; font-size: 0.82rem; }
+.bonus-classe .bom { color: #7aef7a; }
+.bonus-classe .ruim { color: #ff8a7a; }
+.especial-classe { font-size: 0.82rem; padding: 6px 8px; border-radius: 6px; background: rgba(212, 168, 74, 0.12); border: 1px solid rgba(212, 168, 74, 0.35); }
+.cartao-classe .especial-classe { margin-top: 8px; color: var(--texto); }
+
+.campo-nome { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 18px auto 6px; max-width: 320px; }
+.campo-nome span { color: var(--texto-fraco); font-size: 0.9rem; }
+.campo-nome input {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1.1rem;
+  text-align: center;
+  color: var(--texto);
+  background: var(--painel-claro);
+  border: 1px solid var(--destaque);
+  border-radius: 6px;
+}
+.campo-nome input:focus { outline: 2px solid var(--destaque); }
+.criacao .largo { max-width: 320px; }
+.criacao .botoes { justify-content: center; margin-top: 16px; }
+.criacao .botoes button { flex: 0 1 280px; }
+
+/* Nome do personagem na tela inicial */
+.inicio-nome { font-family: Georgia, serif; font-size: 1.2rem; font-weight: bold; color: #fff; text-shadow: 0 2px 4px #000; }
+
+/* ===== Janela de eventos importantes ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 40;
+}
+.modal-caixa {
+  max-width: 480px;
+  background: var(--painel-solido);
+  border: 1px solid var(--destaque);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(212, 168, 74, 0.3);
+}
+.modal-caixa h2 { margin-bottom: 12px; }
+.modal-caixa p { white-space: pre-line; color: var(--texto); line-height: 1.5; margin: 0 0 16px; }
+
+/* ===== Clarão do rompimento ===== */
+.flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, #fff 0%, var(--destaque) 40%, transparent 75%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 36;
+}
+.flash.ativo { animation: clarao 1.2s ease-out; }
+@keyframes clarao {
+  0%   { opacity: 0; }
+  15%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* ===== Celular ===== */
+@container jogo (max-width: 520px) {
+  .recursos { gap: 10px; font-size: 0.9rem; justify-content: flex-end; }
+  .arena { height: 170px; }
+  .lutador canvas { width: 64px; height: 64px; }
+  .lutador canvas.sprite-chefe { width: 96px; height: 96px; }
+  .efeito { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+  .numero-dano { font-size: 0.9rem; }
+  .numero-dano.critico { font-size: 1.05rem; }
+  .melhoria { flex-wrap: wrap; }
+  .melhoria button { width: 100%; }
+  .barra-abas { font-size: 0.6rem; }
+  .barra-abas button { font-size: 0.6rem; }
+  .barra-abas .icone-aba { width: 24px; height: 24px; }
+  /* Mochila no celular: espaços só com o ícone, personagem menor */
+  .boneco { gap: 6px; }
+  .boneco-centro canvas { width: 64px; height: 64px; }
+  .slot-item { justify-content: center; padding: 4px; }
+  .slot-nome, .slot-aviso { display: none; }
+  .filtro span { display: none; }          /* no celular, abas de tipo só com ícone */
+  .botoes-pilha button { flex: 1 1 100%; }
+}
+
+/* =============================================================
+   INTERFACE EM PIXEL ART (arte de IA, img/interface/)
+   As peças são "9-slice": os cantos ficam iguais e o meio estica.
+   Os números do border-image-slice são os cortes que o gerador
+   imprime (python ferramentas/sprites/gerar.py → "Interface: ...").
+   ============================================================= */
+
+/* Cartões (painéis) */
+.cartao {
+  border: 16px solid transparent;
+  border-image: url('../img/interface/painel.png') 40 fill / 16px stretch;
+  border-radius: 0;
+  background: none;
+  padding: 4px 6px;
+}
+
+/* Janela de aviso (rompimento, boas-vindas...) */
+.modal-caixa {
+  border: 22px solid transparent;
+  border-image: url('../img/interface/janela.png') 48 fill / 22px stretch;
+  border-radius: 0;
+  background: none;
+  padding: 8px 10px;
+}
+
+/* Botões comuns e principais (as abas, ícones, cartas e itens têm visual próprio) */
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]) {
+  border: 12px solid transparent;
+  border-image: var(--imagem-botao) 24 fill / 12px stretch;
+  border-radius: 0;
+  background: none;
+  padding: 0 6px;
+  min-height: 40px;
+}
+button { --imagem-botao: url('../img/interface/botao.png'); }
+button.principal {
+  --imagem-botao: url('../img/interface/botao_principal.png');
+  color: #2a1a06;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5);
+}
+button.principal.rompimento { color: #5a0e06; }
+button.perigo { color: #ff9a8a; }
+button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightness(1.15); }
+
+/* Barras de progresso (cultivo e vida) */
+.barra {
+  height: 18px;
+  padding: 4px 0;
+  border: 0 solid transparent;
+  border-width: 0 14px;
+  border-image: url('../img/interface/barra_progresso.png') 0 34 fill / 0 14px stretch;
+  border-radius: 0;
+  background: none;
+}
+.barra-vida { height: 14px; padding: 3px 0; }
+
+/* Título dos painéis: faixa de seda com pontas douradas */
+/* A imagem (110×48) tem a faixa de seda só nas linhas 5 a 28; embaixo ficam as borlas penduradas.
+   O título tem exatamente a altura da faixa (30px = 24 linhas × 1,25) para o texto ficar centralizado
+   nela; o resto da imagem é desenhado para fora da caixa (border-image-outset), sem empurrar nada:
+   em cima 5 linhas × 1,25 = 6px, embaixo 19 linhas × 1,25 = 24px. Pontas: 53 linhas × 1,25 = 66px. */
+.painel-topo { border-bottom: none; position: relative; padding-top: 12px; padding-bottom: 30px; }
+.painel-topo h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 2px;
+  white-space: nowrap;
+  line-height: 1;
+  border: 0 solid transparent;
+  border-width: 0 66px;
+  border-image-source: url('../img/interface/faixa_titulo.png');
+  border-image-slice: 0 53 fill;
+  border-image-width: 0 66px;
+  border-image-outset: 6px 0 24px 0;
+  border-image-repeat: stretch;
+}
+.painel-topo h2 .icone-px { width: 22px; height: 22px; vertical-align: 0; }
+/* Divisor dourado embaixo do título */
+.painel-topo::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -6px;
+  height: 12px;
+  background: url('../img/interface/divisor.png') center / 100% 100% no-repeat;
+}
+
+/* Frisos dourados nas barras de cima e de baixo */
+.barra-topo { border-bottom: none; }
+.barra-topo::after, .barra-abas::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+}
+.barra-topo::after {
+  bottom: -6px;
+  border: 0 solid transparent;
+  border-width: 0 18px;
+  border-image: url('../img/interface/barra_topo.png') 0 26 fill / 0 18px stretch;
+}
+.barra-abas { border-top: none; }
+.barra-abas::before {
+  top: -6px;
+  border: 0 solid transparent;
+  border-width: 0 16px;
+  border-image: url('../img/interface/barra_abas.png') 0 23 fill / 0 16px stretch;
+}
+
+/* Espaços de item: moldura de metal na cor da raridade */
+.celula-item, .slot-item {
+  border: 10px solid transparent;
+  border-image: url('../img/interface/slot_comum.png') 24 fill / 10px stretch;
+  border-radius: 0;
+  background: none;
+}
+.celula-item.vazia, .slot-item.vazio { border-style: solid; opacity: 0.6; }
+.raridade-incomum.celula-item, .raridade-incomum.slot-item { border-image-source: url('../img/interface/slot_incomum.png'); }
+.raridade-raro.celula-item, .raridade-raro.slot-item { border-image-source: url('../img/interface/slot_raro.png'); }
+.raridade-epico.celula-item, .raridade-epico.slot-item { border-image-source: url('../img/interface/slot_epico.png'); }
+.raridade-lendario.celula-item, .raridade-lendario.slot-item { border-image-source: url('../img/interface/slot_lendario.png'); }
+/* ===== Poder e previsão de luta ===== */
+#pers-poder-detalhe { margin-top: 2px; }
+#pers-poder-detalhe .icone-px { width: 16px; height: 16px; vertical-align: -3px; }
+.poder-lutador b { color: var(--destaque); }
+.previsao { text-align: center; font-size: 0.85rem; font-weight: bold; margin: 4px 0 6px; }
+.previsao-facil     { color: #6fef8a; }
+.previsao-segura    { color: #b8e86a; }
+.previsao-arriscada { color: #ffc04a; }
+.previsao-derrota   { color: #ff7a6a; }
+.poder-fase { font-weight: bold; }
+.poder-item { margin: 6px 0; font-size: 0.9rem; color: var(--texto-fraco); }
+.poder-item b { color: var(--destaque); }
+/* ===== Personagem: ficha organizada (rótulo | valor) e bloco de Poder ===== */
+.ficha {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+  margin: 0;
+}
+.ficha dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-fraco); }
+.ficha dd { margin: 0; }
+.ficha .destaque { font-size: 1.05rem; }
+.bloco-poder {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(212, 168, 74, 0.3);
+}
+.bloco-poder .rotulo { margin-top: 0; }
+.bloco-poder .poder { font-size: 1.5rem; line-height: 1.2; color: #fff; }
+.poder-partes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.parte-poder {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  color: var(--texto-fraco);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 168, 74, 0.35);
+  border-radius: 6px;
+  cursor: help;
+}
+.parte-poder b { color: var(--texto); }
+.parte-poder .icone-px { width: 16px; height: 16px; vertical-align: 0; }
+
+/* ===== Combate: dados dos lutadores em 4 linhas alinhadas =====
+   Cada lutador é uma coluna; "display: contents" faz as 4 partes de cada um
+   ocuparem as MESMAS linhas da grade — assim um nome longo não desalinha as barras. */
+.infos-lutadores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto auto;
+  grid-auto-flow: column;
+  column-gap: 16px;
+  row-gap: 2px;
+  text-align: center;
+  margin-top: 4px;
+}
+.info-lutador { display: contents; }
+.lutador-nome {
+  align-self: end;
+  font-weight: bold;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+.lutador-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.8rem;
+  color: var(--texto-fraco);
+}
+.lutador-stats .icone-px { width: 16px; height: 16px; vertical-align: -3px; }
+.infos-lutadores .barra { margin: 4px 0 0; }
+.lutador-vida { font-variant-numeric: tabular-nums; }
+.avisos-luta {
+  margin: 10px 0 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+.avisos-luta .primeiro-ataque { margin: 0 0 2px; }
+.avisos-luta .previsao { margin: 0; }
+/* ===== Mochila: comparação lado a lado com o item vestido ===== */
+.comparando-com { margin: 8px 0 4px; }
+.tabela-comparacao { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 6px; }
+.tabela-comparacao th {
+  font-weight: normal;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+  text-align: right;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(212, 168, 74, 0.35);
+  white-space: nowrap;
+}
+.tabela-comparacao th:first-child, .tabela-comparacao td:first-child { text-align: left; }
+.tabela-comparacao th .icone-px { width: 18px; height: 18px; vertical-align: -4px; }
+.tabela-comparacao td {
+  text-align: right;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tabela-comparacao td:nth-child(3) { color: var(--texto-fraco); }
+.tabela-comparacao .dif { font-weight: bold; }
+.tabela-comparacao .dif.melhor { color: #6fef8a; }
+.tabela-comparacao .dif.pior   { color: #ff7a6a; }
+.tabela-comparacao .dif.igual  { color: var(--texto-fraco); }
+/* Linha da recompensa no combate: um respiro depois das barras de vida */
+.linha:has(#cb-recompensa) { margin-top: 12px; }

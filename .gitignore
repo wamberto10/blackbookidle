@@ -1,0 +1,19 @@
+# Arquivos que NÃO vão para o site (GitHub). O repositório é público, então
+# só vai o que o jogo precisa para rodar — o mesmo que qualquer jogador já vê.
+# Fica SÓ no PC: planejamento e prompts (ideias do dono), ferramentas e simulador.
+docs/
+ferramentas/
+JOGAR.bat
+iniciar-servidor.bat
+iniciar-servidor-rede.bat
+servidor.py
+
+# Originais grandes da IA, prévias e lixo do Python
+img/**/ia/
+img/fundos/originais/
+img/icones/antigos/
+img/personagem/Art Guerreiro de lança/
+img/personagem/personagem inicial/
+ferramentas/sprites/previas/
+__pycache__/
+*.pyc
