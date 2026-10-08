@@ -96,7 +96,7 @@ export function atualizarTelaMochila(estado) {
   if (chave === chaveDesenhada) return;
   chaveDesenhada = chave;
 
-  $('mochila-contagem').textContent = `(${estado.mochila.length}/${CONFIG.equipamentos.capacidadeMochila})`;
+  $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
   desenharEspacos(estado);
   desenharDetalhe(estado);
