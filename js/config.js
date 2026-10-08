@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.8.3',
+  versao: '0.8.4',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -102,7 +102,7 @@ export const CONFIG = {
     capacidadeMochila: 100,            // itens guardados (itens iguais se empilham na tela)
     // Graus: cada tier tem 5 graus (★1 a ★5), cada um um pouco mais forte.
     // Mesclar: 3 itens iguais (mesmo tipo, tier e grau) → 1 do grau seguinte;
-    // 3 itens ★5 → 1 item ★1 do tier seguinte. (Decisão do dono, v0.7.0)
+    // ★5 é o máximo: mesclar NÃO sobe de tier (v0.8.4, decisão do dono; antes 3 ★5 → ★1 do tier seguinte)
     itensParaMesclar: 3,
     graus: 5,
     bonusPorGrau: 0.04,                // +4% por grau (★5 = +16%, ainda abaixo do ★1 do tier seguinte)

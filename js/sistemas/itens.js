@@ -31,11 +31,10 @@ export function nomeDoItem(item) {
   return `${SLOT_POR_ID[item.slot].nome} ${RARIDADE_POR_ID[item.raridade].material} ${estrelas(grauDe(item))}`;
 }
 
-// Para onde vai uma mescla: grau seguinte, ou ★1 do tier seguinte. null = já é o máximo.
+// Para onde vai uma mescla: só o grau seguinte (★1 → ★5), no MESMO tier.
+// v0.8.4 (dono): mesclar não sobe mais de tier; ★5 é o máximo. null = já é o máximo.
 export function proximoDaMescla(raridadeId, grau) {
-  const indice = RARIDADES.findIndex(r => r.id === raridadeId);
-  if (grau < EQ.graus) return { raridade: RARIDADES[indice], grau: grau + 1 };
-  if (indice < RARIDADES.length - 1) return { raridade: RARIDADES[indice + 1], grau: 1 };
+  if (grau < EQ.graus) return { raridade: RARIDADE_POR_ID[raridadeId], grau: grau + 1 };
   return null;
 }
 

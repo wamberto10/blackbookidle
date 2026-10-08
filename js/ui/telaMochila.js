@@ -283,7 +283,7 @@ function desenharDetalhePilha(estado, caixa) {
   // Botão Mesclar
   let botaoMesclar;
   if (!proxima) {
-    botaoMesclar = `<button disabled>Grau máximo</button>`;
+    botaoMesclar = `<button disabled>★5 — grau máximo</button>`;
   } else {
     botaoMesclar = `<button id="detalhe-mesclar" class="botao-mesclar" ${quantidade >= necessarios ? '' : 'disabled'}>
       Mesclar ${Math.min(quantidade, necessarios)}/${necessarios} →
@@ -341,7 +341,7 @@ function desenharChances(estado) {
     <div class="lista-chances">${tiers}</div>
     <p class="pequeno">Grau ao cair: ${CONFIG.equipamentos.pesosGrauAoCair
       .map((p, i) => p > 0 ? `${estrelas(i + 1)} ${p}%` : '').filter(Boolean).join(' · ')}.
-      Mesclar: ${CONFIG.equipamentos.itensParaMesclar} iguais → grau seguinte (${estrelas(5)} → ${estrelas(1)} do tier seguinte).</p>
+      Mesclar: ${CONFIG.equipamentos.itensParaMesclar} iguais → grau seguinte, até ${estrelas(5)} (o tier não muda).</p>
     <p class="pequeno">Itens que caem aqui: ${espacos}</p>
     ${proximo ? `<p class="pequeno">Próximo tipo de item: <b>${proximo.nome}</b>, a partir do Mapa ${proximo.mapaMinimo}.</p>` : ''}`;
 }
