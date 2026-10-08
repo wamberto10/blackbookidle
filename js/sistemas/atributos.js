@@ -61,13 +61,14 @@ export function calcularAtributos(estado) {
   const c = classeDe(estado);
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
+  const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +50%
   return {
-    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque'),
+    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque'),
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
     danoCritico: Math.min(A.danoCriticoMaximo, A.danoCriticoBase + A.danoCriticoPorNivel * nivel + soma(estado, 'danoCritico') + eq.danoCritico + somaClasse('danoCritico')),
     velocidade: (base.velocidade + eq.velocidade) * mult(estado, 'velocidade') * classe('velocidade') * nucleo(estado, 'velocidade'),
-    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade'),
-    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa'),
+    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade'),
+    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa'),
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     sentidoDivino: sentidoDivinoLiberado(estado) ? base.sentidoDivino : 0,

@@ -329,7 +329,7 @@ function desenharDetalhePilha(estado, caixa) {
 // ---- Chances de drop no mapa atual ----
 function desenharChances(estado) {
   const indiceMapa = FASES[estado.combate.faseAtual].mapa;
-  const pesos = EQ.pesosDosTiers(indiceMapa, 'comum');
+  const pesos = EQ.pesosDosTiers(indiceMapa, 'comum', estado.vip);
   const total = pesos.reduce((a, b) => a + b, 0);
   const tiers = RARIDADES.map((r, i) =>
     `<span class="chance" style="color:${r.cor}">${r.tier} ${r.nome}: <b>${(pesos[i] / total * 100).toFixed(1)}%</b></span>`).join('');

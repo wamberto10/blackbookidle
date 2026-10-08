@@ -87,7 +87,8 @@ export function fasesVencidasNestaVida(estado) {
 export function essenciaAoReencarnar(estado) {
   const fases = fasesVencidasNestaVida(estado);
   if (fases <= 0) return 0;
-  return Math.floor(BB.recompensa.base * fases * Math.pow(BB.recompensa.crescimento, fases));
+  const vip = estado.vip ? 1 + CONFIG.vip.bonusEssencia : 1;   // VIP: +100%
+  return Math.floor(BB.recompensa.base * fases * Math.pow(BB.recompensa.crescimento, fases) * vip);
 }
 
 // Só pode reencarnar de novo chegando pelo menos onde reencarnou da última vez
@@ -117,6 +118,7 @@ export function reencarnar(estado) {
   // v0.8.3 (decisão do dono): os itens que caíram ficam — vestidos e na mochila,
   // COM o nível de melhoria (v0.8.6: o dono desfez a volta para +0 da v0.8.5).
   // As Pedras Espirituais continuam zerando.
+  novo.vip = estado.vip;                             // o VIP continua ligado
   novo.nucleos = { ...estado.nucleos };              // Núcleos guardados e pontos usados também ficam
   novo.pontosNucleo = { ...estado.pontosNucleo };
   novo.equipados = { ...estado.equipados };

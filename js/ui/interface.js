@@ -19,6 +19,7 @@ import { montarTelaMapa, atualizarTelaMapa } from './telaMapa.js';
 import { montarTelaBlackBook, atualizarTelaBlackBook } from './telaBlackBook.js';
 import { montarTelaMochila, atualizarTelaMochila } from './telaMochila.js';
 import { montarNucleos, atualizarNucleos } from './nucleos.js';
+import { montarVip, atualizarVip } from './vip.js';
 
 // Atalho para pegar elementos pelo id
 const $ = (id) => document.getElementById(id);
@@ -64,6 +65,7 @@ export function montarInterface(acoes) {
     lista.appendChild(linha);
   }
   montarNucleos(acoes, linhas);   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
+  montarVip(acoes);               // botão 💎 e tela do VIP
 
   montarTelaCombate(acoes);
   montarTelaMapa(acoes);
@@ -88,6 +90,7 @@ export function fecharPainel() {
 export const trocarAba = abrirPainel;
 
 export function atualizarInterface(estado) {
+  atualizarVip(estado);
   const producao = P.producaoPorSegundo(estado);
 
   // ---- Topo ----

@@ -143,6 +143,57 @@ h3 { margin: 18px 0 8px; color: var(--destaque); font-size: 1rem; }
 }
 .inicio-cultivo { width: 100%; }
 
+/* ---- VIP: botão 💎 no canto superior esquerdo da tela inicial e a tela do VIP (ui/vip.js) ---- */
+.inicio { position: relative; }
+.inicio-local { max-width: calc(100% - 140px); }   /* deixa espaço para o botão do VIP */
+.botao-vip {
+  position: absolute;
+  left: 12px;
+  top: calc(var(--altura-topo) + 10px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 4px 6px;
+  border-image: none;
+  border: 1px solid rgba(255, 216, 74, 0.5);
+  border-radius: 10px;
+  background: rgba(15, 12, 18, 0.65);
+  color: #ffd84a;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+.botao-vip .icone-px { width: 34px; height: 34px; }
+.botao-vip.ativo { border-color: #ffd84a; box-shadow: 0 0 10px rgba(255, 216, 74, 0.7); }
+.botao-vip.ativo .icone-px { animation: vip-brilho 2s ease-in-out infinite; }
+@keyframes vip-brilho { 50% { filter: brightness(1.35) drop-shadow(0 0 4px #ffd84a); } }
+.tela-vip {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.65);
+}
+.tela-vip-caixa {
+  width: min(400px, 100%);
+  padding: 18px;
+  border: 1px solid #ffd84a;
+  border-radius: 12px;
+  background: var(--painel);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tela-vip-caixa h2 { margin: 0; color: #ffd84a; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.tela-vip-caixa h2 .icone-px { width: 36px; height: 36px; }
+.tela-vip-estado { margin: 0; font-weight: bold; color: var(--texto-fraco); }
+.tela-vip-lista { margin: 0; padding: 0; list-style: none; text-align: left; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; }
+.tela-vip-lista li { background: rgba(255, 255, 255, 0.04); border-radius: 8px; padding: 8px 10px; }
+
 
 /* ===== Barra de abas (embaixo) ===== */
 .barra-abas {

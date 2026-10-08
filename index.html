@@ -36,6 +36,8 @@
 
   <!-- ===== Tela inicial: o personagem no mundo ===== -->
   <main class="inicio">
+    <!-- Botão do VIP (canto superior esquerdo) — abre a tela do VIP (ui/vip.js) -->
+    <button class="botao-vip" id="botao-vip" title="VIP"><img class="icone-px" src="img/icones/vip.png" alt=""><span>VIP</span></button>
     <div class="inicio-local" id="inicio-local"></div>
 
     <div class="moldura-sprite" id="moldura-sprite">
@@ -386,6 +388,17 @@
   <!-- Mensagem flutuante, clarão de rompimento e janela de eventos importantes -->
   <div id="mensagem" class="mensagem"></div>
   <div id="flash" class="flash"></div>
+  <!-- Tela do VIP (ui/vip.js) -->
+  <div id="tela-vip" class="tela-vip escondido">
+    <div class="tela-vip-caixa">
+      <h2><img class="icone-px" src="img/icones/vip.png" alt=""> VIP</h2>
+      <p id="tela-vip-estado" class="tela-vip-estado"></p>
+      <ul id="tela-vip-lista" class="tela-vip-lista"></ul>
+      <button id="tela-vip-ativar" class="principal largo"></button>
+      <button id="tela-vip-fechar" class="largo">Fechar</button>
+    </div>
+  </div>
+
   <div id="modal" class="modal escondido">
     <div class="modal-caixa">
       <h2 id="modal-titulo"></h2>

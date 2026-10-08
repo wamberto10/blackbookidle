@@ -37,6 +37,7 @@ export function criarEstadoInicial() {
     personagem: null,    // { nome, sexo, classe } — null até passar pela tela de criação
     essencia: 0,         // Essência da Alma (ganha ao reencarnar, gasta no Black Book)
     blackbook,           // níveis das melhorias do Black Book
+    vip: false,          // VIP ligado? (tela do VIP, botão 💎 da tela inicial)
     nucleos: { baixo: 0, medio: 0, alto: 0 },                          // núcleos guardados
     pontosNucleo: { ataque: 0, vitalidade: 0, defesa: 0, velocidade: 0 }, // pontos já usados (+1% cada)
     reencarnacao: {

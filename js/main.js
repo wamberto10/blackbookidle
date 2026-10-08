@@ -214,6 +214,13 @@ montarInterface({
     }
   },
 
+  aoAlternarVip: () => {
+    estado.vip = !estado.vip;
+    C.atualizarAtributosDaLuta(estado);   // os +50% valem na hora
+    salvar(estado);
+    atualizarInterface(estado);
+    mostrarMensagem(estado.vip ? '💎 VIP ativado!' : 'VIP desativado.');
+  },
   aoUsarNucleo: (tipo, atributo, vezes = 1) => {
     if (NU.usarNucleo(estado, tipo, atributo, vezes) > 0) {
       C.atualizarAtributosDaLuta(estado);   // vale na hora, inclusive na luta atual
@@ -299,6 +306,7 @@ let ultimoTick = Date.now();
 // aba escondida...). Esse tempo vai para a simulação offline em vez do passo normal
 // (antes ele era jogado de uma vez: sem resumo, sem limite e com uma enxurrada de avisos).
 const PAUSA_LONGA = 10;
+let cliquesVip = 0;   // fração de clique acumulada do Meditar automático do VIP
 
 setInterval(() => {
   const agora = Date.now();
@@ -310,6 +318,12 @@ setInterval(() => {
     if (!document.hidden) mostrarResumoFora();
     atualizarInterface(estado);
     return;
+  }
+
+  // VIP: Meditar automático (3 cliques por segundo), só com o jogo aberto na tela
+  if (estado.vip && !document.hidden) {
+    cliquesVip += segundos * CONFIG.vip.cliquesPorSegundo;
+    while (cliquesVip >= 1) { P.meditar(estado); cliquesVip -= 1; }
   }
 
   P.atualizar(estado, segundos, aoAvancarNivel);

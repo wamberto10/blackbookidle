@@ -28,9 +28,11 @@ function sortearPorPeso(lista, pesos) {
 }
 
 // Pesos de cada tier num mapa (índice 0 = Mapa 1). Também usado pela tela para mostrar as chances.
-export function pesosDosTiers(indiceMapa, chaveTipo) {
+// VIP: soma CONFIG.vip.pesosExtras nos pesos (50/25/10/5/1 → 60/35/15/8/2)
+export function pesosDosTiers(indiceMapa, chaveTipo, vip = false) {
   const bonusChefe = EQ.bonusRaridadeChefe[chaveTipo] ?? 1;
-  return RARIDADES.map((r, i) => r.peso * (1 + r.bonusMapa * indiceMapa) * (i >= 2 ? bonusChefe : 1));
+  return RARIDADES.map((r, i) => (r.peso + (vip ? CONFIG.vip.pesosExtras[i] : 0)) *
+    (1 + r.bonusMapa * indiceMapa) * (i >= 2 ? bonusChefe : 1));
 }
 
 export function espacosLiberados(indiceMapa) {
@@ -69,7 +71,7 @@ export function recalcularItem(item) {
 // Cria um item caído numa fase. Tier, grau e espaço são sorteados,
 // a não ser que sejam passados (o Mesclar usa isso).
 export function gerarItem(estado, fase, slotFixo = null, raridadeFixa = null, grauFixo = null) {
-  const raridade = raridadeFixa ?? sortearPorPeso(RARIDADES, pesosDosTiers(fase.mapa, fase.chaveTipo));
+  const raridade = raridadeFixa ?? sortearPorPeso(RARIDADES, pesosDosTiers(fase.mapa, fase.chaveTipo, estado.vip));
   const grau = grauFixo ?? sortearPorPeso([1, 2, 3, 4, 5], EQ.pesosGrauAoCair);
   const espacos = espacosLiberados(fase.mapa);
   const slot = slotFixo ?? espacos[Math.floor(Math.random() * espacos.length)];

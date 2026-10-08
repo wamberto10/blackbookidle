@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.6',
+  versao: '0.9.7',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -107,6 +107,16 @@ export const CONFIG = {
     graus: 5,
     bonusPorGrau: 0.04,                // +4% por grau (★5 = +16%, ainda abaixo do ★1 do tier seguinte)
     pesosGrauAoCair: [70, 20, 8, 2, 0], // chance de cada grau quando um item cai (★1 ... ★5)
+  },
+
+  // ---- VIP (v0.9.7, ideia do dono) ----
+  // Liga/desliga de graça na tela do VIP (botão 💎 no canto da tela inicial).
+  // Fica ligado também ao reencarnar.
+  vip: {
+    cliquesPorSegundo: 3,                 // Meditar automático (só com o jogo aberto na tela)
+    pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
+    bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
+    atributos: { ataque: 0.5, defesa: 0.5, vitalidade: 0.5 },   // +50% no total (com itens etc.)
   },
 
   // ---- Núcleos (v0.9.0, ideia do dono) ----
