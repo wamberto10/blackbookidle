@@ -15,7 +15,7 @@
 import { CONFIG } from '../config.js';
 import { FASES, faseLiberada } from './mundo.js';
 import { calcularAtributos, dano } from './atributos.js';
-import { ganharCultivo } from './progressao.js';
+import { ganharCultivo, producaoPorSegundo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
 import { tentarNucleo } from './nucleos.js';
@@ -25,6 +25,13 @@ const CB = CONFIG.combate;
 
 // Luta em andamento. Não é salva: ao recarregar, a luta recomeça.
 let luta = null;
+
+// Cultivo de uma vitória = X segundos da produção ATUAL do jogador (X = tipo da fase: comum 1,5 s ... chefe 15 s).
+// v0.9.5: antes usava a produção do nível da FASE — depois de reencarnar, uma vitória num mapa
+// avançado valia horas ou dias de cultivo e o combate subia os estágios sozinho.
+export function cultivoDaVitoria(estado, fase) {
+  return producaoPorSegundo(estado) * fase.tipo.cultivo;
+}
 
 export function combateLiberado(estado) {
   return liberado(estado, 'combate');
@@ -167,7 +174,7 @@ function vencer(estado, aoEvento) {
   const fase = luta.fase;
   const primeira = fase.indice > estado.combate.fasesConcluidas;
   const multiplicador = primeira ? CB.bonusPrimeiraVitoria : 1;
-  const cultivo = fase.recompensa.cultivo * multiplicador;
+  const cultivo = cultivoDaVitoria(estado, fase) * multiplicador;
   const pedras = fase.recompensa.pedras * multiplicador;
 
   ganharCultivo(estado, cultivo);

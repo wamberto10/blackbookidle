@@ -4,6 +4,7 @@
 import { MUNDOS } from '../dados/mundos.js';
 import { liberado as sistemaLiberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, mapaLiberado, faseLiberada, fasesVencidasNoMapa, mundoConcluido } from '../sistemas/mundo.js';
+import { cultivoDaVitoria } from '../sistemas/combate.js';
 import { formatarNumero } from '../format.js';
 import { icone, iconeDoMapa } from './sprite.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
@@ -88,7 +89,7 @@ function redesenhar(estado) {
          <small class="poder-fase ${previsao.classe}">Poder ${textoDoPoder(previsao.poderInimigo)}</small>`
       : `<b>${fase.numero}</b><span>🔒</span><small>???</small>`;
     botao.title = liberada
-      ? `${fase.tipo.nome} — ${textoDaPrevisao(previsao)}. Recompensa: ${formatarNumero(fase.recompensa.cultivo)} Cultivo, ${formatarNumero(fase.recompensa.pedras)} 💎`
+      ? `${fase.tipo.nome} — ${textoDaPrevisao(previsao)}. Recompensa: ${formatarNumero(cultivoDaVitoria(estado, fase))} Cultivo, ${formatarNumero(fase.recompensa.pedras)} 💎`
       : 'Vença a fase anterior para liberar';
     botao.addEventListener('click', () => acoesGuardadas.aoEscolherFase(fase.indice));
     grade.appendChild(botao);

@@ -13,7 +13,7 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as P from '../sistemas/progressao.js';
-import { combateLiberado, lutaAtual } from '../sistemas/combate.js';
+import { combateLiberado, lutaAtual, cultivoDaVitoria } from '../sistemas/combate.js';
 import { FASES, MAPAS, faseLiberada } from '../sistemas/mundo.js';
 import { RARIDADE_POR_ID } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
@@ -119,7 +119,7 @@ export function atualizarTelaCombate(estado) {
     desenharInimigo($('cb-sprite-inimigo'), fase);
     const primeira = fase.indice > estado.combate.fasesConcluidas;
     $('cb-recompensa').innerHTML =
-      `+${formatarNumero(fase.recompensa.cultivo)} ${icone('cultivo')} +${formatarNumero(fase.recompensa.pedras)} ${icone('pedra')}` +
+      `+${formatarNumero(cultivoDaVitoria(estado, fase))} ${icone('cultivo')} +${formatarNumero(fase.recompensa.pedras)} ${icone('pedra')}` +
       (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : '');
   }
 

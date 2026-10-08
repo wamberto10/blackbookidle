@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.4',
+  versao: '0.9.5',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -26,7 +26,7 @@ export const CONFIG = {
     custoBase: 20,
     crescimentoCusto: 1.577,   // v0.8.5: era 1.55 — o começo fica 2,5× mais rápido e o fim do mundo quase igual
     multiplicadorRompimento: 2.5,  // v0.8.5: era 4 (o 9º estágio demorava 5× o anterior)
-    segundosPorMeditacao: 1,   // cada clique em Meditar = 1 segundo de produção
+    segundosPorMeditacao: 3,   // cada clique em Meditar = 3 segundos de produção (v0.9.5: era 1)
     meditacaoMinima: 1,
   },
 
