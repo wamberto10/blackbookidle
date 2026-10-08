@@ -31,11 +31,34 @@ let estado = carregar() ?? criarEstadoInicial();
 // com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
 let resumoFora = null;
 
+const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false });
+
+// Aba escondida, mas o navegador continua rodando o jogo (computador: outra aba aberta).
+// O tempo passa normalmente, só que sem animações nem avisos — tudo vai para o resumo
+// que aparece quando você volta. (v0.9.8: antes o resumo só contava pausas de mais de
+// 10 s, então 10 minutos em outra aba apareciam como "53 segundos".)
+function passoEscondido(segundos) {
+  const r = resumoFora ??= novoResumo();
+  const antes = estado.cultivoTotal;
+  P.atualizar(estado, segundos, (evento) => { r.estagios += 1; aoAvancarNivel(evento); });
+  C.atualizarCombate(estado, segundos, (evento) => {
+    if (evento.tipo !== 'vitoria') return;
+    r.vitorias += 1;
+    r.pedras += evento.pedras;
+    if (evento.primeira) r.fasesNovas += 1;
+    if (evento.drop) r.itens += 1;
+    if (evento.nucleo) r.nucleos += 1;
+    if (evento.ultimaDoMundo) r.mundoConcluido = true;
+  });
+  r.cultivo += estado.cultivoTotal - antes;
+  r.tempo += segundos;
+}
+
 function somarTempoFora(segundos) {
   const tempo = Math.min(segundos, CONFIG.maxHorasOffline * 3600);
   const cultivo = P.simularOffline(estado, tempo);
   const combate = C.simularCombateOffline(estado, tempo);
-  const r = resumoFora ??= { tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false };
+  const r = resumoFora ??= novoResumo();
   r.tempo += tempo;
   r.cultivo += cultivo.ganho + combate.cultivo;
   r.estagios += cultivo.eventos.length;
@@ -51,6 +74,7 @@ function mostrarResumoFora() {
   const r = resumoFora;
   if (!r) return;
   resumoFora = null;
+  if (r.tempo < 5) return;   // só trocou de aba rapidinho: não precisa de resumo
   let texto = `Você esteve fora por ${formatarTempo(r.tempo)}: +${formatarNumero(r.cultivo)} Cultivo`;
   if (r.estagios > 0) texto += `, ${r.estagios} estágio(s)`;
   if (r.vitorias > 0) texto += `, ${r.vitorias} vitória(s), +${formatarNumero(r.pedras)} 💎`;
@@ -183,6 +207,18 @@ montarInterface({
       mostrarMensagem(`${resultado.quantidade} item(ns) desmanchado(s): +${formatarNumero(resultado.pedras)} 💎`);
       depoisDeMexerNosItens();
     }
+  },
+  aoDesmancharObsoletos: () => {
+    const { itens, pedras } = EQ.obsoletos(estado);
+    if (itens.length === 0) return;
+    const certeza = confirm(
+      `Desmanchar ${itens.length} item(ns) obsoleto(s) por +${formatarNumero(pedras)} 💎?\n\n` +
+      'Obsoleto = nem mesclado até ★5 e melhorado ao máximo ele ficaria melhor que o item que você está vestindo.\n' +
+      'Itens que ainda podem ficar bons continuam guardados.');
+    if (!certeza) return;
+    const resultado = EQ.desmancharObsoletos(estado);
+    mostrarMensagem(`${resultado.quantidade} item(ns) obsoleto(s) desmanchado(s): +${formatarNumero(resultado.pedras)} 💎`);
+    depoisDeMexerNosItens();
   },
   aoMudarAutoEquipar: (ligado) => { estado.opcoes.autoEquipar = ligado; },
 
@@ -317,6 +353,10 @@ setInterval(() => {
     somarTempoFora(segundos);
     if (!document.hidden) mostrarResumoFora();
     atualizarInterface(estado);
+    return;
+  }
+  if (document.hidden) {
+    passoEscondido(segundos);
     return;
   }
 

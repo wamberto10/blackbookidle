@@ -936,6 +936,9 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 .comparacao { font-weight: bold; margin: 6px 0; }
 .comparacao.melhor { color: #6fef6f; }
 .comparacao.pior { color: #ff8a7a; }
+.comparacao-maximo { font-weight: normal; font-size: 0.85rem; margin-top: -2px; }
+.comparacao-maximo.melhor { color: #ffd84a; }
+.item-potencial { color: #ffd84a; }   /* ⬆ = fica melhor que o vestido se melhorar ao máximo */
 
 /* Chances de drop */
 .lista-chances { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0; }

@@ -34,6 +34,7 @@ export function montarTelaMochila(acoes) {
   acoesGuardadas = acoes;
   $('opcao-auto-equipar').addEventListener('change', (e) => acoes.aoMudarAutoEquipar(e.target.checked));
   $('mesclar-tudo').addEventListener('click', () => acoes.aoMesclarTudo());
+  $('desmanchar-obsoletos').addEventListener('click', () => acoes.aoDesmancharObsoletos());
   $('desmanchar-comuns').addEventListener('click', () => acoes.aoDesmancharAteTier(0));
   $('desmanchar-incomuns').addEventListener('click', () => acoes.aoDesmancharAteTier(1));
 }
@@ -98,6 +99,9 @@ export function atualizarTelaMochila(estado) {
 
   $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
+  const quantosObsoletos = EQ.obsoletos(estado).itens.length;
+  $('desmanchar-obsoletos').textContent = `🗑️ Desmanchar obsoletos (${quantosObsoletos})`;
+  $('desmanchar-obsoletos').disabled = quantosObsoletos === 0;
   desenharEspacos(estado);
   desenharDetalhe(estado);
   desenharFiltros(estado);
@@ -169,12 +173,16 @@ function desenharGrade(estado) {
     const botao = document.createElement('button');
     botao.className = `celula-item raridade-${pilha.raridade}`;
     if (mesmoSelecionado(selecionado, alvo)) botao.classList.add('selecionado');
-    // Seta verde se o melhor item da pilha aumentaria o Poder Total
-    const melhor = EQ.ganhoDePoder(estado, EQ.melhorDaPilha(estado, pilha)) > 0;
+    // ▲ verde: o melhor item da pilha já aumentaria o Poder Total.
+    // ⬆ amarelo: ainda não, mas aumentaria depois de melhorado até o nível máximo.
+    const melhorItem = EQ.melhorDaPilha(estado, pilha);
+    const melhor = EQ.ganhoDePoder(estado, melhorItem) > 0;
+    const potencial = !melhor && EQ.ganhoNoNivelMaximo(estado, melhorItem) > 0;
     const podeMesclar = EQ.podeMesclar(estado, pilha.slot, pilha.raridade, pilha.grau);
     botao.innerHTML = `${iconeEquipamento(pilha.slot, pilha.raridade)}
       ${pilha.itens.length > 1 ? `<span class="item-quantidade${podeMesclar ? ' pode-mesclar' : ''}">${pilha.itens.length}</span>` : ''}
       ${melhor ? '<span class="item-melhor">▲</span>' : ''}
+      ${potencial ? '<span class="item-melhor item-potencial" title="Fica melhor que o vestido se melhorar até o nível máximo">⬆</span>' : ''}
       <span class="item-grau">${estrelas(pilha.grau)}</span>`;
     botao.title = `${SLOT_POR_ID[pilha.slot].nome} ${RARIDADE_POR_ID[pilha.raridade].nome} ${estrelas(pilha.grau)} × ${pilha.itens.length}`;
     botao.addEventListener('click', () => selecionar(alvo));
@@ -190,6 +198,17 @@ function desenharGrade(estado) {
 function listaDeAtributos(item) {
   return Object.entries(atributosDoItem(item))
     .map(([a, v]) => `<li><span>${NOMES_DOS_ATRIBUTOS[a]}</span><b>${textoDoAtributo(a, v)}</b></li>`).join('');
+}
+
+// "Melhorado até +12: ▲ Poder +X" — mostra se vale a pena gastar Pedras melhorando este item.
+function linhaDoNivelMaximo(estado, item) {
+  const maximo = nivelMaximo(item);
+  if (item.nivel >= maximo) return '';
+  const ganho = EQ.ganhoNoNivelMaximo(estado, item);
+  return `<div class="comparacao ${ganho > 0 ? 'melhor' : 'pior'} comparacao-maximo">
+      ${ganho > 0 ? '⬆' : '▼'} Melhorado até +${maximo}: Poder Total ${ganho >= 0 ? '+' : '-'}${formatarNumero(Math.abs(ganho))}
+      <span class="pequeno">${ganho > 0 ? '(vale a pena melhorar)' : '(nem no nível máximo ganha do vestido)'}</span>
+    </div>`;
 }
 
 // Comparação lado a lado: este item × o item vestido no mesmo espaço, atributo por atributo.
@@ -278,7 +297,7 @@ function desenharDetalhePilha(estado, caixa) {
   const comparacao = `<div class="comparacao ${ganho > 0 ? 'melhor' : 'pior'}">
       ${ganho > 0 ? '▲' : '▼'} Poder Total ${ganho >= 0 ? '+' : '-'}${formatarNumero(Math.abs(ganho))}
       <span class="pequeno">${atual ? `(comparado com ${nomeDoItem(atual)})` : '(espaço vazio)'}</span>
-    </div>`;
+    </div>${linhaDoNivelMaximo(estado, melhor)}`;
 
   // Botão Mesclar
   let botaoMesclar;

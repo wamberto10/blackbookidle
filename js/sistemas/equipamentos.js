@@ -294,6 +294,38 @@ export function desmancharPilha(estado, slotId, raridadeId, grau) {
   estado.pedras += pedras;
   return { pedras, quantidade: itens.length };
 }
+// Quanto o Poder Total mudaria se ESTE item fosse melhorado até o nível máximo dele e vestido.
+// (Ex.: um Raro +0 pode perder de um Incomum +8 agora, mas ganhar dele quando chegar a +12.)
+export function ganhoNoNivelMaximo(estado, item) {
+  return ganhoDePoder(estado, { ...item, nivel: nivelMaximo(item) });
+}
+
+// ---- Itens obsoletos (v0.9.8, pedido do dono) ----
+// A melhor versão possível de um item: mesclado até ★5 (mesmo tier) e melhorado até o nível máximo.
+function versaoMaxima(item) {
+  return { ...item, grau: EQ.graus, nivel: nivelMaximo(item), atributos: atributosFixos(item.slot, item.raridade, EQ.graus, item.fase) };
+}
+
+// Obsoleto = nem na melhor versão possível ele ganha do item vestido agora naquele espaço.
+// (Item que ainda pode ficar melhor mesclando ou melhorando NÃO é obsoleto.)
+export function ehObsoleto(estado, item) {
+  if (!estado.equipados[item.slot]) return false;   // espaço vazio: qualquer item serve
+  return ganhoDePoder(estado, versaoMaxima(item)) <= 0;
+}
+
+export function obsoletos(estado) {
+  const itens = estado.mochila.filter(item => ehObsoleto(estado, item));
+  return { itens, pedras: itens.reduce((soma, i) => soma + pedrasAoDesmanchar(i), 0) };
+}
+
+export function desmancharObsoletos(estado) {
+  const { itens, pedras } = obsoletos(estado);
+  const ids = new Set(itens.map(i => i.id));
+  estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
+  estado.pedras += pedras;
+  return { pedras, quantidade: itens.length };
+}
+
 // Desmancha todos os itens da mochila até um tier (0 = só Comuns, 1 = Comuns e Incomuns...)
 export function desmancharAteTier(estado, indiceMaximo) {
   let pedras = 0;
