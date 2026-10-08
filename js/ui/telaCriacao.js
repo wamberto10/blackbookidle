@@ -14,11 +14,6 @@ const escolha = { sexo: 'masculino', nome: '', classe: null };
 let aoConfirmarGuardado = null;
 let demonstracao = null;   // timer que mostra a pose de ataque nas cartas de classe
 
-const NOMES_DOS_ATRIBUTOS = {
-  ataque: 'Ataque', vitalidade: 'Vitalidade', defesa: 'Defesa', velocidade: 'Velocidade',
-  critico: 'Taxa de Crítico', danoCritico: 'Dano Crítico',
-};
-
 export function montarTelaCriacao(aoConfirmar) {
   aoConfirmarGuardado = aoConfirmar;
 
@@ -39,18 +34,13 @@ export function montarTelaCriacao(aoConfirmar) {
     const carta = document.createElement('button');
     carta.className = 'carta-escolha carta-classe';
     carta.dataset.classe = classe.id;
-    const bonus = [
-      ...Object.entries(classe.multiplicar).map(([a, v]) =>
-        `<li class="${v >= 0 ? 'bom' : 'ruim'}">${v >= 0 ? '+' : ''}${Math.round(v * 100)}% ${NOMES_DOS_ATRIBUTOS[a]}</li>`),
-      ...Object.entries(classe.somar).map(([a, v]) =>
-        `<li class="bom">+${v}% ${NOMES_DOS_ATRIBUTOS[a]}</li>`),
-    ].join('');
+    // v0.9.4 (dono): os bônus de atributo da classe ficam escondidos (só no código);
+    // na tela aparece apenas a habilidade passiva.
     carta.innerHTML = `
       <canvas width="32" height="32"></canvas>
       <b class="nome-classe">${classe.nome}</b>
       <small class="titulo-classe">${classe.titulo}</small>
       <p>${classe.descricao}</p>
-      <ul class="bonus-classe">${bonus}</ul>
       <div class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</div>`;
     carta.addEventListener('click', () => { escolha.classe = classe.id; atualizarEtapa2(); });
     caixaClasse.appendChild(carta);

@@ -17,7 +17,7 @@ export const CLASSES = [
       'à distância, com força física devastadora e uma regeneração absurda.',
     // Balanceado por simulação: vence os chefes no mesmo nível que as outras classes,
     // mas mata devagar e termina as lutas com mais vida (o "tanque").
-    multiplicar: { ataque: 0.10, vitalidade: 0.20, defesa: 0.10, velocidade: -0.10 },
+    multiplicar: { ataque: 0.20, vitalidade: 0.20, defesa: 0.10, velocidade: -0.10 },  // v0.9.4: ataque era 0.10 (farmava 27% mais devagar; agora termina o mundo no mesmo tempo)
     somar: {},
     especial: { regeneracao: 0.01 },
     nomeEspecial: 'Regeneração',
