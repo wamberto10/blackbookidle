@@ -114,6 +114,11 @@ export function reencarnar(estado) {
   novo.personagem = estado.personagem;
   novo.essencia = estado.essencia + ganho;
   novo.blackbook = { ...estado.blackbook };
+  // v0.8.3 (decisão do dono): os itens que caíram ficam — vestidos e na mochila,
+  // com o nível de melhoria. As Pedras Espirituais continuam zerando.
+  novo.equipados = { ...estado.equipados };
+  novo.mochila = [...estado.mochila];
+  novo.proximoIdItem = estado.proximoIdItem;
   novo.opcoes = { ...estado.opcoes };
   novo.estatisticas = { ...estado.estatisticas };
   novo.reencarnacao = {

@@ -195,7 +195,7 @@ montarInterface({
       'Você vai recomeçar do Corpo Temperado, 1º Estágio, perdendo o Cultivo, o reino, ' +
       'as fases e as Pedras Espirituais desta vida.\n\n' +
       `Você recebe: ${formatarNumero(ganho)} Essência da Alma ✨\n` +
-      'A Essência e as melhorias do Black Book ficam para sempre.');
+      'A Essência, as melhorias do Black Book e seus equipamentos ficam para sempre.');
     if (!certeza) return;
 
     const resultado = BB.reencarnar(estado);
