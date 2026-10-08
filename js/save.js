@@ -66,6 +66,9 @@ export function carregar() {
     estado.versao = CONFIG.versao;
 
     // Proteções: não deixa o save apontar para algo que não existe
+    // Hora do último save inválida ou no futuro (relógio do celular mudou): conta como "agora",
+    // para o progresso offline nunca dar tempo negativo nem gigante.
+    if (!Number.isFinite(estado.ultimoSave) || estado.ultimoSave > Date.now()) estado.ultimoSave = Date.now();
     estado.reino = Math.min(Math.max(0, estado.reino), REINOS.length - 1);
     estado.estagio = Math.min(Math.max(0, estado.estagio), REINOS[estado.reino].estagios.length - 1);
     const c = estado.combate;

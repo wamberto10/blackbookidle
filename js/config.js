@@ -5,13 +5,13 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.2',
+  versao: '0.9.3',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
 
   // Máximo de horas de progresso offline
-  maxHorasOffline: 12,
+  maxHorasOffline: 24,   // v0.9.3 (dono): era 12 — 24 h enquanto o jogo está em desenvolvimento
 
   // ---- Cultivo ----
   // Produção por segundo = producaoBase × crescimentoProducao^nível × bonusPorReino^reino × bônus do Black Book

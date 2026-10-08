@@ -25,20 +25,47 @@ import { iniciarSite } from './site.js';
 // 1) Carrega o jogo salvo, ou começa um novo
 let estado = carregar() ?? criarEstadoInicial();
 
-// 2) Progresso offline: cultivo e combate continuam enquanto você está fora
+// 2) Progresso offline: cultivo e combate continuam enquanto você está fora.
+// Vale para o jogo fechado E para o jogo parado em segundo plano (celular com a tela
+// apagada, outro app aberto...): nos dois casos o tempo passa pela mesma simulação,
+// com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
+let resumoFora = null;
+
+function somarTempoFora(segundos) {
+  const tempo = Math.min(segundos, CONFIG.maxHorasOffline * 3600);
+  const cultivo = P.simularOffline(estado, tempo);
+  const combate = C.simularCombateOffline(estado, tempo);
+  const r = resumoFora ??= { tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false };
+  r.tempo += tempo;
+  r.cultivo += cultivo.ganho + combate.cultivo;
+  r.estagios += cultivo.eventos.length;
+  r.vitorias += combate.vitorias;
+  r.pedras += combate.pedras;
+  r.fasesNovas += combate.fasesNovas;
+  r.itens += combate.itens;
+  r.nucleos += combate.nucleos;
+  r.mundoConcluido ||= combate.mundoConcluido;
+}
+
+function mostrarResumoFora() {
+  const r = resumoFora;
+  if (!r) return;
+  resumoFora = null;
+  let texto = `Você esteve fora por ${formatarTempo(r.tempo)}: +${formatarNumero(r.cultivo)} Cultivo`;
+  if (r.estagios > 0) texto += `, ${r.estagios} estágio(s)`;
+  if (r.vitorias > 0) texto += `, ${r.vitorias} vitória(s), +${formatarNumero(r.pedras)} 💎`;
+  if (r.fasesNovas > 0) texto += `, ${r.fasesNovas} fase(s) nova(s)`;
+  if (r.itens > 0) texto += `, ${r.itens} item(ns)`;
+  if (r.nucleos > 0) texto += `, ${r.nucleos} núcleo(s)`;
+  mostrarMensagem(texto + '.');
+  if (r.mundoConcluido) mostrarModal(MUNDO.final.titulo, MUNDO.final.texto);
+  salvar(estado);
+}
+
 const tempoFora = segundosOffline(estado);
 if (tempoFora > 5) {
-  const cultivo = P.simularOffline(estado, tempoFora);
-  const combate = C.simularCombateOffline(estado, tempoFora);
-
-  let texto = `Você esteve fora por ${formatarTempo(tempoFora)}: +${formatarNumero(cultivo.ganho + combate.cultivo)} Cultivo`;
-  if (cultivo.eventos.length > 0) texto += `, ${cultivo.eventos.length} estágio(s)`;
-  if (combate.vitorias > 0) texto += `, ${combate.vitorias} vitória(s), +${formatarNumero(combate.pedras)} 💎`;
-  if (combate.fasesNovas > 0) texto += `, ${combate.fasesNovas} fase(s) nova(s)`;
-  if (combate.itens > 0) texto += `, ${combate.itens} item(ns)`;
-  if (combate.nucleos > 0) texto += `, ${combate.nucleos} núcleo(s)`;
-  mostrarMensagem(texto + '.');
-  if (combate.mundoConcluido) mostrarModal(MUNDO.final.titulo, MUNDO.final.texto);
+  somarTempoFora(tempoFora);
+  mostrarResumoFora();
 }
 
 // ---- O que fazer quando o jogador avança no cultivo (manual ou automático) ----
@@ -268,10 +295,22 @@ if (precisaCriarPersonagem(estado)) abrirCriacao();
 // 4) Loop do jogo: roda 10 vezes por segundo, usando o tempo REAL que passou
 let ultimoTick = Date.now();
 
+// Mais que isso entre um passo e outro = o jogo ficou parado (segundo plano no celular,
+// aba escondida...). Esse tempo vai para a simulação offline em vez do passo normal
+// (antes ele era jogado de uma vez: sem resumo, sem limite e com uma enxurrada de avisos).
+const PAUSA_LONGA = 10;
+
 setInterval(() => {
   const agora = Date.now();
   const segundos = (agora - ultimoTick) / 1000;
   ultimoTick = agora;
+
+  if (segundos > PAUSA_LONGA) {
+    somarTempoFora(segundos);
+    if (!document.hidden) mostrarResumoFora();
+    atualizarInterface(estado);
+    return;
+  }
 
   P.atualizar(estado, segundos, aoAvancarNivel);
   C.atualizarCombate(estado, segundos, aoEventoCombate);
@@ -282,6 +321,7 @@ setInterval(() => {
 setInterval(() => salvar(estado), CONFIG.intervaloAutoSave);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) salvar(estado);
+  else mostrarResumoFora();   // voltou para o jogo: mostra o que aconteceu enquanto estava em segundo plano
 });
 window.addEventListener('beforeunload', () => salvar(estado));
 
