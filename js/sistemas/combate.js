@@ -14,7 +14,7 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import { FASES, faseLiberada } from './mundo.js';
-import { calcularAtributos, dano } from './atributos.js';
+import { calcularAtributos, dano, golpesPorTurno } from './atributos.js';
 import { ganharCultivo, producaoPorSegundo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
@@ -116,11 +116,15 @@ function passo(estado, dt, aoEvento) {
 
     const ordem = luta.jogadorPrimeiro ? ['jogador', 'inimigo'] : ['inimigo', 'jogador'];
     for (const atacante of ordem) {
-      if (atacante === 'jogador') golpeDoJogador(aoEvento);
-      else golpeDoInimigo(aoEvento);
+      // v0.9.12 (dono): com o dobro (ou mais) da Velocidade do inimigo, o jogador ataca 2 vezes no turno
+      const golpes = atacante === 'jogador' ? golpesPorTurno(luta.jogador, luta.inimigo) : 1;
+      for (let g = 0; g < golpes; g++) {
+        if (atacante === 'jogador') golpeDoJogador(aoEvento);
+        else golpeDoInimigo(aoEvento);
 
-      if (luta.vidaInimigo <= 0) { vencer(estado, aoEvento); return; }
-      if (luta.vidaJogador <= 0) { perder(estado, aoEvento, 'derrotado'); return; }
+        if (luta.vidaInimigo <= 0) { vencer(estado, aoEvento); return; }
+        if (luta.vidaJogador <= 0) { perder(estado, aoEvento, 'derrotado'); return; }
+      }
     }
 
     // Refinador Corporal: Regeneração no fim do turno

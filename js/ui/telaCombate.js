@@ -23,6 +23,7 @@ import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
 import { desenharFundo } from './fundo.js';
 import { previsaoDaFase, textoDoPoder } from './poder.js';
 import { SPRITES } from '../dados/sprites.js';
+import { golpesPorTurno } from '../sistemas/atributos.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -128,7 +129,9 @@ export function atualizarTelaCombate(estado) {
     lutaMostrada = luta;
     vidaMostrada.jogador = { vida: luta.vidaJogador, maxima: luta.jogador.vitalidade };
     vidaMostrada.inimigo = { vida: luta.vidaInimigo, maxima: luta.inimigo.vida };
-    $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade);
+    // Com o dobro da Velocidade do inimigo, ataca 2 vezes por turno: mostra "×2"
+    $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade) +
+      (golpesPorTurno(luta.jogador, luta.inimigo) > 1 ? ' ⚡×2' : '');
     $('cb-vel-inimigo').textContent = formatarNumero(luta.inimigo.velocidade);
     // Poder dos dois lados (mesma conta). A previsão da luta e o aviso de quem é mais
     // rápido foram tirados da tela a pedido do dono.

@@ -132,12 +132,17 @@ export function poderDoInimigo(fase) {
 
 // Previsão de uma luta (média, sem sorte): quantos turnos para vencer e quanta vida sobra.
 // resultado: 'facil' | 'segura' | 'arriscada' | 'derrota' | 'tempo'
+// v0.9.12 (dono): Velocidade do dobro (ou mais) da do inimigo = 2 ataques por turno
+export function golpesPorTurno(jogador, inimigo) {
+  return jogador.velocidade >= 2 * inimigo.velocidade ? 2 : 1;
+}
+
 export function preverLuta(jogador, fase, turnosMaximos) {
   const i = fase.inimigo;
   const esp = jogador.especial ?? {};
   const critico = 1 + (Math.min(jogador.critico, 100) / 100) * (jogador.danoCritico / 100 - 1);
   const explosao = esp.explosaoACada ? 1 + esp.bonusExplosao / esp.explosaoACada : 1;
-  const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao;
+  const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao * golpesPorTurno(jogador, i);
   const turnosParaVencer = Math.ceil(i.vida / meuDano);
 
   const recebido = dano(i.ataque, jogador.defesa) * (1 - jogador.esquiva / 100);

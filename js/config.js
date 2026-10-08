@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.11',
+  versao: '0.9.12',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
