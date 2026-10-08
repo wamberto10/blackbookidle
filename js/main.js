@@ -107,6 +107,7 @@ function avisarDrop(drop) {
 
 // Depois de mexer nos itens: atualiza a tela e salva
 function depoisDeMexerNosItens() {
+  C.atualizarAtributosDaLuta(estado);   // a luta atual já usa os novos atributos
   salvar(estado);
   atualizarInterface(estado);
 }
@@ -181,13 +182,14 @@ montarInterface({
 
   aoComprarMelhoria: (id) => {
     if (BB.comprarMelhoria(estado, id)) {
+      C.atualizarAtributosDaLuta(estado);   // o bônus vale na hora, inclusive na luta atual
       salvar(estado);
       atualizarInterface(estado);
     }
   },
   aoReencarnar: () => {
     const ganho = BB.essenciaAoReencarnar(estado);
-    if (ganho <= 0) return;
+    if (!BB.podeReencarnar(estado)) return;
     const certeza = confirm(
       'Reencarnar agora?\n\n' +
       'Você vai recomeçar do Corpo Temperado, 1º Estágio, perdendo o Cultivo, o reino, ' +

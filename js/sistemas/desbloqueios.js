@@ -13,13 +13,14 @@ export function nivelDeDesbloqueio(sistema) {
 
 // Ex.: liberado(estado, 'mochila') → true se o jogador já chegou lá
 export function liberado(estado, sistema) {
-  // Depois da primeira reencarnação, o Black Book fica sempre aberto
-  // (para gastar a Essência da Alma logo no começo da nova vida)
-  if (sistema === 'blackbook' && estado.reencarnacao.vezes > 0) return true;
+  // Depois da primeira reencarnação, tudo fica aberto desde o começo da vida nova
+  // (Combate, Mapa, Mochila e Black Book — decisão do dono)
+  if (estado.reencarnacao.vezes > 0) return true;
   return indiceNivel(estado) >= nivelDeDesbloqueio(sistema);
 }
 
 // O jogador acabou de chegar exatamente no nível que libera este sistema?
+// (depois de reencarnar já está tudo liberado, então não avisa de novo)
 export function acabouDeLiberar(estado, sistema) {
-  return indiceNivel(estado) === nivelDeDesbloqueio(sistema);
+  return estado.reencarnacao.vezes === 0 && indiceNivel(estado) === nivelDeDesbloqueio(sistema);
 }

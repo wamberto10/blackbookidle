@@ -37,6 +37,17 @@ export function reiniciarLuta() {
   luta = null;
 }
 
+// Atributos mudaram no meio da luta (melhoria do Black Book, item vestido...):
+// a luta atual passa a usar os novos na hora, mantendo a mesma % de vida.
+export function atualizarAtributosDaLuta(estado) {
+  if (!luta) return;
+  const novo = calcularAtributos(estado);
+  const fracaoDeVida = Math.max(0, luta.vidaJogador) / luta.jogador.vitalidade;
+  luta.jogador = novo;
+  luta.vidaJogador = novo.vitalidade * fracaoDeVida;
+  luta.jogadorPrimeiro = novo.velocidade >= luta.inimigo.velocidade;
+}
+
 export function irParaFase(estado, indice) {
   if (!faseLiberada(estado, indice)) return false;
   estado.combate.faseAtual = indice;

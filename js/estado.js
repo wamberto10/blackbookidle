@@ -40,6 +40,7 @@ export function criarEstadoInicial() {
     reencarnacao: {
       vezes: 0,
       melhorFaseDeTodas: -1,   // fase mais distante já vencida em qualquer vida
+      faseDaUltima: -1,        // fase em que reencarnou da última vez (-1 = nunca)
       essenciaTotal: 0,
     },
     opcoes: {

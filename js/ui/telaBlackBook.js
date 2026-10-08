@@ -60,9 +60,11 @@ export function atualizarTelaBlackBook(estado) {
   $('bb-fase').textContent = nomeDaFase(estado.combate.fasesConcluidas);
   $('bb-ganho').textContent = `${formatarNumero(ganho)} ✨`;
   $('bb-reencarnar').disabled = !BB.podeReencarnar(estado);
-  $('bb-reencarnar').textContent = ganho > 0
-    ? `📕 Reencarnar e receber ${formatarNumero(ganho)} ✨ Essência da Alma`
-    : '📕 Vença pelo menos 1 fase para poder reencarnar';
+  $('bb-reencarnar').textContent = !BB.chegouOndeReencarnou(estado)
+    ? `📕 Para reencarnar de novo, vença ${nomeDaFase(BB.faseMinimaParaReencarnar(estado))} (onde você reencarnou da última vez)`
+    : ganho > 0
+      ? `📕 Reencarnar e receber ${formatarNumero(ganho)} ✨ Essência da Alma`
+      : '📕 Vença pelo menos 1 fase para poder reencarnar';
 
   // ---- Melhorias ----
   $('bb-essencia').textContent = formatarNumero(Math.floor(estado.essencia));

@@ -90,8 +90,19 @@ export function essenciaAoReencarnar(estado) {
   return Math.floor(BB.recompensa.base * fases * Math.pow(BB.recompensa.crescimento, fases));
 }
 
+// Só pode reencarnar de novo chegando pelo menos onde reencarnou da última vez
+// (ex.: reencarnou no Mapa 1 · Fase 11 → precisa vencer a Fase 11 do Mapa 1 ou ir além).
+// Decisão do dono. -1 = ainda não precisa chegar em lugar nenhum.
+export function faseMinimaParaReencarnar(estado) {
+  return estado.reencarnacao.faseDaUltima ?? -1;
+}
+
+export function chegouOndeReencarnou(estado) {
+  return estado.combate.fasesConcluidas >= faseMinimaParaReencarnar(estado);
+}
+
 export function podeReencarnar(estado) {
-  return essenciaAoReencarnar(estado) > 0;
+  return essenciaAoReencarnar(estado) > 0 && chegouOndeReencarnou(estado);
 }
 
 // Devolve um estado NOVO (vida nova), guardando só o que é permanente
@@ -108,6 +119,7 @@ export function reencarnar(estado) {
   novo.reencarnacao = {
     vezes: estado.reencarnacao.vezes + 1,
     melhorFaseDeTodas: Math.max(estado.reencarnacao.melhorFaseDeTodas, estado.combate.fasesConcluidas),
+    faseDaUltima: estado.combate.fasesConcluidas,
     essenciaTotal: estado.reencarnacao.essenciaTotal + ganho,
   };
 
