@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.8.4',
+  versao: '0.8.5',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -20,12 +20,12 @@ export const CONFIG = {
   cultivo: {
     // v0.8.0 (consolidação): era 1. Com 1, o Mundo Inicial acabava em ~8 h numa vida só;
     // o dono pediu 3 a 5 dias com 2 a 4 reencarnações (testado em ferramentas/simular.html).
-    producaoBase: 0.2,
+    producaoBase: 0.5,         // v0.8.5: era 0.2 (dono achou os estágios difíceis demais de passar)
     crescimentoProducao: 1.3,
     bonusPorReino: 1.8,
     custoBase: 20,
-    crescimentoCusto: 1.55,
-    multiplicadorRompimento: 4,
+    crescimentoCusto: 1.577,   // v0.8.5: era 1.55 — o começo fica 2,5× mais rápido e o fim do mundo quase igual
+    multiplicadorRompimento: 2.5,  // v0.8.5: era 4 (o 9º estágio demorava 5× o anterior)
     segundosPorMeditacao: 1,   // cada clique em Meditar = 1 segundo de produção
     meditacaoMinima: 1,
   },

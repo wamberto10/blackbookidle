@@ -17,7 +17,9 @@
 // icone = emoji usado nas mensagens | sprite = ícone em pixel art (img/icones/)
 export const TIPOS_DE_FASE = {
   comum:         { nome: 'Comum',          icone: '🗡️', sprite: 'fase_comum',          vida: 4,  ataque: 0.4, defesa: 0.2,  velocidade: 0.8,  cultivo: 1.5, pedras: 1 },
-  elite:         { nome: 'Elite',          icone: '⭐', sprite: 'fase_elite',          vida: 8,  ataque: 0.6, defesa: 0.3,  velocidade: 1.0,  cultivo: 3,   pedras: 3 },
+  // v0.8.5: Elite era vida 8 / ataque 0.6 / defesa 0.3 — ficava ~2× mais forte que a fase 3 e mais forte
+  // que as 3 fases seguintes (ex.: Lobo Alfa, Mapa 2 · Fase 4). Agora fica um degrau acima do Comum.
+  elite:         { nome: 'Elite',          icone: '⭐', sprite: 'fase_elite',          vida: 6.5, ataque: 0.5, defesa: 0.25, velocidade: 0.95, cultivo: 3,   pedras: 3 },
   intermediario: { nome: 'Intermediário',  icone: '⚔️', sprite: 'fase_intermediario',  vida: 6,  ataque: 0.5, defesa: 0.25, velocidade: 0.9,  cultivo: 2,   pedras: 2 },
   eliteAvancada: { nome: 'Elite Avançada', icone: '🌟', sprite: 'fase_elite_avancada', vida: 10, ataque: 0.7, defesa: 0.35, velocidade: 1.05, cultivo: 4,   pedras: 5 },
   especialista:  { nome: 'Especialista',   icone: '🥋', sprite: 'fase_especialista',   vida: 9,  ataque: 0.7, defesa: 0.3,  velocidade: 1.1,  cultivo: 3.5, pedras: 4 },
