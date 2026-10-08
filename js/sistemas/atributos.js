@@ -9,20 +9,22 @@ import { indiceNivel, producaoPorSegundo } from './progressao.js';
 import { multiplicadorMelhoria as mult, efeitoMelhoria as soma } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
 import { classeDe } from './personagem.js';
+import { multiplicadorNucleo as nucleo } from './nucleos.js';
 
 const A = CONFIG.atributos;
 
 // Atributos na ordem em que aparecem na tela.
 // formato: 'numero' (1.5K), 'porcento' (12.5%) ou 'decimal' (1.25)
 // icone: arquivo em img/icones/
+// maximo: teto do atributo (aparece na tela como "13% / 60%")
 export const ATRIBUTOS = [
   { id: 'ataque',        nome: 'Ataque',           icone: 'atr_ataque',         formato: 'numero' },
-  { id: 'critico',       nome: 'Taxa de Crítico',  icone: 'atr_critico',        formato: 'porcento' },
-  { id: 'danoCritico',   nome: 'Dano Crítico',     icone: 'atr_dano_critico',   formato: 'porcento' },
+  { id: 'critico',       nome: 'Taxa de Crítico',  icone: 'atr_critico',        formato: 'porcento', maximo: A.criticoMaximo },
+  { id: 'danoCritico',   nome: 'Dano Crítico',     icone: 'atr_dano_critico',   formato: 'porcento', maximo: A.danoCriticoMaximo },
   { id: 'velocidade',    nome: 'Velocidade',       icone: 'atr_velocidade',     formato: 'numero' },
   { id: 'vitalidade',    nome: 'Vitalidade (HP)',  icone: 'atr_vitalidade',     formato: 'numero' },
   { id: 'defesa',        nome: 'Defesa',           icone: 'atr_defesa',         formato: 'numero' },
-  { id: 'esquiva',       nome: 'Esquiva',          icone: 'atr_esquiva',        formato: 'porcento' },
+  { id: 'esquiva',       nome: 'Esquiva',          icone: 'atr_esquiva',        formato: 'porcento', maximo: A.esquivaMaxima },
   { id: 'poderCultivo',  nome: 'Poder de Cultivo', icone: 'atr_poder_cultivo',  formato: 'numero' },
   { id: 'sentidoDivino', nome: 'Sentido Divino',   icone: 'atr_sentido_divino', formato: 'numero' },
 ];
@@ -54,18 +56,18 @@ export function calcularAtributos(estado) {
   // eq = soma dos equipamentos vestidos
   // mult(...) = melhoria de "+X%" do Black Book | soma(...) = melhoria de "+X pontos"
   // classe(...) = bônus/penalidade da classe (dados/classes.js)
-  // Valores fixos: (base + equipamentos) × Black Book × classe
+  // Valores fixos: (base + equipamentos) × Black Book × classe × Núcleos (+1% por ponto)
   const eq = bonusEquipamentos(estado);
   const c = classeDe(estado);
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
   return {
-    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque'),
+    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque'),
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
     danoCritico: Math.min(A.danoCriticoMaximo, A.danoCriticoBase + A.danoCriticoPorNivel * nivel + soma(estado, 'danoCritico') + eq.danoCritico + somaClasse('danoCritico')),
-    velocidade: (base.velocidade + eq.velocidade) * mult(estado, 'velocidade') * classe('velocidade'),
-    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade'),
-    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa'),
+    velocidade: (base.velocidade + eq.velocidade) * mult(estado, 'velocidade') * classe('velocidade') * nucleo(estado, 'velocidade'),
+    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade'),
+    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa'),
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     sentidoDivino: sentidoDivinoLiberado(estado) ? base.sentidoDivino : 0,

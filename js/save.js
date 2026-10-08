@@ -33,6 +33,8 @@ export function carregar() {
       equipados: { ...padrao.equipados, ...dados.equipados },
       mochila: Array.isArray(dados.mochila) ? dados.mochila : [],
       blackbook: { ...padrao.blackbook, ...dados.blackbook },
+      nucleos: { ...padrao.nucleos, ...dados.nucleos },
+      pontosNucleo: { ...padrao.pontosNucleo, ...dados.pontosNucleo },
       reencarnacao: { ...padrao.reencarnacao, ...dados.reencarnacao },
       opcoes: { ...padrao.opcoes, ...dados.opcoes },
       estatisticas: { ...padrao.estatisticas, ...dados.estatisticas },

@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.8.5',
+  versao: '0.9.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -107,6 +107,23 @@ export const CONFIG = {
     graus: 5,
     bonusPorGrau: 0.04,                // +4% por grau (★5 = +16%, ainda abaixo do ★1 do tier seguinte)
     pesosGrauAoCair: [70, 20, 8, 2, 0], // chance de cada grau quando um item cai (★1 ... ★5)
+  },
+
+  // ---- Núcleos (v0.9.0, ideia do dono) ----
+  // Caem ao vencer inimigos do Mapa 3 em diante (mapas da Transformação do Qi).
+  // Cada ponto dá +1% em Ataque, Vitalidade, Defesa ou Velocidade (o jogador escolhe).
+  // Chances por vitória: o dono pediu 8% / 5% / 0,5% e aprovou dividir por 20
+  // (com ~350 vitórias por hora caíam ~150 pontos/hora — forte demais).
+  // Tudo fica ao reencarnar: núcleos guardados e pontos já usados.
+  nucleos: {
+    mapaMinimo: 3,
+    bonusPorPonto: 0.01,
+    atributos: ['ataque', 'vitalidade', 'defesa', 'velocidade'],
+    tipos: [
+      { id: 'baixo', nome: 'Núcleo de Rank Baixo', pontos: 1,  chance: 0.004,   cor: '#4ad04a', icone: 'nucleo_baixo' },
+      { id: 'medio', nome: 'Núcleo de Rank Médio', pontos: 5,  chance: 0.0025,  cor: '#4a9aff', icone: 'nucleo_medio' },
+      { id: 'alto',  nome: 'Núcleo de Rank Alto',  pontos: 20, chance: 0.00025, cor: '#ffd84a', icone: 'nucleo_alto' },
+    ],
   },
 
   // ---- Black Book: Reencarnação e melhorias permanentes ----

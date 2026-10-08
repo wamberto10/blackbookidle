@@ -18,6 +18,7 @@ import { calcularAtributos, dano } from './atributos.js';
 import { ganharCultivo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
+import { tentarNucleo } from './nucleos.js';
 import { classeDe } from './personagem.js';
 
 const CB = CONFIG.combate;
@@ -176,9 +177,11 @@ function vencer(estado, aoEvento) {
 
   // Chance de cair um equipamento
   const drop = tentarDrop(estado, fase, primeira);
+  // Chance de cair um Núcleo (Mapa 3 em diante)
+  const nucleo = tentarNucleo(estado, fase);
 
   const ultimaDoMundo = primeira && fase.indice === FASES.length - 1;
-  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop });
+  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo });
 
   if (estado.combate.autoAvancar && fase.indice + 1 < FASES.length) {
     estado.combate.faseAtual = fase.indice + 1;
@@ -197,7 +200,7 @@ function perder(estado, aoEvento, motivo) {
 
 // Simula as lutas enquanto o jogador estava fora e resume o resultado
 export function simularCombateOffline(estado, segundos) {
-  const resumo = { vitorias: 0, derrotas: 0, cultivo: 0, pedras: 0, fasesNovas: 0, itens: 0, mundoConcluido: false };
+  const resumo = { vitorias: 0, derrotas: 0, cultivo: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false };
   if (!combateLiberado(estado)) return resumo;
 
   atualizarCombate(estado, segundos, (evento) => {
@@ -206,6 +209,7 @@ export function simularCombateOffline(estado, segundos) {
       resumo.cultivo += evento.cultivo;
       resumo.pedras += evento.pedras;
       if (evento.drop) resumo.itens += 1;
+      if (evento.nucleo) resumo.nucleos += 1;
       if (evento.primeira) resumo.fasesNovas += 1;
       if (evento.ultimaDoMundo) resumo.mundoConcluido = true;
     } else if (evento.tipo === 'derrota') {

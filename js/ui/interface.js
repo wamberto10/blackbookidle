@@ -18,6 +18,7 @@ import { montarTelaCombate, atualizarTelaCombate } from './telaCombate.js';
 import { montarTelaMapa, atualizarTelaMapa } from './telaMapa.js';
 import { montarTelaBlackBook, atualizarTelaBlackBook } from './telaBlackBook.js';
 import { montarTelaMochila, atualizarTelaMochila } from './telaMochila.js';
+import { montarNucleos, atualizarNucleos } from './nucleos.js';
 
 // Atalho para pegar elementos pelo id
 const $ = (id) => document.getElementById(id);
@@ -53,13 +54,16 @@ export function montarInterface(acoes) {
 
   // ---- Lista de atributos (cria uma linha para cada) ----
   const lista = $('lista-atributos');
+  const linhas = {};
   for (const atributo of ATRIBUTOS) {
     const linha = document.createElement('div');
     linha.className = 'atributo';
     linha.innerHTML = `<span>${icone(atributo.icone)} ${atributo.nome}</span><strong>0</strong>`;
     elementosAtributos[atributo.id] = linha.querySelector('strong');
+    linhas[atributo.id] = linha;
     lista.appendChild(linha);
   }
+  montarNucleos(acoes, linhas);   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
 
   montarTelaCombate(acoes);
   montarTelaMapa(acoes);
@@ -193,10 +197,15 @@ function atualizarPersonagem(estado) {
     const valor = atributos[atributo.id];
     const bloqueado = atributo.id === 'sentidoDivino' && valor === 0;
     const elemento = elementosAtributos[atributo.id];
-    elemento.textContent = bloqueado ? '🔒 Bloqueado' : formatarAtributo(valor, atributo.formato);
+    // Atributos com teto mostram o máximo junto (ex.: "13% / 60%"); no teto, fica dourado
+    const maximo = atributo.maximo !== undefined ? ` / ${formatarAtributo(atributo.maximo, atributo.formato)}` : '';
+    elemento.textContent = bloqueado ? '🔒 Bloqueado' : formatarAtributo(valor, atributo.formato) + maximo;
+    elemento.classList.toggle('no-maximo', atributo.maximo !== undefined && valor >= atributo.maximo);
+    elemento.title = atributo.maximo !== undefined ? `Máximo: ${formatarAtributo(atributo.maximo, atributo.formato)}` : elemento.title;
     elemento.title = bloqueado ? 'Libera no reino Ascensão Imortal' : '';
     elemento.classList.toggle('atributo-trancado', bloqueado);
   }
+  atualizarNucleos(estado);
   const analise = analisarPoder(atributos);
   $('pers-poder').textContent = formatarNumero(analise.poder);
   // A explicação aparece ao passar o mouse (ou segurar o dedo) em cada caixinha

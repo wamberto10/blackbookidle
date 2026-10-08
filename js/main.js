@@ -8,6 +8,7 @@ import * as P from './sistemas/progressao.js';
 import * as C from './sistemas/combate.js';
 import * as BB from './sistemas/blackbook.js';
 import * as EQ from './sistemas/equipamentos.js';
+import * as NU from './sistemas/nucleos.js';
 import { acabouDeLiberar } from './sistemas/desbloqueios.js';
 import { criarPersonagem, precisaCriarPersonagem } from './sistemas/personagem.js';
 import { CLASSE_POR_ID } from './dados/classes.js';
@@ -35,6 +36,7 @@ if (tempoFora > 5) {
   if (combate.vitorias > 0) texto += `, ${combate.vitorias} vitória(s), +${formatarNumero(combate.pedras)} 💎`;
   if (combate.fasesNovas > 0) texto += `, ${combate.fasesNovas} fase(s) nova(s)`;
   if (combate.itens > 0) texto += `, ${combate.itens} item(ns)`;
+  if (combate.nucleos > 0) texto += `, ${combate.nucleos} núcleo(s)`;
   mostrarMensagem(texto + '.');
   if (combate.mundoConcluido) mostrarModal(MUNDO.final.titulo, MUNDO.final.texto);
 }
@@ -71,6 +73,11 @@ function aoEventoCombate(evento) {
       `✔ ${fase.inimigo.nome} derrotado: +${formatarNumero(evento.cultivo)} Cultivo, +${formatarNumero(evento.pedras)} 💎` +
       (evento.primeira ? ' (primeira vitória!)' : ''), 'vitoria');
     if (evento.drop) avisarDrop(evento.drop);
+    if (evento.nucleo) {
+      registrarBatalha(`💠 ${evento.nucleo.nome} encontrado! Use-o na aba Personagem (+${evento.nucleo.pontos}%).`, 'vitoria');
+      mostrarMensagem(`💠 ${evento.nucleo.nome}! (+${evento.nucleo.pontos}% num atributo — aba Personagem)`);
+      salvar(estado);
+    }
 
     // Chefe de mapa vencido pela primeira vez
     if (evento.primeira && fase.numero === 12) {
@@ -180,6 +187,13 @@ montarInterface({
     }
   },
 
+  aoUsarNucleo: (tipo, atributo) => {
+    if (NU.usarNucleo(estado, tipo, atributo)) {
+      C.atualizarAtributosDaLuta(estado);   // vale na hora, inclusive na luta atual
+      salvar(estado);
+      atualizarInterface(estado);
+    }
+  },
   aoComprarMelhoria: (id) => {
     if (BB.comprarMelhoria(estado, id)) {
       C.atualizarAtributosDaLuta(estado);   // o bônus vale na hora, inclusive na luta atual
