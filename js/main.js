@@ -214,8 +214,8 @@ montarInterface({
     }
   },
 
-  aoUsarNucleo: (tipo, atributo) => {
-    if (NU.usarNucleo(estado, tipo, atributo)) {
+  aoUsarNucleo: (tipo, atributo, vezes = 1) => {
+    if (NU.usarNucleo(estado, tipo, atributo, vezes) > 0) {
       C.atualizarAtributosDaLuta(estado);   // vale na hora, inclusive na luta atual
       salvar(estado);
       atualizarInterface(estado);

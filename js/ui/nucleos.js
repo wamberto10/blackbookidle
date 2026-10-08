@@ -37,20 +37,38 @@ export function montarNucleos(acoes, linhas) {
   const janela = document.createElement('div');
   janela.id = 'escolha-nucleo';
   janela.className = 'escolha-nucleo escondido';
+  // Seletor de quantidade (um só para os 3 núcleos, para caber no celular):
+  // escolhe 1×, 5×, 10× ou Todos e depois toca no núcleo.
   janela.innerHTML = `
     <div class="escolha-nucleo-caixa">
       <h3 id="escolha-nucleo-titulo"></h3>
+      <div class="escolha-nucleo-qtd" id="escolha-nucleo-qtd">
+        ${QUANTIDADES.map(q => `<button data-qtd="${q.valor}">${q.texto}</button>`).join('')}
+      </div>
       <div id="escolha-nucleo-lista" class="escolha-nucleo-lista"></div>
       <button id="escolha-nucleo-fechar">Fechar</button>
     </div>`;
   ($('jogo') ?? document.body).appendChild(janela);
   janela.addEventListener('click', (e) => { if (e.target === janela) fechar(); });
   $('escolha-nucleo-fechar').addEventListener('click', fechar);
+  $('escolha-nucleo-qtd').addEventListener('click', (e) => {
+    const botao = e.target.closest('button[data-qtd]');
+    if (!botao) return;
+    quantidadeEscolhida = Number(botao.dataset.qtd);
+    chaveJanela = '';
+    if (ultimoEstado) desenharJanela(ultimoEstado);
+  });
   $('escolha-nucleo-lista').addEventListener('click', (e) => {
     const botao = e.target.closest('button[data-tipo]');
-    if (botao && atributoEscolhido) acoes.aoUsarNucleo(botao.dataset.tipo, atributoEscolhido);
+    if (botao && atributoEscolhido) acoes.aoUsarNucleo(botao.dataset.tipo, atributoEscolhido, quantidadeEscolhida);
   });
 }
+
+// Infinity = "Todos" (usa todos os núcleos daquele tipo)
+const QUANTIDADES = [
+  { valor: 1, texto: '1×' }, { valor: 5, texto: '5×' }, { valor: 10, texto: '10×' }, { valor: Infinity, texto: 'Todos' },
+];
+let quantidadeEscolhida = 1;
 
 function abrir(atributo) {
   atributoEscolhido = atributo;
@@ -70,15 +88,21 @@ let chaveGuardados = '';
 
 function desenharJanela(estado) {
   const atributo = atributoEscolhido;
-  const chave = `${atributo}|${pontosEm(estado, atributo)}|${TIPOS_DE_NUCLEO.map(t => quantidade(estado, t.id)).join(',')}`;
+  const chave = `${atributo}|${quantidadeEscolhida}|${pontosEm(estado, atributo)}|${TIPOS_DE_NUCLEO.map(t => quantidade(estado, t.id)).join(',')}`;
   if (chave === chaveJanela) return;
   chaveJanela = chave;
   $('escolha-nucleo-titulo').textContent = `Usar Núcleo em ${NOME[atributo]} (agora +${pontosEm(estado, atributo)}%)`;
+  for (const botao of $('escolha-nucleo-qtd').children) {
+    botao.classList.toggle('ativo', Number(botao.dataset.qtd) === quantidadeEscolhida);
+  }
   $('escolha-nucleo-lista').innerHTML = TIPOS_DE_NUCLEO.map(tipo => {
     const qtd = quantidade(estado, tipo.id);
+    const usa = Math.min(qtd, quantidadeEscolhida);   // quantos serão usados com o toque
     return `<button data-tipo="${tipo.id}" ${qtd > 0 ? '' : 'disabled'}>
-        ${icone(tipo.icone)} <span style="color:${tipo.cor}">${tipo.nome}</span>
-        <b>+${tipo.pontos}%</b> <small>(você tem ${qtd})</small>
+        ${icone(tipo.icone)}
+        <span class="escolha-nucleo-nome"><span style="color:${tipo.cor}">${tipo.nome.replace('Núcleo de ', '')}</span>
+          <small>você tem ${qtd}</small></span>
+        <b>${usa > 0 ? `usar ${usa} → +${usa * tipo.pontos}%` : `+${tipo.pontos}% cada`}</b>
       </button>`;
   }).join('');
 }

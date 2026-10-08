@@ -386,7 +386,13 @@ canvas { image-rendering: pixelated; }
 .escolha-nucleo-caixa h3 { margin: 0 0 12px; font-size: 1rem; }
 .escolha-nucleo-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .escolha-nucleo-lista button { display: flex; align-items: center; gap: 8px; text-align: left; }
-.escolha-nucleo-lista button b { margin-left: auto; }
+.escolha-nucleo-lista button b { margin-left: auto; white-space: nowrap; }
+.escolha-nucleo-nome { display: flex; flex-direction: column; line-height: 1.2; }
+.escolha-nucleo-nome small { color: var(--texto-fraco); }
+/* Seletor 1× · 5× · 10× · Todos (vale para os 3 núcleos) */
+.escolha-nucleo-qtd { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.escolha-nucleo-qtd button { padding: 6px 0; border-image: none; border: 1px solid var(--borda); border-radius: 6px; background: rgba(20, 14, 24, 0.9); }
+.escolha-nucleo-qtd button.ativo { border-color: var(--destaque); color: var(--destaque); font-weight: bold; }
 .escolha-nucleo-lista .icone-px { width: 28px; height: 28px; }
 .atributo > strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .atributo > strong.atributo-trancado { font-size: 0.8rem; font-weight: normal; color: var(--texto-fraco); cursor: help; }

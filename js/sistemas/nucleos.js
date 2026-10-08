@@ -52,10 +52,13 @@ export function tentarNucleo(estado, fase) {
   return null;
 }
 
-// Usa 1 núcleo guardado num atributo. Devolve true se deu certo.
-export function usarNucleo(estado, tipo, atributo) {
-  if (!podeUsarNucleoEm(atributo) || quantidade(estado, tipo) <= 0) return false;
-  estado.nucleos[tipo] -= 1;
-  estado.pontosNucleo[atributo] = pontosEm(estado, atributo) + NUCLEO_POR_ID[tipo].pontos;
-  return true;
+// Usa núcleos guardados num atributo (padrão 1; Infinity = todos daquele tipo).
+// Devolve quantos foram usados (0 = nenhum).
+export function usarNucleo(estado, tipo, atributo, vezes = 1) {
+  if (!podeUsarNucleoEm(atributo)) return 0;
+  const usados = Math.min(quantidade(estado, tipo), vezes);
+  if (usados <= 0) return 0;
+  estado.nucleos[tipo] -= usados;
+  estado.pontosNucleo[atributo] = pontosEm(estado, atributo) + usados * NUCLEO_POR_ID[tipo].pontos;
+  return usados;
 }
