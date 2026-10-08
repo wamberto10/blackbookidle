@@ -143,9 +143,15 @@ function atualizarFundo(estado) {
 
 // ---- Cultivo: tela inicial e painel Cultivo ----
 function atualizarCultivo(estado, producao) {
-  const textoMeditar = `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
-  $('botao-meditar').textContent = textoMeditar;
-  $('inicio-meditar').textContent = textoMeditar;
+  // VIP: o botão liga/desliga o Meditar automático; sem VIP, é por clique
+  const auto = estado.vip && estado.opcoes.meditarAuto;
+  const textoMeditar = estado.vip
+    ? `🧘 Meditar automático: ${auto ? 'LIGADO' : 'DESLIGADO'}`
+    : `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
+  for (const id of ['botao-meditar', 'inicio-meditar']) {
+    $(id).textContent = textoMeditar;
+    $(id).classList.toggle('meditar-auto', auto);
+  }
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
   // Requisito de combate para romper o reino

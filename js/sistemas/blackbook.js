@@ -117,8 +117,9 @@ export function reencarnar(estado) {
   novo.blackbook = { ...estado.blackbook };
   // v0.8.3 (decisão do dono): os itens que caíram ficam — vestidos e na mochila,
   // COM o nível de melhoria (v0.8.6: o dono desfez a volta para +0 da v0.8.5).
-  // As Pedras Espirituais continuam zerando.
+  // (Pedras Espirituais também ficam desde a v0.9.11.)
   novo.vip = estado.vip;                             // o VIP continua ligado
+  novo.pedras = estado.pedras;                       // v0.9.11 (dono): Pedras Espirituais também ficam
   novo.nucleos = { ...estado.nucleos };              // Núcleos guardados e pontos usados também ficam
   novo.pontosNucleo = { ...estado.pontosNucleo };
   novo.equipados = { ...estado.equipados };

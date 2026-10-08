@@ -165,6 +165,8 @@ h3 { margin: 18px 0 8px; color: var(--destaque); font-size: 1rem; }
   font-weight: bold;
 }
 .botao-vip .icone-px { width: 34px; height: 34px; }
+/* Meditar automático do VIP ligado: botão brilhando em dourado */
+.meditar-auto { color: #ffd84a !important; box-shadow: 0 0 10px rgba(255, 216, 74, 0.55); }
 .botao-vip.ativo { border-color: #ffd84a; box-shadow: 0 0 10px rgba(255, 216, 74, 0.7); }
 .botao-vip.ativo .icone-px { animation: vip-brilho 2s ease-in-out infinite; }
 @keyframes vip-brilho { 50% { filter: brightness(1.35) drop-shadow(0 0 4px #ffd84a); } }

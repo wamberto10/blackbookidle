@@ -173,7 +173,9 @@ function depoisDeMexerNosItens() {
 // 3) Monta a tela e diz o que cada botão faz
 montarInterface({
   aoMeditar: () => {
-    P.meditar(estado);
+    // VIP: o botão vira liga/desliga do Meditar automático (deixa de ser por clique)
+    if (estado.vip) estado.opcoes.meditarAuto = !estado.opcoes.meditarAuto;
+    else P.meditar(estado);
     atualizarInterface(estado);
   },
   aoAvancar: () => {
@@ -276,10 +278,10 @@ montarInterface({
     if (!BB.podeReencarnar(estado)) return;
     const certeza = confirm(
       'Reencarnar agora?\n\n' +
-      'Você vai recomeçar do Corpo Temperado, 1º Estágio, perdendo o Cultivo, o reino, ' +
-      'as fases e as Pedras Espirituais desta vida.\n\n' +
+      'Você vai recomeçar do Corpo Temperado, 1º Estágio, perdendo o Cultivo, o reino ' +
+      'e as fases desta vida.\n\n' +
       `Você recebe: ${formatarNumero(ganho)} Essência da Alma ✨\n` +
-      'A Essência, as melhorias do Black Book e seus equipamentos ficam para sempre.');
+      'A Essência, as melhorias do Black Book, seus equipamentos, a mochila e as Pedras Espirituais ficam para sempre.');
     if (!certeza) return;
 
     const resultado = BB.reencarnar(estado);
@@ -361,7 +363,7 @@ setInterval(() => {
   }
 
   // VIP: Meditar automático (3 cliques por segundo), só com o jogo aberto na tela
-  if (estado.vip && !document.hidden) {
+  if (estado.vip && estado.opcoes.meditarAuto && !document.hidden) {
     cliquesVip += segundos * CONFIG.vip.cliquesPorSegundo;
     while (cliquesVip >= 1) { P.meditar(estado); cliquesVip -= 1; }
   }

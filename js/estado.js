@@ -49,6 +49,7 @@ export function criarEstadoInicial() {
     opcoes: {
       autoAvancar: false,   // avançar estágios de cultivo automaticamente
       autoEquipar: true,    // vestir sozinho itens que aumentam o Poder Total
+      meditarAuto: true,    // VIP: Meditar automático ligado (o botão Meditar liga/desliga)
     },
     estatisticas: {
       meditacoes: 0,
