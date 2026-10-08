@@ -2,18 +2,16 @@
 // sistemas/equipamentos.js — DROPS, VESTIR, MELHORAR E DESMANCHAR
 //
 // Como um item é criado quando cai numa fase:
-//  1. Sorteia o TIER: tiers altos são raros, mas ficam mais comuns
-//     a cada mapa e nas lutas contra chefes.
-//  2. Sorteia o ESPAÇO entre os já liberados naquele mapa
-//     (Mapa 1: Elmo e Peitoral ... a partir do Mapa 7: todos os 10).
+//  1. Sorteia o TIER (mesmas chances em todo mapa; chefes melhoram um pouco).
+//  2. Sorteia o ESPAÇO entre os 10 (todos caem em qualquer mapa).
 //  3. Sorteia o GRAU (★1 a ★5): quase sempre ★1, às vezes ★2 a ★4.
-//  4. Calcula os atributos com base na força da fase onde caiu,
-//     multiplicados pela força do tier, mais extras aleatórios.
+//  4. Os atributos são FIXOS por tipo de item (dados/equipamentos.js):
+//     base do mapa onde caiu × força do tier × estrelas. Nada aleatório.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { SLOTS, RARIDADES, ATRIBUTOS_EXTRAS, ATRIBUTOS_EM_PORCENTO } from '../dados/equipamentos.js';
+import { SLOTS, RARIDADES, ATRIBUTOS_EM_PORCENTO } from '../dados/equipamentos.js';
 import { calcularAtributos, poderTotal } from './atributos.js';
-import { FASES } from './mundo.js';
+import { FASES, chefeDoMapa } from './mundo.js';
 import { indiceRaridade, nivelMaximo, custoMelhoria, pedrasAoDesmanchar, grauDe, proximoDaMescla } from './itens.js';
 
 const EQ = CONFIG.equipamentos;
@@ -39,12 +37,33 @@ export function espacosLiberados(indiceMapa) {
   return SLOTS.filter(s => s.mapaMinimo <= indiceMapa + 1);
 }
 
+// v0.9.2 (dono): atributos FIXOS. Nada é sorteado: o valor depende só do tipo do item,
+// do tier, das estrelas e do MAPA onde caiu. Todos os itens de um mapa usam a mesma
+// base (a do chefe do mapa) — assim, dentro do mapa, tier maior sempre ganha.
 function valorDoAtributo(atributo, fator, fase, forca) {
-  const variacao = 1 + (Math.random() * 2 - 1) * EQ.variacao;
   if (ATRIBUTOS_EM_PORCENTO.includes(atributo)) {
-    return fator * (1 + EQ.crescimentoPorcentoPorMapa * fase.mapa) * forca * variacao;
+    return fator * (1 + EQ.crescimentoPorcentoPorMapa * fase.mapa) * forca;
   }
-  return fase.referencia[atributo] * fator * forca * variacao;
+  return chefeDoMapa(fase.mapa).referencia[atributo] * fator * forca;
+}
+
+// Atributos (no nível 0) de um item com este tipo, tier, estrelas e fase
+export function atributosFixos(slotId, raridadeId, grau, indiceFase) {
+  const slot = SLOTS.find(s => s.id === slotId);
+  const raridade = RARIDADES.find(r => r.id === raridadeId);
+  const forca = raridade.forca * (1 + EQ.bonusPorGrau * (grau - 1));
+  const fase = FASES[Math.min(Math.max(0, indiceFase), FASES.length - 1)];
+  const atributos = {};
+  for (const [atributo, fator] of Object.entries(slot.principal)) {
+    atributos[atributo] = valorDoAtributo(atributo, fator, fase, forca);
+  }
+  return atributos;
+}
+
+// Saves antigos: refaz os atributos de um item com a regra fixa (mantém tipo, tier, estrelas, nível e fase)
+export function recalcularItem(item) {
+  if (!item) return item;
+  return { ...item, atributos: atributosFixos(item.slot, item.raridade, grauDe(item), item.fase) };
 }
 
 // Cria um item caído numa fase. Tier, grau e espaço são sorteados,
@@ -52,21 +71,9 @@ function valorDoAtributo(atributo, fator, fase, forca) {
 export function gerarItem(estado, fase, slotFixo = null, raridadeFixa = null, grauFixo = null) {
   const raridade = raridadeFixa ?? sortearPorPeso(RARIDADES, pesosDosTiers(fase.mapa, fase.chaveTipo));
   const grau = grauFixo ?? sortearPorPeso([1, 2, 3, 4, 5], EQ.pesosGrauAoCair);
-  const forca = raridade.forca * (1 + EQ.bonusPorGrau * (grau - 1));
   const espacos = espacosLiberados(fase.mapa);
   const slot = slotFixo ?? espacos[Math.floor(Math.random() * espacos.length)];
-
-  const atributos = {};
-  for (const [atributo, fator] of Object.entries(slot.principal)) {
-    atributos[atributo] = valorDoAtributo(atributo, fator, fase, forca);
-  }
-
-  // Extras: atributos diferentes dos principais, sorteados sem repetir
-  const possiveis = Object.keys(ATRIBUTOS_EXTRAS).filter(a => !(a in atributos));
-  for (let i = 0; i < raridade.extras && possiveis.length > 0; i++) {
-    const [atributo] = possiveis.splice(Math.floor(Math.random() * possiveis.length), 1);
-    atributos[atributo] = valorDoAtributo(atributo, ATRIBUTOS_EXTRAS[atributo], fase, forca);
-  }
+  const atributos = atributosFixos(slot.id, raridade.id, grau, fase.indice);
 
   return {
     id: estado.proximoIdItem++,

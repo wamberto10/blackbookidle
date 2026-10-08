@@ -7,6 +7,7 @@ import { criarEstadoInicial } from './estado.js';
 import { REINOS } from './dados/reinos.js';
 import { FASES } from './sistemas/mundo.js';
 import { corrigirMelhoriasAntigas } from './sistemas/blackbook.js';
+import { recalcularItem } from './sistemas/equipamentos.js';
 
 const CHAVE_DO_SAVE = 'blackbook-idle-save-v1';
 
@@ -55,6 +56,12 @@ export function carregar() {
     }
     // v0.8.1: Esquiva saiu do Black Book e Crítico/Dano Crítico ganharam nível máximo
     corrigirMelhoriasAntigas(estado);
+    // v0.9.2: atributos dos itens ficaram FIXOS por tipo — refaz os itens antigos
+    // (mantém tipo, tier, estrelas, nível e o mapa onde caíram)
+    if (versaoMenorQue(dados.versao, '0.9.2')) {
+      for (const slot in estado.equipados) estado.equipados[slot] = recalcularItem(estado.equipados[slot]);
+      estado.mochila = estado.mochila.map(recalcularItem);
+    }
     delete estado.treino;
     estado.versao = CONFIG.versao;
 

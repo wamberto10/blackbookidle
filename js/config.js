@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.1',
+  versao: '0.9.2',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -93,7 +93,7 @@ export const CONFIG = {
     bonusRaridadeChefe: { miniChefe: 1.25, chefe: 1.5 },
     // Atributos % (crítico, esquiva...) crescem um pouco a cada mapa
     crescimentoPorcentoPorMapa: 0.03,  // v0.7.1: era 0.1 (equipamento crescia demais no fim do mundo)
-    variacao: 0.2,                     // atributos variam ±20% entre itens iguais
+    variacao: 0,                       // v0.9.2: sem variação (atributos fixos; era ±20%)
     bonusPorNivel: 0.05,               // cada nível de melhoria dá +5% em todos os atributos
     custoMelhoriaBase: 4,              // Pedras = base × valor do tier × 1,05^fase × 1,25^nível
     crescimentoCustoMelhoria: 1.25,
