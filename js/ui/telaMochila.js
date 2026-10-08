@@ -51,6 +51,18 @@ function mesmoSelecionado(a, b) {
 function selecionar(alvo) {
   selecionado = mesmoSelecionado(selecionado, alvo) ? null : alvo;
   redesenharAgora();
+  // O detalhe fica acima da grade: rola SÓ o painel até ele, para não precisar procurar.
+  // (scrollIntoView rolava também a moldura do jogo e a tela ficava vazia.)
+  if (selecionado) {
+    const detalhe = $('item-detalhe');
+    let rolavel = detalhe.parentElement;
+    while (rolavel && !(rolavel.scrollHeight > rolavel.clientHeight && /auto|scroll/.test(getComputedStyle(rolavel).overflowY))) {
+      rolavel = rolavel.parentElement;
+    }
+    if (!rolavel) return;
+    const distancia = detalhe.getBoundingClientRect().top - rolavel.getBoundingClientRect().top;
+    if (distancia < 0) rolavel.scrollTo({ top: rolavel.scrollTop + distancia - 8, behavior: 'smooth' });
+  }
 }
 
 // Valor de um atributo como texto: "+123" ou "+1.5%"
@@ -100,7 +112,7 @@ export function atualizarTelaMochila(estado) {
   $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
   const quantosObsoletos = EQ.obsoletos(estado).itens.length;
-  $('desmanchar-obsoletos').textContent = `🗑️ Desmanchar obsoletos (${quantosObsoletos})`;
+  $('desmanchar-obsoletos').textContent = `🗑️ Obsoletos (${quantosObsoletos})`;
   $('desmanchar-obsoletos').disabled = quantosObsoletos === 0;
   desenharEspacos(estado);
   desenharDetalhe(estado);
