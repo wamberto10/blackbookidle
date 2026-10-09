@@ -109,8 +109,9 @@ function passo(estado, dt, aoEvento) {
   luta.tempo += dt;
   luta.relogio += dt;
 
-  // Um turno a cada "duracaoDoTurno" segundos
-  while (luta.relogio >= CB.duracaoDoTurno) {
+  // Um turno a cada "duracaoDoTurno" segundos.
+  // (folga de 1e-9: somar 0,1 dez vezes dá 0,9999999… e o turno atrasava um passo)
+  while (luta.relogio >= CB.duracaoDoTurno - 1e-9) {
     luta.relogio -= CB.duracaoDoTurno;
     luta.turno += 1;
 
@@ -131,7 +132,7 @@ function passo(estado, dt, aoEvento) {
     regenerar(aoEvento);
   }
 
-  if (luta.tempo >= CB.duracaoMaxima) perder(estado, aoEvento, 'tempo');
+  if (luta.tempo >= CB.duracaoMaxima - 1e-9) perder(estado, aoEvento, 'tempo');
 }
 
 function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } no ataque duplo

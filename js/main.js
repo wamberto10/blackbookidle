@@ -54,20 +54,14 @@ function passoEscondido(segundos) {
   r.tempo += segundos;
 }
 
+// Tempo fora (jogo fechado ou congelado em segundo plano): simula cultivo e lutas JUNTOS,
+// em pedaços de até 5 s — igual ao jogo aberto. (v0.9.17: antes simulava todo o cultivo e
+// depois todas as lutas; os estágios ganhos com o cultivo das lutas não aumentavam a
+// produção durante o tempo fora, e o offline rendia 5–15% menos que jogando.)
 function somarTempoFora(segundos) {
   const tempo = Math.min(segundos, CONFIG.maxHorasOffline * 3600);
-  const cultivo = P.simularOffline(estado, tempo);
-  const combate = C.simularCombateOffline(estado, tempo);
-  const r = resumoFora ??= novoResumo();
-  r.tempo += tempo;
-  r.cultivo += cultivo.ganho + combate.cultivo;
-  r.estagios += cultivo.eventos.length;
-  r.vitorias += combate.vitorias;
-  r.pedras += combate.pedras;
-  r.fasesNovas += combate.fasesNovas;
-  r.itens += combate.itens;
-  r.nucleos += combate.nucleos;
-  r.mundoConcluido ||= combate.mundoConcluido;
+  const pedacos = Math.min(20000, Math.max(1, Math.ceil(tempo / 5)));
+  for (let i = 0; i < pedacos; i++) passoEscondido(tempo / pedacos);
 }
 
 function mostrarResumoFora() {
@@ -254,7 +248,7 @@ montarInterface({
 
   aoAlternarVip: () => {
     estado.vip = !estado.vip;
-    C.atualizarAtributosDaLuta(estado);   // os +50% valem na hora
+    C.atualizarAtributosDaLuta(estado);   // os bônus do VIP valem na hora
     salvar(estado);
     atualizarInterface(estado);
     mostrarMensagem(estado.vip ? '💎 VIP ativado!' : 'VIP desativado.');

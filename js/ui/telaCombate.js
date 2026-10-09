@@ -258,8 +258,9 @@ export function mostrarGolpe(evento) {
         : efeitoDoInimigo(lutaMostrada?.fase.inimigo, forma);
       tocarEfeito(alvo, efeito);
       animarClasse($(`cb-sprite-${alvo}`), 'atingido', 300);
-      const prefixo = (evento.segundo ? 'GOLPE DUPLO! ' : '') +
-        (evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}! ` : evento.critico ? 'CRÍTICO! ' : '');
+      // Cada aviso numa linha, com o dano embaixo (antes ficava tudo numa linha e saía da arena)
+      const prefixo = (evento.segundo ? 'GOLPE DUPLO!\n' : '') +
+        (evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}!\n` : evento.critico ? 'CRÍTICO!\n' : '');
       const numero = numeroFlutuante(alvo, prefixo + formatarNumero(evento.dano),
         (forte ? 'critico' : '') + (evento.elemental ? ' elemental' : '') + (alvo === 'jogador' ? ' recebido' : ''));
       if (elemento && atacante === 'jogador') numero.style.color = elemento.cor;

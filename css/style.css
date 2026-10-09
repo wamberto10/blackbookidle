@@ -750,7 +750,9 @@ canvas.atingido { animation: atingido 0.3s ease-out; }
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px #000;
   pointer-events: none;
   animation: subir 1s ease-out forwards;
-  white-space: nowrap;
+  white-space: pre;          /* "CRÍTICO!" numa linha e o dano na de baixo */
+  text-align: center;
+  line-height: 1.1;
   z-index: 4;
 }
 .numero-dano.critico { color: #ffcf4a; font-size: 1.4rem; animation-name: subir-critico; }
@@ -1210,7 +1212,13 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 
 /* ===== Celular ===== */
 @container jogo (max-width: 520px) {
-  .recursos { gap: 10px; font-size: 0.9rem; justify-content: flex-end; }
+  .recursos { gap: 8px; font-size: 0.82rem; justify-content: flex-end; }
+  /* v0.9.17: com 3 recursos no topo o nome ficava só "T"; o "+X/s" sai do topo no celular
+     (aparece na aba Cultivo) e o nome/reino ganham um espaço mínimo */
+  .recursos small { display: none; }
+  .recursos .icone-px { width: 18px; height: 18px; }
+  .topo-personagem { min-width: 86px; }
+  .topo-personagem .inicio-nome { font-size: 0.9rem; }
   .arena { height: 170px; }
   .lutador canvas { width: 64px; height: 64px; }
   .lutador canvas.sprite-chefe { width: 96px; height: 96px; }
