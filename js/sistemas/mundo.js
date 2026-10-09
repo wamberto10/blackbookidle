@@ -119,12 +119,13 @@ export function mundoJaZerado(estado, indiceMundo = 0) {
 }
 
 // ---- Onde começa cada vida nova (reencarnação) ----
-// Mundo onde a próxima vida começa: o mais avançado já zerado + 1
-// (decisão do dono: quem já zerou o Mundo 1 volta para a 1ª fase do Mundo 2).
+// Mundo onde a próxima vida começa.
+// v0.11.2 (dono): TODA vida recomeça no Mundo 1 (Mapa 1, Corpo Temperado); o Mundo 2 só é
+// alcançado zerando o Mundo 1 de novo. (Na v0.10.0 quem já tinha zerado o Mundo 1 recomeçava
+// no Santo, Mapa 13 — o dono achou que o cultivo "pulava" para o Santo.)
+// Para voltar à regra antiga: devolver o mundo mais avançado já zerado + 1 (ver mundoJaZerado).
 export function mundoDeInicio(estado) {
-  let mundo = 0;
-  while (mundo + 1 < MUNDOS_JOGAVEIS.length && mundoJaZerado(estado, mundo)) mundo += 1;
-  return mundo;
+  return 0;
 }
 
 // Texto de onde a próxima vida começa. Ex.: "Santo — 1º Estágio, no Mapa 13 (Fronteira de Tong Xuan)"

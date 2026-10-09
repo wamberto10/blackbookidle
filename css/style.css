@@ -236,15 +236,23 @@ h3 { margin: 18px 0 8px; color: var(--destaque); font-size: 1rem; }
   background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.75));
 }
 .boss-topo { position: relative; z-index: 3; padding: 12px 16px 0; text-align: center; }
-.boss-titulo { margin: 0 36px; color: #ffd0d0; font-size: 1.15rem; text-shadow: 0 2px 4px #000; }
+.boss-titulo { margin: 0 40px; color: #ffd0d0; font-size: 1.15rem; text-shadow: 0 2px 4px #000; }
 .boss-edicao { margin: 2px 0 8px; font-size: 0.75rem; color: #c8c0d8; text-shadow: 0 1px 2px #000; }
-.boss-fechar {
-  position: absolute; right: 12px; top: 10px; width: 36px; height: 36px; padding: 0;
-  border-image: none; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 1rem;
+/* Botão de sair (o ID vence o visual de moldura dourada dos botões comuns) */
+#tela-boss-fechar {
+  position: absolute; right: 10px; top: 10px; width: 36px; height: 36px; min-height: 0; padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35); border-image: none; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 1rem; line-height: 34px; text-align: center;
 }
-.boss-barra { position: relative; height: 20px; }
-.boss-barra span { position: absolute; inset: 0; font-size: 0.8rem; line-height: 20px; font-weight: bold; text-shadow: 0 1px 2px #000; }
+/* Barras de vida próprias da tela do boss (sem a moldura das barras comuns) */
+.boss-barra {
+  position: relative; height: 20px; overflow: hidden;
+  border: 2px solid rgba(255, 220, 160, 0.55); border-radius: 10px; background: rgba(0, 0, 0, 0.65);
+}
+.boss-barra-cheia { height: 100%; width: 100%; background: linear-gradient(#ff6a5a, #b02a2a); transition: width 0.25s ease-out; }
+.boss-barra-cheia.jogador { background: linear-gradient(#7aef7a, #2a9a3a); }
+.boss-barra span { position: absolute; inset: 0; font-size: 0.8rem; line-height: 16px; font-weight: bold; color: #fff; text-shadow: 0 1px 2px #000; }
+.boss-minha-barra { height: 12px; }
 .boss-tempo { margin: 6px 0 0; min-height: 1.2em; font-weight: bold; color: #fff; text-shadow: 0 1px 3px #000; }
 
 /* Palco: o boss ocupa o meio da tela; na luta o herói entra pela esquerda */
