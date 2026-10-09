@@ -20,6 +20,7 @@ export function montarVip(acoes) {
     `<span style="color:${r.cor}">${r.nome} +${V.pesosExtras[i]}%</span>`).join(' · ');
   $('tela-vip-lista').innerHTML = `
     <li>🧘 <b>Meditar automático</b>: ${V.cliquesPorSegundo} cliques por segundo com o jogo aberto — o botão Meditar passa a ligar/desligar</li>
+    <li>⚡ <b>Rompimento automático</b>: rompe o reino sozinho assim que cumprir os requisitos</li>
     <li>🎁 <b>Mais itens raros</b>: ${tiers}</li>
     <li>✨ <b>+${Math.round(V.bonusEssencia * 100)}% de Essência da Alma</b> ao reencarnar</li>
     <li>⚔️ <b>+${Math.round(V.atributos.ataque * 100)}% de Ataque</b>, 🛡️ <b>+${Math.round(V.atributos.defesa * 100)}% de Defesa</b> e

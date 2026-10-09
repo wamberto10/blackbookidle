@@ -148,12 +148,14 @@ export function atualizar(estado, segundos, aoEvento) {
   ganharCultivo(estado, producaoPorSegundo(estado) * segundos);
   estado.estatisticas.tempoJogado += segundos;
 
-  // Avanço automático: só estágios. Rompimentos são sempre manuais.
-  if (estado.opcoes.autoAvancar) {
-    while (podeAvancar(estado) && !proximoEhRompimento(estado)) {
-      const evento = avancar(estado);
-      if (aoEvento) aoEvento(evento);
-    }
+  // Avanço automático (opção "auto"): só estágios. Rompimentos são manuais...
+  // ...a não ser com o VIP (v0.9.13, dono): aí o rompimento é automático assim que
+  // os requisitos (cultivo + chefe do mapa) forem cumpridos.
+  while (podeAvancar(estado)) {
+    const rompimento = proximoEhRompimento(estado);
+    if (rompimento ? !estado.vip : !estado.opcoes.autoAvancar) break;
+    const evento = avancar(estado);
+    if (aoEvento) aoEvento(evento);
   }
 }
 

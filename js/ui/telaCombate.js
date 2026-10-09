@@ -29,6 +29,7 @@ const $ = (id) => document.getElementById(id);
 
 // Tempos das animações (milissegundos)
 const INTERVALO_ENTRE_GOLPES = 380;
+const INTERVALO_GOLPE_DUPLO = 220;   // entre o 1º e o 2º golpe do ataque duplo
 const ATRASO_DO_IMPACTO = 120;       // o golpe "acerta" um pouco depois do avanço
 const DURACAO_DA_MORTE = 800;
 
@@ -124,12 +125,22 @@ export function atualizarTelaCombate(estado) {
       (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : '');
   }
 
+  // Velocidade dos dois (atualiza sempre: muda na hora ao melhorar Velocidade no Black Book).
+  // Com o dobro da Velocidade do inimigo, ataca 2 vezes por turno: mostra "⚡×2".
+  if (luta && luta === lutaMostrada) {
+    const duplo = golpesPorTurno(luta.jogador, luta.inimigo) > 1;
+    $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade) + (duplo ? ' ⚡×2' : '');
+    $('cb-vel-jogador').parentElement.title = duplo
+      ? 'Ataque duplo: você ataca 2 vezes por turno'
+      : `Velocidade · com ${formatarNumero(2 * luta.inimigo.velocidade)} ou mais, você ataca 2 vezes por turno`;
+    $('cb-vel-inimigo').textContent = formatarNumero(luta.inimigo.velocidade);
+  }
+
   // Começou uma luta nova: barras cheias (depois que as animações da anterior terminarem)
   if (luta && luta !== lutaMostrada && pendentes === 0 && inimigoLivre) {
     lutaMostrada = luta;
     vidaMostrada.jogador = { vida: luta.vidaJogador, maxima: luta.jogador.vitalidade };
     vidaMostrada.inimigo = { vida: luta.vidaInimigo, maxima: luta.inimigo.vida };
-    // Com o dobro da Velocidade do inimigo, ataca 2 vezes por turno: mostra "×2"
     $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade) +
       (golpesPorTurno(luta.jogador, luta.inimigo) > 1 ? ' ⚡×2' : '');
     $('cb-vel-inimigo').textContent = formatarNumero(luta.inimigo.velocidade);
@@ -205,6 +216,9 @@ export function mostrarGolpe(evento) {
     return;
   }
 
+  // Ataque duplo: o 1º golpe deixa só um intervalo curto até o 2º, para os dois (mais o do
+  // inimigo) caberem no turno de 1 s. Antes a fila atrasava, juntava os golpes e parecia um só.
+  const intervalo = evento.duplo && !evento.segundo ? INTERVALO_GOLPE_DUPLO : INTERVALO_ENTRE_GOLPES;
   agendar(() => {
     // 1) Quem ataca avança
     animarClasse($(`cb-corpo-${atacante}`), atacante === 'jogador' ? 'avancando-direita' : 'avancando-esquerda', 300);
@@ -244,7 +258,8 @@ export function mostrarGolpe(evento) {
         : efeitoDoInimigo(lutaMostrada?.fase.inimigo, forma);
       tocarEfeito(alvo, efeito);
       animarClasse($(`cb-sprite-${alvo}`), 'atingido', 300);
-      const prefixo = evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}! ` : evento.critico ? 'CRÍTICO! ' : '';
+      const prefixo = (evento.segundo ? 'GOLPE DUPLO! ' : '') +
+        (evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}! ` : evento.critico ? 'CRÍTICO! ' : '');
       const numero = numeroFlutuante(alvo, prefixo + formatarNumero(evento.dano),
         (forte ? 'critico' : '') + (evento.elemental ? ' elemental' : '') + (alvo === 'jogador' ? ' recebido' : ''));
       if (elemento && atacante === 'jogador') numero.style.color = elemento.cor;
@@ -254,7 +269,7 @@ export function mostrarGolpe(evento) {
         animarClasse($('arena-clarao'), 'clarao-critico', 250);
       }
     }, ATRASO_DO_IMPACTO);
-  });
+  }, intervalo);
 }
 
 // Refinador Corporal: Regeneração no fim do turno

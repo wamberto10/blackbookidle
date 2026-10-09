@@ -119,7 +119,7 @@ function passo(estado, dt, aoEvento) {
       // v0.9.12 (dono): com o dobro (ou mais) da Velocidade do inimigo, o jogador ataca 2 vezes no turno
       const golpes = atacante === 'jogador' ? golpesPorTurno(luta.jogador, luta.inimigo) : 1;
       for (let g = 0; g < golpes; g++) {
-        if (atacante === 'jogador') golpeDoJogador(aoEvento);
+        if (atacante === 'jogador') golpeDoJogador(aoEvento, golpes > 1 ? { duplo: true, segundo: g === 1 } : {});
         else golpeDoInimigo(aoEvento);
 
         if (luta.vidaInimigo <= 0) { vencer(estado, aoEvento); return; }
@@ -134,7 +134,7 @@ function passo(estado, dt, aoEvento) {
   if (luta.tempo >= CB.duracaoMaxima) perder(estado, aoEvento, 'tempo');
 }
 
-function golpeDoJogador(aoEvento) {
+function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } no ataque duplo
   const jogador = luta.jogador;
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
@@ -152,7 +152,7 @@ function golpeDoJogador(aoEvento) {
   luta.vidaInimigo -= dano;
   // "vida" e "vidaMaxima" deixam a tela atualizar a barra no momento da animação do golpe
   // "numero" = quantos golpes o jogador já deu (a tela usa para alternar os elementos)
-  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, numero: luta.golpesDoJogador, vida: luta.vidaInimigo, vidaMaxima: luta.inimigo.vida });
+  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, numero: luta.golpesDoJogador, vida: luta.vidaInimigo, vidaMaxima: luta.inimigo.vida, ...extra });
 }
 
 function regenerar(aoEvento) {
