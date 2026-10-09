@@ -51,7 +51,11 @@ export function atributosBase(nivel, indiceReino) {
 
 export function calcularAtributos(estado) {
   const nivel = indiceNivel(estado);
-  const base = atributosBase(nivel, estado.reino);
+  const base = { ...atributosBase(nivel, estado.reino) };
+  // Bônus EXTRA de reino só do jogador (os inimigos usam atributosBase puro).
+  // Faz cada rompimento valer mais que o ganho dos inimigos (v0.9.16, pedido do dono).
+  const extraReino = Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, estado.reino);
+  for (const atributo of ['ataque', 'vitalidade', 'defesa', 'sentidoDivino']) base[atributo] *= extraReino;
 
   // eq = soma dos equipamentos vestidos
   // mult(...) = melhoria de "+X%" do Black Book | soma(...) = melhoria de "+X pontos"

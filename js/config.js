@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.15',
+  versao: '0.9.16',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -36,6 +36,7 @@ export const CONFIG = {
     base: { ataque: 5, vitalidade: 60, defesa: 2, sentidoDivino: 20 },
     crescimento: 1.25,
     bonusPorReino: 1.6,
+    bonusPorReinoJogador: 2.0,  // v0.9.16 (dono): o jogador ganha ×2 por reino (os inimigos ×1,6) — rompimento = ×2,5
     velocidadeBase: 10,         // decide quem ataca primeiro em cada turno
     crescimentoVelocidade: 1.05,
     criticoBase: 5,             // % de chance
