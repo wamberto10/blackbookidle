@@ -61,7 +61,7 @@ export function calcularAtributos(estado) {
   const c = classeDe(estado);
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
-  const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +50%
+  const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +25% (CONFIG.vip.atributos)
   return {
     ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque'),
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),

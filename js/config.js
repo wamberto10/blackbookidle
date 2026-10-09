@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.9.14',
+  versao: '0.9.15',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -116,7 +116,7 @@ export const CONFIG = {
     cliquesPorSegundo: 3,                 // Meditar automático (só com o jogo aberto na tela)
     pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
     bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
-    atributos: { ataque: 0.5, defesa: 0.5, vitalidade: 0.5 },   // +50% no total (com itens etc.)
+    atributos: { ataque: 0.25, defesa: 0.25, vitalidade: 0.25 },   // +25% no total (v0.9.15, dono: era +50%)
   },
 
   // ---- Núcleos (v0.9.0, ideia do dono) ----
