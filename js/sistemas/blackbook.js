@@ -102,8 +102,21 @@ export function chegouOndeReencarnou(estado) {
   return estado.combate.fasesConcluidas >= faseMinimaParaReencarnar(estado);
 }
 
+// Vida que começou no Mundo 2 (ou além): precisa vencer pelo menos 1 fase nova antes de
+// reencarnar — senão daria para reencarnar na hora, ganhando a Essência das fases do Mundo 1 de graça.
+export function venceuFaseNestaVida(estado) {
+  return estado.combate.fasesConcluidas > (estado.combate.inicioDaVida ?? -1);
+}
+
 export function podeReencarnar(estado) {
-  return essenciaAoReencarnar(estado) > 0 && chegouOndeReencarnou(estado);
+  return essenciaAoReencarnar(estado) > 0 && chegouOndeReencarnou(estado) && venceuFaseNestaVida(estado);
+}
+
+// Onde a vida nova começa (Mundo 1 ou começo do Mundo 2...). Quem decide é sistemas/mundo.js,
+// que se registra aqui ao carregar (importar mundo.js daqui criaria um ciclo de imports).
+let comecarVidaNova = null;
+export function definirInicioDaVida(funcao) {
+  comecarVidaNova = funcao;
 }
 
 // Devolve um estado NOVO (vida nova), guardando só o que é permanente
@@ -133,6 +146,7 @@ export function reencarnar(estado) {
     faseDaUltima: estado.combate.fasesConcluidas,
     essenciaTotal: estado.reencarnacao.essenciaTotal + ganho,
   };
+  if (comecarVidaNova) comecarVidaNova(novo, estado);
 
   return { estado: novo, ganho };
 }

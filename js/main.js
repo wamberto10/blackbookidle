@@ -14,7 +14,7 @@ import { criarPersonagem, precisaCriarPersonagem } from './sistemas/personagem.j
 import { CLASSE_POR_ID } from './dados/classes.js';
 import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
-import { MUNDO, MAPAS } from './sistemas/mundo.js';
+import { MUNDO, MAPAS, textoDoInicioDaVida } from './sistemas/mundo.js';
 import { salvar, carregar, apagarSave, segundosOffline } from './save.js';
 import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
@@ -31,7 +31,7 @@ let estado = carregar() ?? criarEstadoInicial();
 // com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
 let resumoFora = null;
 
-const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false });
+const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: null });
 
 // Aba escondida, mas o navegador continua rodando o jogo (computador: outra aba aberta).
 // O tempo passa normalmente, só que sem animações nem avisos — tudo vai para o resumo
@@ -48,7 +48,7 @@ function passoEscondido(segundos) {
     if (evento.primeira) r.fasesNovas += 1;
     if (evento.drop) r.itens += 1;
     if (evento.nucleo) r.nucleos += 1;
-    if (evento.ultimaDoMundo) r.mundoConcluido = true;
+    if (evento.ultimaDoMundo) r.mundoConcluido = evento.ultimaDoMundo;
   });
   r.cultivo += estado.cultivoTotal - antes;
   r.tempo += segundos;
@@ -76,7 +76,7 @@ function mostrarResumoFora() {
   if (r.itens > 0) texto += `, ${r.itens} item(ns)`;
   if (r.nucleos > 0) texto += `, ${r.nucleos} núcleo(s)`;
   mostrarMensagem(texto + '.');
-  if (r.mundoConcluido) mostrarModal(MUNDO.final.titulo, MUNDO.final.texto);
+  if (r.mundoConcluido) mostrarModal(r.mundoConcluido.final.titulo, r.mundoConcluido.final.texto);
   salvar(estado);
 }
 
@@ -132,7 +132,7 @@ function aoEventoCombate(evento) {
       mostrarMensagem(texto);
       salvar(estado);
     }
-    if (evento.ultimaDoMundo) mostrarModal(MUNDO.final.titulo, MUNDO.final.texto);
+    if (evento.ultimaDoMundo) mostrarModal(evento.ultimaDoMundo.final.titulo, evento.ultimaDoMundo.final.texto);
   } else if (evento.tipo === 'derrota') {
     animarDerrota();
     const motivo = evento.motivo === 'tempo' ? 'o tempo acabou' : 'você foi derrotado';
@@ -272,7 +272,7 @@ montarInterface({
     if (!BB.podeReencarnar(estado)) return;
     const certeza = confirm(
       'Reencarnar agora?\n\n' +
-      'Você vai recomeçar do Corpo Temperado, 1º Estágio, perdendo o Cultivo, o reino ' +
+      `Você vai recomeçar em ${textoDoInicioDaVida(estado)}, perdendo o Cultivo, o reino ` +
       'e as fases desta vida.\n\n' +
       `Você recebe: ${formatarNumero(ganho)} Essência da Alma ✨\n` +
       'A Essência, as melhorias do Black Book, seus equipamentos, a mochila e as Pedras Espirituais ficam para sempre.');

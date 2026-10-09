@@ -3,7 +3,8 @@
 // =============================================================
 import { MUNDOS } from '../dados/mundos.js';
 import { liberado as sistemaLiberado } from '../sistemas/desbloqueios.js';
-import { MUNDO, MAPAS, FASES, mapaLiberado, faseLiberada, fasesVencidasNoMapa, mundoConcluido } from '../sistemas/mundo.js';
+import { MAPAS, FASES, MUNDOS_JOGAVEIS, mapaLiberado, faseLiberada, fasesVencidasNoMapa, mundoConcluido,
+  mapasDoMundo, primeiraFaseDoMundo, ultimaFaseDoMundo } from '../sistemas/mundo.js';
 import { cultivoDaVitoria } from '../sistemas/combate.js';
 import { formatarNumero } from '../format.js';
 import { icone, iconeDoMapa } from './sprite.js';
@@ -19,9 +20,17 @@ let chaveDesenhada = '';
 
 export function montarTelaMapa(acoes) {
   acoesGuardadas = acoes;
-  $('mapa-mundo-nome').textContent = MUNDO.nome;
-  $('mapa-mundo-lema').textContent = MUNDO.lema;
-  $('mapa-mundo-desc').textContent = MUNDO.descricao;
+}
+
+// Mundo liberado = a 1ª fase dele já pode ser jogada (venceu o chefe final do mundo anterior)
+function mundoLiberado(estado, indiceMundo) {
+  return faseLiberada(estado, primeiraFaseDoMundo(indiceMundo));
+}
+
+function escolherMundo(indiceMundo) {
+  mapaSelecionado = mapasDoMundo(indiceMundo)[0];
+  chaveDesenhada = '';
+  atualizarTelaMapa(ultimoEstado);
 }
 
 export function atualizarTelaMapa(estado) {
@@ -42,10 +51,32 @@ export function atualizarTelaMapa(estado) {
 }
 
 function redesenhar(estado) {
-  // ---- Cartões dos 12 mapas ----
+  // ---- Mundo do mapa aberto (nome, lema, descrição) e botões para trocar de mundo ----
+  const indiceMundo = MAPAS[mapaSelecionado].mundo;
+  const mundo = MUNDOS_JOGAVEIS[indiceMundo];
+  $('mapa-mundo-nome').textContent = `Mundo ${indiceMundo + 1} — ${mundo.nome}`;
+  $('mapa-mundo-lema').textContent = mundo.lema;
+  $('mapa-mundo-desc').textContent = mundo.descricao;
+
+  const abas = $('abas-mundo');
+  abas.innerHTML = '';
+  const liberados = MUNDOS_JOGAVEIS.filter((_, i) => mundoLiberado(estado, i)).length;
+  abas.classList.toggle('escondido', liberados < 2);   // só aparece com 2 mundos ou mais
+  MUNDOS_JOGAVEIS.forEach((outro, i) => {
+    if (!mundoLiberado(estado, i)) return;
+    const botao = document.createElement('button');
+    botao.className = 'aba-mundo' + (i === indiceMundo ? ' selecionado' : '');
+    botao.textContent = `Mundo ${i + 1}`;
+    botao.title = outro.nome;
+    botao.addEventListener('click', () => escolherMundo(i));
+    abas.appendChild(botao);
+  });
+
+  // ---- Cartões dos 12 mapas do mundo ----
   const lista = $('lista-mapas');
   lista.innerHTML = '';
-  MAPAS.forEach((mapa, indice) => {
+  mapasDoMundo(indiceMundo).forEach((indice) => {
+    const mapa = MAPAS[indice];
     const liberado = mapaLiberado(estado, indice);
     const vencidas = fasesVencidasNoMapa(estado, indice);
     const cartao = document.createElement('button');
@@ -98,14 +129,25 @@ function redesenhar(estado) {
   // ---- Lista de mundos ----
   const listaMundos = $('lista-mundos');
   listaMundos.innerHTML = '';
-  MUNDOS.forEach((mundo, indice) => {
+  let proximoMostrado = false;
+  MUNDOS.forEach((outro, indice) => {
     const item = document.createElement('li');
-    if (indice === 0) {
-      item.className = mundoConcluido(estado) ? 'concluido' : 'atual';
-      item.innerHTML = `<span>${mundoConcluido(estado) ? '✔' : '➤'} Mundo 1 — ${mundo.nome}</span><small>${estado.combate.fasesConcluidas + 1}/144 fases</small>`;
-    } else if (indice === 1 && mundoConcluido(estado)) {
+    const jogavel = indice < MUNDOS_JOGAVEIS.length;
+    if (jogavel && mundoLiberado(estado, indice)) {
+      const primeira = primeiraFaseDoMundo(indice);
+      const total = ultimaFaseDoMundo(indice) - primeira + 1;
+      const vencidas = Math.max(0, Math.min(total, estado.combate.fasesConcluidas + 1 - primeira));
+      const concluido = mundoConcluido(estado, indice);
+      item.className = concluido ? 'concluido' : 'atual';
+      item.innerHTML = `<span>${concluido ? '✔' : '➤'} Mundo ${indice + 1} — ${outro.nome}</span><small>${vencidas}/${total} fases</small>`;
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => escolherMundo(indice));
+    } else if (!proximoMostrado) {
+      proximoMostrado = true;
       item.className = 'proximo';
-      item.innerHTML = `<span>Mundo 2 — ${mundo.nome}</span><small>Em desenvolvimento</small>`;
+      item.innerHTML = jogavel
+        ? `<span>🔒 Mundo ${indice + 1} — ${outro.nome}</span><small>Vença o chefe final do Mundo ${indice}</small>`
+        : `<span>Mundo ${indice + 1} — ${outro.nome}</span><small>Em desenvolvimento</small>`;
     } else {
       item.className = 'oculto';
       item.innerHTML = `<span>Mundo ${indice + 1} — ???</span><small></small>`;

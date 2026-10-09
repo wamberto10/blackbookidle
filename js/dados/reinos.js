@@ -26,7 +26,8 @@ export const REGIOES = [
 //                  (a chave é o índice: 0 = 1º estágio, 3 = 4º estágio)
 //   corManto     → cor da roupa do personagem neste reino
 //   mapaParaRomper → para SAIR deste reino, é preciso vencer o chefe
-//                  deste mapa (número do mapa, de 1 a 12, no Mundo Inicial)
+//                  deste mapa (Mundo 1 = Mapas 1–12, Mundo 2 = Mapas 13–24;
+//                  um mapa que ainda não existe trava o reino até o próximo mundo)
 export const REINOS = [
   // ===================== REGIÃO 1 =====================
   {
@@ -87,6 +88,7 @@ export const REINOS = [
     estagios: INICIAL_INTER_PICO, corManto: '#d0d0d0',
     descricao: 'Saint Qi e resistência para sobreviver no Campo Estelar.',
     desbloqueio: 'Seu Qi se tornou Saint Qi. O Campo Estelar aguarda.',
+    mapaParaRomper: 14,
   },
 
   // ===================== REGIÃO 2 =====================
@@ -95,18 +97,21 @@ export const REINOS = [
     estagios: estagios(3), corManto: '#3f5fbf',
     descricao: 'Compreensão das leis naturais.',
     desbloqueio: 'Você chegou ao Campo Estelar e começa a compreender as leis naturais.',
+    mapaParaRomper: 16,
   },
   {
     id: 'retorno_origem', nome: 'Retorno à Origem', regiao: 1,
     estagios: estagios(3), corManto: '#2f7fbf',
     descricao: 'Formação do Shi, um domínio capaz de suprimir adversários.',
     desbloqueio: 'Seu Shi começa a se formar.',
+    mapaParaRomper: 18,
   },
   {
     id: 'rei_origem', nome: 'Rei da Origem', regiao: 1,
     estagios: estagios(3), corManto: '#1f4f8f',
     descricao: 'Domínio dos princípios espaciais. Possibilidade de se tornar Mestre Estelar ao refinar um planeta.',
     desbloqueio: 'Os princípios espaciais se curvam a você.',
+    mapaParaRomper: 20,
   },
 
   // ===================== REGIÃO 3 =====================
@@ -115,12 +120,14 @@ export const REINOS = [
     estagios: estagios(3), corManto: '#6f3f9f',
     descricao: 'Conversão de Saint Qi em Source Qi e uso dos Princípios do Mundo.',
     desbloqueio: 'Seu Saint Qi se converteu em Source Qi.',
+    mapaParaRomper: 22,
   },
   {
     id: 'imperador', nome: 'Imperador', regiao: 2,
     estagios: ['1ª Ordem', '2ª Ordem', '3ª Ordem', 'Pico'], corManto: '#8f2f2f',
     descricao: 'Emperor Qi.',
     desbloqueio: 'Você se tornou um Imperador. Seu Qi agora é Emperor Qi.',
+    mapaParaRomper: 24,
   },
   {
     id: 'grande_imperador', nome: 'Grande Imperador', regiao: 2,
@@ -128,6 +135,7 @@ export const REINOS = [
     estagios: ['Reconhecimento do Mundo'], corManto: '#bf9f2f',
     descricao: 'Sistema especial de reconhecimento pelo mundo e condensação do Selo do Dao.',
     desbloqueio: 'O mundo reconhece sua existência.',
+    mapaParaRomper: 36,
   },
   {
     id: 'pseudo_grande_imperador', nome: 'Pseudo-Grande Imperador / Meio-Aberto', regiao: 2,

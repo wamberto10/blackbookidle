@@ -96,7 +96,7 @@ export const MUNDO_INICIAL = {
         f('Casa de Leilões', 'Segurança do Leilão'),
         f('Rua dos Comerciantes', 'Cultivador Independente'),
         f('Taverna do Dragão Bêbado', 'Mercenário Bêbado'),
-        f('Arena da Cidade', 'Lutador da Arena'),
+        f('Arena da Cidade', 'Lutador do Bando da Batalha Sangrenta'),
         f('Mansão da Família Local', 'Chefe da Guarda Familiar'),
         f('Pátio dos Mestres', 'Especialista Local'),
         f('Salão de Banquetes', 'Servo Leal da Família'),
@@ -198,48 +198,48 @@ export const MUNDO_INICIAL = {
     },
     // ---------------------------------------------------------- MAPA 8
     {
-      nome: 'Terra Maligna das Nuvens Cinzentas', icone: '🌫️', cor: '#2a2030', reino: 4,
+      nome: 'Terras do Vale do Rei Fantasma', icone: '🌫️', cor: '#2a2030', reino: 4,
       cena: { ceu: ['#1a1420', '#5a4a5a'], astro: '#c03030', astroX: 230, montanhas: ['#4a3a50', '#2a2030', '#140e18'], estruturas: 'ruinas', nevoa: 'rgba(120,100,130,0.3)' },
       descricao:
-        'Céu escuro, montanhas corrompidas e energia demoníaca. Uma região dominada por forças ' +
-        'malignas, governada pelos temidos Reis Malignos.',
+        'Céu escuro, montanhas corrompidas e energia demoníaca. As terras das seitas malignas, lideradas ' +
+        'pelo temido Vale do Rei Fantasma e governadas pelos Reis Malignos.',
       sistema: null,
       fases: [
-        f('Fronteira Cinzenta', 'Bandido das Névoas', 'maligno'),
+        f('Fronteira do Vale', 'Bandido das Névoas', 'maligno'),
         f('Cidade Destruída', 'Cultivador Maligno', 'maligno'),
         f('Montanhas Corrompidas', 'Fera Corrompida', 'fera'),
         f('Desfiladeiro Sombrio', 'Assassino das Sombras', 'maligno'),
         f('Caverna Sombria', 'Morcego Demoníaco', 'fera'),
-        f('Pântano de Sangue', 'Discípulo do Culto de Sangue', 'maligno'),
+        f('Pântano de Sangue', 'Discípulo do Vale do Rei Fantasma', 'maligno'),
         f('Templo Profanado', 'Sacerdote Maligno', 'maligno'),
         f('Fortaleza Negra', 'Rei Maligno do Norte', 'maligno'),
         f('Altar dos Demônios', 'Especialista Maligno', 'maligno'),
-        f('Torre das Nuvens Cinzentas', 'Rei Maligno do Sul', 'maligno'),
+        f('Torre do Rei Fantasma', 'Rei Maligno do Sul', 'maligno'),
         f('Salão dos Reis', 'Rei Maligno Supremo', 'maligno'),
-        f('Trono Cinzento', 'Grande Líder da Terra Maligna', 'maligno'),
+        f('Trono do Rei Fantasma', 'Mestre do Vale do Rei Fantasma', 'maligno'),
       ],
     },
     // ---------------------------------------------------------- MAPA 9
     {
-      nome: 'Guerra entre Forças', icone: '🔥', cor: '#4a2414', reino: 5,
+      nome: 'Guerra contra a Dinastia Tian Lang', icone: '🔥', cor: '#4a2414', reino: 5,
       cena: { ceu: ['#2a0a0a', '#e0602a'], astro: '#ff9a3a', astroX: 120, montanhas: ['#6a2a1a', '#3a1a10', '#1a0a06'], estruturas: 'ruinas', nevoa: 'rgba(60,30,20,0.35)' },
       descricao:
-        'A tensão entre forças ortodoxas e malignas explode em guerra aberta: invasões, ' +
-        'emboscadas e cercos a cidades e seitas.',
+        'A Dinastia Tian Lang, aliada às seitas malignas, invade a Dinastia Han: invasões, ' +
+        'emboscadas e cercos a cidades e seitas em uma guerra aberta.',
       sistema: 'Batalhas em larga escala e Cerco (ondas de inimigos)',
       fases: [
-        f('Vila Invadida', 'Batedor Maligno', 'maligno'),
-        f('Muralha da Cidade', 'Soldado Maligno', 'maligno'),
+        f('Vila Invadida', 'Batedor de Tian Lang', 'maligno'),
+        f('Muralha da Cidade', 'Soldado de Tian Lang', 'maligno'),
         f('Portões em Chamas', 'Onda de Invasores', 'maligno'),
         f('Acampamento Inimigo', 'Comandante de Vanguarda', 'maligno'),
         f('Campo de Batalha', 'Cultivador de Guerra', 'maligno'),
         f('Emboscada no Desfiladeiro', 'Emboscador Maligno', 'maligno'),
         f('Defesa da Seita', 'Esquadrão de Assalto', 'maligno'),
-        f('Torre de Vigia', 'Capitão das Hordas', 'maligno'),
+        f('Torre de Vigia', 'Capitão de Tian Lang', 'maligno'),
         f('Planície Sangrenta', 'Especialista de Guerra', 'maligno'),
         f('Linha de Frente', 'Feiticeiro de Batalha', 'maligno'),
-        f('Cerco Final', 'Senhor da Guerra Maligno', 'maligno'),
-        f('Coração do Exército', 'General das Forças Malignas', 'maligno'),
+        f('Cerco Final', 'Senhor da Guerra de Tian Lang', 'maligno'),
+        f('Coração do Exército', 'General da Dinastia Tian Lang', 'maligno'),
       ],
     },
     // ---------------------------------------------------------- MAPA 10
@@ -312,7 +312,7 @@ export const MUNDO_INICIAL = {
         // Fase 11: grande batalha contra o guardião do corredor
         f('Diante do Corredor', 'Guardião do Corredor Espacial', 'guardiao'),
         // Fase 12: o último grande obstáculo
-        f('Portal para o Reino Tong Xuan', 'Senhor do Portal Ancestral', 'guardiao'),
+        f('Portal para o Reino Tong Xuan', 'Senhor Demônio', 'maligno'),
       ],
     },
   ],
@@ -321,9 +321,9 @@ export const MUNDO_INICIAL = {
   final: {
     titulo: 'O Mundo Inicial terminou.',
     texto:
-      'O corredor espacial se ativa, e diante de você surge uma realidade completamente diferente.\n\n' +
+      'Com a queda do Senhor Demônio, o corredor espacial se ativa, e diante de você surge uma realidade completamente diferente.\n\n' +
       '"Eu pensei que este era o mundo inteiro. Agora descobri que ele era apenas um pequeno fragmento."\n\n' +
       'Mas o verdadeiro caminho marcial apenas começou.\n\n' +
-      '🌌 REINO TONG XUAN — DESBLOQUEADO\n(o Mundo 2 está em desenvolvimento)',
+      '🌌 REINO TONG XUAN — DESBLOQUEADO\n(o Mundo 2 começa no Mapa 13: Fronteira de Tong Xuan)',
   },
 };

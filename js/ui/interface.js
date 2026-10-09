@@ -9,7 +9,7 @@ import { REINOS, REGIOES } from '../dados/reinos.js';
 import * as P from '../sistemas/progressao.js';
 import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atributos.js';
 import { liberado } from '../sistemas/desbloqueios.js';
-import { MUNDO, MAPAS, FASES, chefeDoMapa } from '../sistemas/mundo.js';
+import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
 import { desenharPersonagem, icone, iconeDoMapa } from './sprite.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
@@ -130,7 +130,7 @@ function atualizarFundo(estado) {
 
   if (fundoDesenhado === indiceMapa) return;
   fundoDesenhado = indiceMapa;
-  $('inicio-local').innerHTML = `${MUNDO.nome} · ${iconeDoMapa(indiceMapa)} ${mapa.nome}`;
+  $('inicio-local').innerHTML = `${mundoDoMapa(indiceMapa).nome} · ${iconeDoMapa(indiceMapa)} ${mapa.nome}`;
 
   if (MUNDO.imagemFundo) {
     $('fundo-imagem').style.backgroundImage = `url("${MUNDO.imagemFundo}")`;
@@ -159,7 +159,9 @@ function atualizarCultivo(estado, producao) {
   let textoRequisito = '';
   if (requisito && !requisito.cumprido) {
     const chefe = chefeDoMapa(requisito.mapa - 1);
-    textoRequisito = `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
+    textoRequisito = chefe
+      ? `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
+      : '🔒 O próximo reino será liberado no próximo mundo (em breve).';
   }
   $('cult-requisito').textContent = textoRequisito;
   $('inicio-requisito').textContent = textoRequisito;

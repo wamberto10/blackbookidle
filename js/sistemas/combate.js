@@ -13,7 +13,7 @@
 //  - Derrota ou tempo esgotado: volta uma fase e desliga o avanço automático.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { FASES, faseLiberada } from './mundo.js';
+import { FASES, MUNDOS_JOGAVEIS, faseLiberada } from './mundo.js';
 import { calcularAtributos, dano, golpesPorTurno } from './atributos.js';
 import { ganharCultivo, producaoPorSegundo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
@@ -192,7 +192,8 @@ function vencer(estado, aoEvento) {
   // Chance de cair um Núcleo (Mapa 3 em diante)
   const nucleo = tentarNucleo(estado, fase);
 
-  const ultimaDoMundo = primeira && fase.indice === FASES.length - 1;
+  // Venceu o chefe final de um mundo pela primeira vez → o mundo (com o texto final) | null
+  const ultimaDoMundo = primeira && fase.ultimaDoMundo ? MUNDOS_JOGAVEIS[fase.mundo] : null;
   if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo });
 
   if (estado.combate.autoAvancar && fase.indice + 1 < FASES.length) {
@@ -212,7 +213,7 @@ function perder(estado, aoEvento, motivo) {
 
 // Simula as lutas enquanto o jogador estava fora e resume o resultado
 export function simularCombateOffline(estado, segundos) {
-  const resumo = { vitorias: 0, derrotas: 0, cultivo: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: false };
+  const resumo = { vitorias: 0, derrotas: 0, cultivo: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: null };
   if (!combateLiberado(estado)) return resumo;
 
   atualizarCombate(estado, segundos, (evento) => {
@@ -223,7 +224,7 @@ export function simularCombateOffline(estado, segundos) {
       if (evento.drop) resumo.itens += 1;
       if (evento.nucleo) resumo.nucleos += 1;
       if (evento.primeira) resumo.fasesNovas += 1;
-      if (evento.ultimaDoMundo) resumo.mundoConcluido = true;
+      if (evento.ultimaDoMundo) resumo.mundoConcluido = evento.ultimaDoMundo;
     } else if (evento.tipo === 'derrota') {
       resumo.derrotas += 1;
     }

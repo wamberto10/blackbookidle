@@ -524,6 +524,10 @@ button.perigo { border-color: var(--perigo); }
 .caminho .concluido { opacity: 0.6; }
 .caminho .atual { border-color: var(--destaque); color: var(--destaque); font-weight: bold; }
 .caminho .oculto { color: var(--texto-fraco); opacity: 0.4; }
+/* Botões para trocar de mundo na aba Mapa (aparecem com 2 mundos liberados) */
+.abas-mundo { display: flex; gap: 6px; margin-bottom: 8px; }
+.abas-mundo .aba-mundo { flex: 1; padding: 6px 4px; }
+.abas-mundo .aba-mundo.selecionado { border-color: var(--destaque); color: var(--destaque); font-weight: bold; }
 
 /* ===== Combate ===== */
 /* Arena: o cenário do mapa (pixel art) ao fundo e os lutadores no "palco" */

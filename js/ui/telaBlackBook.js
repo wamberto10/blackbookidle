@@ -4,7 +4,7 @@
 import { CONFIG } from '../config.js';
 import * as BB from '../sistemas/blackbook.js';
 import { liberado } from '../sistemas/desbloqueios.js';
-import { FASES } from '../sistemas/mundo.js';
+import { FASES, textoDoInicioDaVida } from '../sistemas/mundo.js';
 import { formatarNumero } from '../format.js';
 import { icone } from './sprite.js';
 
@@ -59,9 +59,12 @@ export function atualizarTelaBlackBook(estado) {
   const ganho = BB.essenciaAoReencarnar(estado);
   $('bb-fase').textContent = nomeDaFase(estado.combate.fasesConcluidas);
   $('bb-ganho').textContent = `${formatarNumero(ganho)} ✨`;
+  $('bb-inicio').textContent = textoDoInicioDaVida(estado);
   $('bb-reencarnar').disabled = !BB.podeReencarnar(estado);
   $('bb-reencarnar').textContent = !BB.chegouOndeReencarnou(estado)
     ? `📕 Para reencarnar de novo, vença ${nomeDaFase(BB.faseMinimaParaReencarnar(estado))} (onde você reencarnou da última vez)`
+    : !BB.venceuFaseNestaVida(estado)
+      ? '📕 Vença pelo menos 1 fase nova nesta vida para poder reencarnar'
     : ganho > 0
       ? `📕 Reencarnar e receber ${formatarNumero(ganho)} ✨ Essência da Alma`
       : '📕 Vença pelo menos 1 fase para poder reencarnar';

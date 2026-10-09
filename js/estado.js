@@ -28,6 +28,7 @@ export function criarEstadoInicial() {
     combate: {
       faseAtual: 0,         // fase sendo jogada (0 = Mapa 1, Fase 1)
       fasesConcluidas: -1,  // maior fase já vencida (-1 = nenhuma)
+      inicioDaVida: -1,     // fases já vencidas quando a vida começou (Mundo 2: 143 = todo o Mundo 1)
       autoAvancar: true,    // ir para a próxima fase ao vencer
       vitorias: 0,
       derrotas: 0,

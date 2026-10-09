@@ -1,7 +1,7 @@
 // =============================================================
 // sistemas/mundo.js — MAPAS E FASES
-// Transforma os dados de dados/mundo1.js em uma lista de 144 fases,
-// calculando a força de cada inimigo e suas recompensas.
+// Transforma os dados dos mundos (dados/mundo1.js, mundo2.js...) em uma lista única de fases
+// (Mundo 1 = fases 0–143, Mundo 2 = 144–287), calculando a força de cada inimigo e suas recompensas.
 // =============================================================
 import { CONFIG } from '../config.js';
 import { MUNDOS } from '../dados/mundos.js';
@@ -9,12 +9,19 @@ import { REINOS } from '../dados/reinos.js';
 import { TIPOS_DE_FASE, ESTRUTURA_DO_MAPA } from '../dados/fases.js';
 import { inicioDoReino, producaoNoNivel } from './progressao.js';
 import { atributosBase } from './atributos.js';
+import { definirInicioDaVida } from './blackbook.js';
 
 const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
 
-export const MUNDO = MUNDOS[0];
-export const MAPAS = MUNDO.mapas;
-export const FASES = []; // lista com todas as fases do mundo, em ordem
+// Mundos jogáveis (com mapas). Os mapas de todos eles ficam numa lista só:
+// Mundo 1 = Mapas 1–12 (índices 0–11), Mundo 2 = Mapas 13–24 (índices 12–23)...
+export const MUNDOS_JOGAVEIS = MUNDOS.filter(m => m.mapas.length > 0);
+export const MUNDO = MUNDOS[0];   // Mundo Inicial (mensagem de boas-vindas)
+export const MAPAS = [];
+MUNDOS_JOGAVEIS.forEach((mundo, indiceMundo) => {
+  for (const mapa of mundo.mapas) { mapa.mundo = indiceMundo; MAPAS.push(mapa); }
+});
+export const FASES = []; // lista com todas as fases de todos os mundos, em ordem
 
 MAPAS.forEach((mapa, indiceMapa) => {
   // Mapas do mesmo reino dividem os estágios entre si.
@@ -42,7 +49,10 @@ MAPAS.forEach((mapa, indiceMapa) => {
     FASES.push({
       indice,
       mapa: indiceMapa,
+      mundo: mapa.mundo,
       numero: indiceNoMapa + 1,
+      // última fase de um mundo (o chefe que abre o próximo mundo)
+      ultimaDoMundo: indiceNoMapa === FASES_POR_MAPA - 1 && MAPAS[indiceMapa + 1]?.mundo !== mapa.mundo,
       local: dados.local,
       chaveTipo,
       tipo,
@@ -82,6 +92,62 @@ export function chefeDoMapa(indiceMapa) {
   return FASES[indiceMapa * FASES_POR_MAPA + FASES_POR_MAPA - 1];
 }
 
-export function mundoConcluido(estado) {
-  return estado.combate.fasesConcluidas >= FASES.length - 1;
+// ---- Mundos ----
+// Índice da primeira e da última fase de um mundo (0 = Mundo 1)
+export function primeiraFaseDoMundo(indiceMundo) {
+  return FASES.findIndex(fase => fase.mundo === indiceMundo);
 }
+export function ultimaFaseDoMundo(indiceMundo) {
+  return FASES.findLastIndex(fase => fase.mundo === indiceMundo);
+}
+export function mundoDoMapa(indiceMapa) {
+  return MUNDOS_JOGAVEIS[MAPAS[indiceMapa].mundo];
+}
+export function mapasDoMundo(indiceMundo) {
+  return MAPAS.map((mapa, indice) => indice).filter(indice => MAPAS[indice].mundo === indiceMundo);
+}
+
+// O jogador já venceu o chefe final do mundo NESTA vida? (0 = Mundo 1)
+export function mundoConcluido(estado, indiceMundo = 0) {
+  return estado.combate.fasesConcluidas >= ultimaFaseDoMundo(indiceMundo);
+}
+
+// Já venceu o chefe final do mundo em QUALQUER vida? (decide onde começa a vida nova)
+export function mundoJaZerado(estado, indiceMundo = 0) {
+  const melhor = Math.max(estado.combate.fasesConcluidas, estado.reencarnacao.melhorFaseDeTodas);
+  return melhor >= ultimaFaseDoMundo(indiceMundo);
+}
+
+// ---- Onde começa cada vida nova (reencarnação) ----
+// Mundo onde a próxima vida começa: o mais avançado já zerado + 1
+// (decisão do dono: quem já zerou o Mundo 1 volta para a 1ª fase do Mundo 2).
+export function mundoDeInicio(estado) {
+  let mundo = 0;
+  while (mundo + 1 < MUNDOS_JOGAVEIS.length && mundoJaZerado(estado, mundo)) mundo += 1;
+  return mundo;
+}
+
+// Texto de onde a próxima vida começa. Ex.: "Santo — 1º Estágio, no Mapa 13 (Fronteira de Tong Xuan)"
+export function textoDoInicioDaVida(estado) {
+  const indiceMapa = FASES[primeiraFaseDoMundo(mundoDeInicio(estado))].mapa;
+  const mapa = MAPAS[indiceMapa];
+  const reino = REINOS[indiceMapa === 0 ? 0 : mapa.reino];
+  const estagio = indiceMapa === 0 ? 0 : (mapa.inicioNoReino ?? 0);
+  return `${reino.nome} — ${reino.estagios[estagio]}, no Mapa ${indiceMapa + 1} (${mapa.nome})`;
+}
+
+// Coloca a vida nova no começo do mundo certo: reino e estágio do 1º mapa dele
+// (Mundo 2 = Santo, 1º estágio) e as fases dos mundos anteriores já vencidas.
+// (O Mundo 1 continua começando do Corpo Temperado, 1º estágio, como sempre.)
+function comecarVidaNova(novo, anterior) {
+  const indiceMundo = mundoDeInicio(anterior);
+  if (indiceMundo === 0) return;
+  const primeira = primeiraFaseDoMundo(indiceMundo);
+  const mapa = MAPAS[FASES[primeira].mapa];
+  novo.reino = mapa.reino;
+  novo.estagio = mapa.inicioNoReino ?? 0;
+  novo.combate.fasesConcluidas = primeira - 1;
+  novo.combate.faseAtual = primeira;
+  novo.combate.inicioDaVida = primeira - 1;
+}
+definirInicioDaVida(comecarVidaNova);
