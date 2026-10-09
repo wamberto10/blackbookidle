@@ -114,7 +114,8 @@ function aoEventoBoss(evento) {
     mostrarGolpeBoss(evento);
   } else if (evento.tipo === 'fim') {
     const motivo = evento.motivo === 'tempo' ? 'o tempo acabou' : evento.motivo === 'derrotado' ? 'você caiu' : 'luta interrompida';
-    mostrarMensagem(`🌙 Luta contra o boss encerrada (${motivo}): você causou ${(evento.dano * 100).toFixed(2)}% de dano.`);
+    // Com "Atacar sozinho" as lutas se repetem a cada ~2 min: sem aviso a cada uma
+    if (!estado.opcoes.bossAuto) mostrarMensagem(`🌙 Luta contra o boss encerrada (${motivo}): você causou ${(evento.dano * 100).toFixed(2)}% de dano.`);
     salvar(estado);
   } else if (evento.tipo === 'boss-derrotado') {
     const r = evento.recompensa;
@@ -318,7 +319,12 @@ montarInterface({
   aoLutarBoss: () => {
     if (BOSS.comecarLuta(estado)) atualizarInterface(estado);
   },
-  aoSairDaLutaBoss: () => BOSS.abandonarLuta(estado, aoEventoBoss),
+  // Sair da tela do boss interrompe a luta — a não ser com "Atacar sozinho" ligado (aí ela continua por trás)
+  aoSairDaLutaBoss: () => { if (!estado.opcoes.bossAuto) BOSS.abandonarLuta(estado, aoEventoBoss); },
+  aoMudarBossAuto: (ligado) => {
+    estado.opcoes.bossAuto = ligado;
+    salvar(estado);
+  },
   aoEscolherFase: (indice) => {
     if (C.irParaFase(estado, indice)) {
       focarMapaDaFase(indice);
@@ -395,6 +401,8 @@ setInterval(() => {
   P.atualizar(estado, segundos, aoAvancarNivel);
   // Evento de Boss: enquanto você luta contra o boss, o combate das fases fica em pausa
   BOSS.atualizarBoss(estado);
+  // "Atacar sozinho" (tela do boss): começa a luta assim que puder — com o jogo aberto na tela
+  if (estado.opcoes.bossAuto && BOSS.podeLutar(estado)) BOSS.comecarLuta(estado);
   if (BOSS.lutaDoBoss()) BOSS.atualizarLutaDoBoss(estado, segundos, aoEventoBoss);
   else C.atualizarCombate(estado, segundos, aoEventoCombate);
   atualizarInterface(estado);

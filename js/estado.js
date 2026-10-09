@@ -60,6 +60,7 @@ export function criarEstadoInicial() {
       autoAvancar: false,   // avançar estágios de cultivo automaticamente
       autoEquipar: true,    // vestir sozinho itens que aumentam o Poder Total
       meditarAuto: true,    // VIP: Meditar automático ligado (o botão Meditar liga/desliga)
+      bossAuto: false,      // Evento de Boss: começa as lutas sozinho (quando o boss volta e após cada descanso)
     },
     estatisticas: {
       meditacoes: 0,

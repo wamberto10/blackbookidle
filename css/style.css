@@ -275,6 +275,8 @@ h3 { margin: 18px 0 8px; color: var(--destaque); font-size: 1rem; }
 .boss-cena.boss-ausente #boss-sprite { filter: grayscale(0.6) brightness(0.8); }   /* ajoelhado (pose de derrota) */
 
 .boss-rodape { position: relative; z-index: 3; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.boss-auto { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(10, 8, 20, 0.8); color: var(--texto); font-size: 0.85rem; }
+.boss-auto input { width: 18px; height: 18px; flex: none; }
 .boss-info { background: rgba(10, 8, 20, 0.8); border-radius: 10px; padding: 8px 12px; color: var(--texto); }
 .boss-info summary { cursor: pointer; font-weight: bold; color: #ffd84a; }
 .boss-info p { margin: 6px 0 0; }

@@ -25,6 +25,7 @@ export function montarTelaBoss(acoes) {
   $('botao-boss').addEventListener('click', abrirTelaBoss);
   $('tela-boss-fechar').addEventListener('click', fecharTelaBoss);
   $('boss-lutar').addEventListener('click', () => acoesGuardadas.aoLutarBoss());
+  $('boss-auto').addEventListener('change', (e) => acoesGuardadas.aoMudarBossAuto(e.target.checked));
   $('boss-nome').textContent = B.nome;
   $('boss-recompensa').innerHTML =
     `🎁 Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
@@ -88,7 +89,8 @@ export function atualizarTelaBoss(estado) {
     $('boss-tempo').textContent = presente ? '' : `O boss volta em ${formatarTempo(BOSS.segundosParaVoltar(estado, agora))}`;
   }
 
-  // ---- Botão Lutar ----
+  // ---- Botão Lutar e "Atacar sozinho" ----
+  if ($('boss-auto').checked !== !!estado.opcoes.bossAuto) $('boss-auto').checked = !!estado.opcoes.bossAuto;
   const lutar = $('boss-lutar');
   const descanso = BOSS.segundosDeDescanso(estado, agora);
   lutar.disabled = !BOSS.podeLutar(estado, agora);
