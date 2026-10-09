@@ -318,6 +318,7 @@ montarInterface({
   aoLutarBoss: () => {
     if (BOSS.comecarLuta(estado)) atualizarInterface(estado);
   },
+  aoSairDaLutaBoss: () => BOSS.abandonarLuta(estado, aoEventoBoss),
   aoEscolherFase: (indice) => {
     if (C.irParaFase(estado, indice)) {
       focarMapaDaFase(indice);

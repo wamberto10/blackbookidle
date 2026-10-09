@@ -1,7 +1,9 @@
 // =============================================================
 // ui/telaBoss.js — BOTÃO "BOSS" E TELA DO EVENTO DE BOSS
-// O botão fica no canto superior direito da tela inicial e abre a janela
-// da luta contra o Mestre do Salão Ying Yue (regras em sistemas/boss.js).
+// O botão fica no canto superior direito da tela inicial e abre a tela
+// inteira do Mestre do Salão Ying Yue (regras em sistemas/boss.js):
+//  - antes da luta: o boss grande no ambiente dele, a vida atual e o botão Lutar
+//  - lutando (classe .lutando): a arena com o herói e o boss
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as BOSS from '../sistemas/boss.js';
@@ -22,11 +24,10 @@ export function montarTelaBoss(acoes) {
   acoesGuardadas = acoes;
   $('botao-boss').addEventListener('click', abrirTelaBoss);
   $('tela-boss-fechar').addEventListener('click', fecharTelaBoss);
-  $('tela-boss').addEventListener('click', (e) => { if (e.target.id === 'tela-boss') fecharTelaBoss(); });
   $('boss-lutar').addEventListener('click', () => acoesGuardadas.aoLutarBoss());
   $('boss-nome').textContent = B.nome;
   $('boss-recompensa').innerHTML =
-    `🎁 Recompensa ao derrotá-lo (igual para todos que causaram dano): <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
+    `🎁 Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
     `e <b style="color:#ff6ad5">1 item Ancestral</b> (espaço aleatório, melhor que um Lendário do seu mapa). ` +
     `Ele volta ${B.renasceMinutos} minutos depois de derrotado.`;
   desenharSpriteDeInimigo($('boss-sprite'), B.aparencia);
@@ -41,7 +42,9 @@ export function abrirTelaBoss() {
   $('tela-boss').classList.remove('escondido');
 }
 
+// Sair no meio da luta interrompe a luta (o dano já causado fica)
 function fecharTelaBoss() {
+  if (BOSS.lutaDoBoss()) acoesGuardadas.aoSairDaLutaBoss?.();
   aberta = false;
   $('tela-boss').classList.add('escondido');
 }
@@ -61,7 +64,8 @@ export function atualizarTelaBoss(estado) {
   $('botao-boss-texto').textContent = presente ? 'BOSS' : formatarRelogio(BOSS.segundosParaVoltar(estado, agora));
   if (!aberta) return;
 
-  // ---- Tela ----
+  // ---- Tela: antes da luta (o boss sozinho) ou lutando (a arena) ----
+  $('tela-boss').classList.toggle('lutando', !!luta);
   const boss = BOSS.atributosDoBoss(estado);
   const b = estado.boss;
   $('boss-edicao').textContent = `Aparição nº ${b.edicao} · força do chefe do Mapa ${boss.mapa + 1} (${MAPAS[boss.mapa].nome})`;
@@ -79,26 +83,25 @@ export function atualizarTelaBoss(estado) {
 
   if (luta) {
     $('boss-minha-vida').style.width = `${Math.max(0, luta.vidaJogador / luta.jogador.vitalidade) * 100}%`;
-    $('boss-tempo').textContent = `⏳ ${Math.max(0, Math.ceil(B.duracaoLuta - luta.tempo))}s · dano nesta luta: ${porcento(luta.danoNestaLuta)}`;
+    $('boss-tempo').textContent = `⏳ ${Math.max(0, Math.ceil(B.duracaoLuta - luta.tempo))}s · seu dano: ${porcento(luta.danoNestaLuta)}`;
   } else {
-    $('boss-minha-vida').style.width = '100%';
-    $('boss-tempo').textContent = '';
+    $('boss-tempo').textContent = presente ? '' : `O boss volta em ${formatarTempo(BOSS.segundosParaVoltar(estado, agora))}`;
   }
 
   // ---- Botão Lutar ----
   const lutar = $('boss-lutar');
   const descanso = BOSS.segundosDeDescanso(estado, agora);
   lutar.disabled = !BOSS.podeLutar(estado, agora);
-  lutar.textContent = !presente ? `⏳ O boss volta em ${formatarTempo(BOSS.segundosParaVoltar(estado, agora))}`
-    : luta ? '⚔️ Lutando...'
+  lutar.textContent = !presente ? '⏳ Aguardando o boss voltar'
     : descanso > 0 ? `😮‍💨 Descansando... ${Math.ceil(descanso)}s`
     : `⚔️ Lutar (${B.duracaoLuta} s)`;
 
   // ---- Rank de dano ----
   const rank = BOSS.rankDeDano(estado);
-  $('boss-rank').innerHTML = rank.length
+  const htmlRank = rank.length
     ? rank.map((r, i) => `<li><span>${i + 1}. ${r.nome}</span><b>${porcento(r.dano)}</b></li>`).join('')
     : '<li class="pequeno">Ninguém causou dano ainda nesta aparição.</li>';
+  if ($('boss-rank').innerHTML !== htmlRank) $('boss-rank').innerHTML = htmlRank;
 }
 
 function formatarRelogio(segundos) {
