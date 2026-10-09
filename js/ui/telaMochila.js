@@ -362,7 +362,7 @@ function desenharChances(estado) {
   const indiceMapa = FASES[estado.combate.faseAtual].mapa;
   const pesos = EQ.pesosDosTiers(indiceMapa, 'comum', estado.vip);
   const total = pesos.reduce((a, b) => a + b, 0);
-  const tiers = RARIDADES.map((r, i) =>
+  const tiers = RARIDADES.map((r, i) => r.exclusivo ? '' :
     `<span class="chance" style="color:${r.cor}">${r.tier} ${r.nome}: <b>${(pesos[i] / total * 100).toFixed(1)}%</b></span>`).join('');
   const espacos = EQ.espacosLiberados(indiceMapa).map(s => iconeEquipamento(s.id, 'comum', 'icone-chance')).join('');
   const proximo = SLOTS.filter(s => s.mapaMinimo > indiceMapa + 1).sort((a, b) => a.mapaMinimo - b.mapaMinimo)[0];

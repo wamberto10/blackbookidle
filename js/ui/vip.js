@@ -16,7 +16,7 @@ export function montarVip(acoes) {
   $('tela-vip').addEventListener('click', (e) => { if (e.target.id === 'tela-vip') $('tela-vip').classList.add('escondido'); });
   $('tela-vip-ativar').addEventListener('click', acoes.aoAlternarVip);
 
-  const tiers = RARIDADES.map((r, i) =>
+  const tiers = RARIDADES.filter(r => !r.exclusivo).map((r, i) =>
     `<span style="color:${r.cor}">${r.nome} +${V.pesosExtras[i]}%</span>`).join(' · ');
   $('tela-vip-lista').innerHTML = `
     <li>🧘 <b>Meditar automático</b>: ${V.cliquesPorSegundo} cliques por segundo com o jogo aberto — o botão Meditar passa a ligar/desligar</li>

@@ -4,6 +4,7 @@
 // atualizarInterface → roda 10×/segundo: só atualiza textos
 // As abas Combate e Mapa ficam em telaCombate.js e telaMapa.js
 // =============================================================
+import { montarTelaBoss, atualizarTelaBoss } from './telaBoss.js';
 import { CONFIG } from '../config.js';
 import { REINOS, REGIOES } from '../dados/reinos.js';
 import * as P from '../sistemas/progressao.js';
@@ -66,6 +67,7 @@ export function montarInterface(acoes) {
   }
   montarNucleos(acoes, linhas);   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
   montarVip(acoes);               // botão 💎 e tela do VIP
+  montarTelaBoss(acoes);          // botão BOSS e tela do Evento de Boss
 
   montarTelaCombate(acoes);
   montarTelaMapa(acoes);
@@ -121,6 +123,7 @@ export function atualizarInterface(estado) {
   atualizarTelaCombate(estado);
   atualizarTelaMapa(estado);
   atualizarTelaBlackBook(estado);
+  atualizarTelaBoss(estado);
 }
 
 // ---- Fundo: paisagem do mapa atual (ou imagem própria do mundo) ----

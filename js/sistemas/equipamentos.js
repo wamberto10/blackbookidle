@@ -31,7 +31,7 @@ function sortearPorPeso(lista, pesos) {
 // VIP: soma CONFIG.vip.pesosExtras nos pesos (50/25/10/5/1 → 60/35/15/8/2)
 export function pesosDosTiers(indiceMapa, chaveTipo, vip = false) {
   const bonusChefe = EQ.bonusRaridadeChefe[chaveTipo] ?? 1;
-  return RARIDADES.map((r, i) => (r.peso + (vip ? CONFIG.vip.pesosExtras[i] : 0)) *
+  return RARIDADES.map((r, i) => (r.peso + (vip && !r.exclusivo ? CONFIG.vip.pesosExtras[i] ?? 0 : 0)) *
     (1 + r.bonusMapa * indiceMapa) * (i >= 2 ? bonusChefe : 1));
 }
 

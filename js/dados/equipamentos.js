@@ -43,6 +43,9 @@ export const RARIDADES = [
   { id: 'raro',     tier: 'B',   nome: 'Raro',     material: 'de Safira',            cor: '#4a7aff', peso: 10, bonusMapa: 0,    forca: 1.7,  extras: 0, nivelMaximo: 12, valor: 2.5 },
   { id: 'epico',    tier: 'A',   nome: 'Épico',    material: 'do Abismo Violeta',    cor: '#b050ff', peso: 5,   bonusMapa: 0,    forca: 2.2,  extras: 0, nivelMaximo: 16, valor: 4 },
   { id: 'lendario', tier: 'S',   nome: 'Lendário', material: 'do Imperador Celeste', cor: '#ffd84a', peso: 1,   bonusMapa: 0,    forca: 3.0,  extras: 0, nivelMaximo: 20, valor: 6 },
+  // v0.11.0 (dono): EXCLUSIVO do Evento de Boss (peso 0 = nunca cai nas fases). Cor rosa.
+  // Força 4,0: o ★1 já ganha do Lendário ★5 (3,0 × 1,16 = 3,48) do mesmo mapa.
+  { id: 'ancestral', tier: 'SS', nome: 'Ancestral', material: 'Ancestral',           cor: '#ff6ad5', peso: 0,   bonusMapa: 0,    forca: 4.0,  extras: 0, nivelMaximo: 25, valor: 10, exclusivo: true },
 ];
 
 // ---- Atributos extras sorteados (mesma regra de "fração" ou "pontos" acima) ----

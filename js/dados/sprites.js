@@ -269,7 +269,8 @@ export const SPRITES = {
     "cultivador_possuido",
     "dragao_ossos",
     "aranha_osso",
-    "eco_deus_demonio"
+    "eco_deus_demonio",
+    "mestre_ying_yue"
   ],
   "icones": [
     "cultivo",
@@ -329,21 +330,25 @@ export const SPRITES = {
       "incomum",
       "raro",
       "epico",
-      "lendario"
+      "lendario",
+      "ancestral"
     ]
   },
   "efeitos": [
+    "aura_lunar",
     "chama",
     "chama_critica",
     "corte",
     "corte_critico",
     "corte_inimigo",
+    "corte_lunar",
     "cura",
     "garras",
     "gelo",
     "gelo_critico",
     "impacto",
     "impacto_critico",
+    "lua_crescente",
     "magia_azul",
     "magia_roxa",
     "mordida",
@@ -351,15 +356,18 @@ export const SPRITES = {
     "trovao_critico"
   ],
   "efeitosIA": [
+    "aura_lunar",
     "corte",
     "corte_critico",
     "corte_inimigo",
+    "corte_lunar",
     "cura",
     "garras",
     "gelo",
     "gelo_critico",
     "impacto",
     "impacto_critico",
+    "lua_crescente",
     "magia_azul",
     "magia_roxa",
     "mordida"

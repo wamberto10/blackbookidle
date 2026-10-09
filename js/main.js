@@ -9,6 +9,8 @@ import * as C from './sistemas/combate.js';
 import * as BB from './sistemas/blackbook.js';
 import * as EQ from './sistemas/equipamentos.js';
 import * as NU from './sistemas/nucleos.js';
+import * as BOSS from './sistemas/boss.js';
+import { mostrarGolpeBoss, animarDerrotaDoBoss } from './ui/telaBoss.js';
 import { acabouDeLiberar } from './sistemas/desbloqueios.js';
 import { criarPersonagem, precisaCriarPersonagem } from './sistemas/personagem.js';
 import { CLASSE_POR_ID } from './dados/classes.js';
@@ -39,6 +41,7 @@ const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedr
 // 10 s, então 10 minutos em outra aba apareciam como "53 segundos".)
 function passoEscondido(segundos) {
   const r = resumoFora ??= novoResumo();
+  BOSS.abandonarLuta(estado, aoEventoBoss);   // a luta contra o boss só acontece com o jogo na tela
   const antes = estado.cultivoTotal;
   P.atualizar(estado, segundos, (evento) => { r.estagios += 1; aoAvancarNivel(evento); });
   C.atualizarCombate(estado, segundos, (evento) => {
@@ -102,6 +105,29 @@ function aoAvancarNivel(evento) {
     mostrarMensagem(`✨ ${evento.nome}. ${evento.marco}`);
   } else {
     mostrarMensagem(`⬆️ ${evento.nome}`);
+  }
+}
+
+// ---- Evento de Boss (Mestre do Salão Ying Yue) ----
+function aoEventoBoss(evento) {
+  if (evento.tipo === 'golpe' || evento.tipo === 'cura' || evento.tipo === 'carregando') {
+    mostrarGolpeBoss(evento);
+  } else if (evento.tipo === 'fim') {
+    const motivo = evento.motivo === 'tempo' ? 'o tempo acabou' : evento.motivo === 'derrotado' ? 'você caiu' : 'luta interrompida';
+    mostrarMensagem(`🌙 Luta contra o boss encerrada (${motivo}): você causou ${(evento.dano * 100).toFixed(2)}% de dano.`);
+    salvar(estado);
+  } else if (evento.tipo === 'boss-derrotado') {
+    const r = evento.recompensa;
+    const nucleos = NU.TIPOS_DE_NUCLEO.filter(t => r.nucleos[t.id] > 0).map(t => `${r.nucleos[t.id]}× ${t.nome}`).join(', ');
+    const item = r.item.item;
+    const onde = r.item.destino === 'equipado' ? 'vestido automaticamente' : 'guardado na mochila';
+    const rank = evento.rank.map((l, i) => `${i + 1}. ${l.nome} — ${(l.dano * 100).toFixed(2)}%`).join('\n');
+    const texto = `Rank de dano:\n${rank}\n\nRecompensa:\n💠 ${nucleos}\n🌸 ${nomeDoItem(item)} (Ancestral) — ${onde}\n\n` +
+      `Use os Núcleos na aba Personagem. O boss volta em ${CONFIG.boss.renasceMinutos} minutos.`;
+    animarDerrotaDoBoss();
+    // A janela da recompensa espera a queda do boss na tela (1,8 s)
+    setTimeout(() => mostrarModal(`🏆 ${CONFIG.boss.nome} foi derrotado!`, texto), document.hidden ? 0 : 1800);
+    salvar(estado);
   }
 }
 
@@ -289,6 +315,9 @@ montarInterface({
       `O Black Book recebeu ${formatarNumero(resultado.ganho)} de Essência da Alma ✨.\n\n` +
       'Use-a nas melhorias permanentes do Black Book e vá mais longe nesta nova vida.');
   },
+  aoLutarBoss: () => {
+    if (BOSS.comecarLuta(estado)) atualizarInterface(estado);
+  },
   aoEscolherFase: (indice) => {
     if (C.irParaFase(estado, indice)) {
       focarMapaDaFase(indice);
@@ -363,7 +392,10 @@ setInterval(() => {
   }
 
   P.atualizar(estado, segundos, aoAvancarNivel);
-  C.atualizarCombate(estado, segundos, aoEventoCombate);
+  // Evento de Boss: enquanto você luta contra o boss, o combate das fases fica em pausa
+  BOSS.atualizarBoss(estado);
+  if (BOSS.lutaDoBoss()) BOSS.atualizarLutaDoBoss(estado, segundos, aoEventoBoss);
+  else C.atualizarCombate(estado, segundos, aoEventoCombate);
   atualizarInterface(estado);
 }, 100);
 

@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.10.0',
+  versao: '0.11.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -118,6 +118,31 @@ export const CONFIG = {
     pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
     bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
     atributos: { ataque: 0.25, defesa: 0.25, vitalidade: 0.25 },   // +25% no total (v0.9.15, dono: era +50%)
+  },
+
+  // ---- Evento de Boss (v0.11.0, ideia do dono) ----
+  // Mestre do Salão Ying Yue: boss de vida enorme que vai sendo desgastado em várias lutas.
+  // Por enquanto LOCAL (cada jogador tem o seu); feito para virar global (com servidor) depois.
+  // O boss tem a força do ÚLTIMO CHEFE DE MAPA que o jogador já venceu, e o dano conta como
+  // % da vida total — assim jogadores em pontos diferentes do jogo disputam o rank por igual.
+  boss: {
+    nome: 'Mestre do Salão Ying Yue',
+    aparencia: 'mestre_ying_yue',      // sprite em img/inimigos/
+    vidaEmChefes: 40,                  // vida total = 40× a vida desse chefe (~18 lutas ≈ 35 min jogando)
+    ataque: 1.0,                       // × o ataque do chefe do seu mapa
+    defesa: 1.0,                       // × a defesa do chefe do seu mapa
+    velocidade: 1.05,                  // × a velocidade do chefe do seu mapa
+    duracaoLuta: 60,                   // segundos de cada luta (ou até você cair)
+    descanso: 60,                      // segundos de descanso entre uma luta e outra
+    renasceMinutos: 10,                // volta 10 min depois de ser derrotado
+    // Recompensa (igual para todos que causaram dano): 10 Núcleos de rank aleatório
+    // (chances proporcionais às do drop: ~59% Baixo, ~37% Médio, ~4% Alto) + 1 item Ancestral
+    // de espaço aleatório, do seu mapa atual (melhor que um Lendário ★5 do mesmo mapa)
+    nucleos: 10,
+    // Técnica especial (v0.11.0): a cada 5 turnos do boss, 1 turno concentrando a luz da lua
+    // (não ataca) e no seguinte a Lâmina da Lua Crescente (×2,5 o dano normal). Em média o boss
+    // bate só 10% mais que um golpe normal por turno, mas a luta fica com "momentos" de perigo.
+    especial: { nome: 'Lâmina da Lua Crescente', aCada: 5, multiplicador: 2.5 },
   },
 
   // ---- Núcleos (v0.9.0, ideia do dono) ----

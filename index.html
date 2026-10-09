@@ -38,6 +38,11 @@
   <main class="inicio">
     <!-- Botão do VIP (canto superior esquerdo) — abre a tela do VIP (ui/vip.js) -->
     <button class="botao-vip" id="botao-vip" title="VIP"><img class="icone-px" src="img/icones/vip.png" alt=""><span>VIP</span></button>
+    <!-- Botão do Evento de Boss (canto superior direito) — abre a tela do boss (ui/telaBoss.js) -->
+    <button class="botao-boss escondido" id="botao-boss" title="Evento de Boss: Mestre do Salão Ying Yue">
+      <img class="icone-px" src="img/icones/boss.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'), {className: 'boss-emoji', textContent: '🌙'}))">
+      <span id="botao-boss-texto">BOSS</span>
+    </button>
     <div class="inicio-local" id="inicio-local"></div>
 
     <div class="moldura-sprite" id="moldura-sprite">
@@ -396,6 +401,42 @@
   <!-- Mensagem flutuante, clarão de rompimento e janela de eventos importantes -->
   <div id="mensagem" class="mensagem"></div>
   <div id="flash" class="flash"></div>
+  <!-- Tela do Evento de Boss (ui/telaBoss.js) -->
+  <div id="tela-boss" class="tela-vip tela-boss escondido">
+    <div class="tela-vip-caixa tela-boss-caixa">
+      <h2>🌙 <span id="boss-nome"></span></h2>
+      <p class="pequeno" id="boss-edicao"></p>
+      <div class="barra barra-vida boss-barra"><div class="barra-preenchida vida inimigo" id="boss-vida"></div><span id="boss-vida-texto"></span></div>
+      <div class="boss-arena" id="boss-arena">
+        <div class="boss-lado">
+          <div class="boss-numeros" id="boss-numeros-jogador"></div>
+          <div class="boss-corpo" id="boss-corpo-jogador">
+            <canvas id="boss-jogador" width="32" height="32"></canvas>
+            <div class="efeito" id="boss-efeito-jogador"></div>
+          </div>
+          <div class="barra barra-vida"><div class="barra-preenchida vida" id="boss-minha-vida"></div></div>
+        </div>
+        <div class="boss-lado">
+          <div class="boss-numeros" id="boss-numeros-boss"></div>
+          <div class="boss-corpo" id="boss-corpo-boss">
+            <div class="boss-aura" id="boss-aura"></div>
+            <canvas id="boss-sprite" class="sprite-chefe" width="32" height="32"></canvas>
+            <div class="efeito" id="boss-efeito-boss"></div>
+          </div>
+        </div>
+        <div class="boss-aviso" id="boss-aviso"></div>
+        <div class="boss-clarao" id="boss-clarao"></div>
+      </div>
+      <p class="pequeno" id="boss-tempo"></p>
+      <button id="boss-lutar" class="principal largo"></button>
+      <h3>🏆 Rank de dano</h3>
+      <ol class="boss-rank" id="boss-rank"></ol>
+      <p class="pequeno dica">O evento ainda é local: cada jogador enfrenta o seu boss. O rank entre jogadores chega quando o evento ficar online.</p>
+      <p class="pequeno" id="boss-recompensa"></p>
+      <button id="tela-boss-fechar" class="largo">Fechar</button>
+    </div>
+  </div>
+
   <!-- Tela do VIP (ui/vip.js) -->
   <div id="tela-vip" class="tela-vip escondido">
     <div class="tela-vip-caixa">

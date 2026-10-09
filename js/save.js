@@ -37,6 +37,7 @@ export function carregar() {
       nucleos: { ...padrao.nucleos, ...dados.nucleos },
       pontosNucleo: { ...padrao.pontosNucleo, ...dados.pontosNucleo },
       reencarnacao: { ...padrao.reencarnacao, ...dados.reencarnacao },
+      boss: { ...padrao.boss, ...dados.boss, rank: Array.isArray(dados.boss?.rank) ? dados.boss.rank : [] },
       opcoes: { ...padrao.opcoes, ...dados.opcoes },
       estatisticas: { ...padrao.estatisticas, ...dados.estatisticas },
     };

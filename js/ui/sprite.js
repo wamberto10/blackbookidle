@@ -94,6 +94,11 @@ export function desenharInimigo(canvas, fase) {
   canvas.classList.toggle('sprite-chefe', forte);
 }
 
+// Inimigo pelo nome do sprite (ex.: 'mestre_ying_yue'), usado pelo Evento de Boss
+export function desenharSpriteDeInimigo(canvas, aparencia) {
+  mostrar(canvas, `img/inimigos/${aparencia}.png`);
+}
+
 // Ícone 16×16 como HTML. Ex.: icone('pedra') → <img src="img/icones/pedra.png">
 export function icone(nome, classe = '') {
   return `<img class="icone-px ${classe}" src="img/icones/${nome}.png" alt="">`;

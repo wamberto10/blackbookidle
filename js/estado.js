@@ -41,6 +41,15 @@ export function criarEstadoInicial() {
     vip: false,          // VIP ligado? (tela do VIP, botão 💎 da tela inicial)
     nucleos: { baixo: 0, medio: 0, alto: 0 },                          // núcleos guardados
     pontosNucleo: { ataque: 0, vitalidade: 0, defesa: 0, velocidade: 0 }, // pontos já usados (+1% cada)
+    // Evento de Boss (sistemas/boss.js). Fica ao reencarnar: é um evento do jogo, não da vida.
+    boss: {
+      edicao: 1,        // quantas vezes o boss já apareceu
+      vida: 1,          // fração da vida que resta (1 = 100%)
+      voltaEm: 0,       // hora (ms) em que o boss reaparece depois de derrotado (0 = já está aqui)
+      descansoAte: 0,   // hora (ms) em que você pode lutar de novo
+      rank: [],         // [{ nome, dano }] dano em fração da vida total, nesta edição
+      derrotas: 0,      // quantas vezes o boss já foi derrotado
+    },
     reencarnacao: {
       vezes: 0,
       melhorFaseDeTodas: -1,   // fase mais distante já vencida em qualquer vida
