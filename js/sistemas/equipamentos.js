@@ -244,7 +244,7 @@ export function mesclar(estado, slotId, raridadeId, grau) {
   const ids = new Set(escolhidos.map(i => i.id));
   estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
 
-  // Metade das Pedras gastas melhorando os itens volta
+  // Parte das Pedras gastas melhorando os itens volta (EQ.devolucaoAoDesmanchar: 75%)
   const pedras = Math.floor(escolhidos.reduce((soma, i) => soma + i.investido, 0) * EQ.devolucaoAoDesmanchar);
   estado.pedras += pedras;
 

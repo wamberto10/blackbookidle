@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.15.3',
+  versao: '0.15.4',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -101,8 +101,8 @@ export const CONFIG = {
     bonusPorNivel: 0.05,               // cada nível de melhoria dá +5% em todos os atributos
     custoMelhoriaBase: 4,              // Pedras = base × valor do tier × 1,05^fase × 1,25^nível
     crescimentoCustoMelhoria: 1.25,
-    pedrasAoDesmancharBase: 3,         // Pedras = base × valor do tier × 1,05^fase (+50% do investido)
-    devolucaoAoDesmanchar: 0.5,
+    pedrasAoDesmancharBase: 3,         // Pedras = base × valor do tier × 1,05^fase (+75% do investido)
+    devolucaoAoDesmanchar: 0.75,       // v0.15.4 (dono): era 0.5 — vale também na mescla
     capacidadeMochila: Infinity,       // v0.9.1 (dono): sem limite (era 100; cheia, o item virava Pedras)
     // Graus: cada tier tem 5 graus (★1 a ★5), cada um um pouco mais forte.
     // Mesclar: 3 itens iguais (mesmo tipo, tier e grau) → 1 do grau seguinte;
