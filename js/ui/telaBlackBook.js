@@ -45,7 +45,7 @@ function nomeDaFase(indice) {
 
 // Ex.: "+30%" para multiplicar 0.3 | "+4%" para somar 4
 function textoDoEfeito(melhoria, efeito) {
-  if (melhoria.tipo === 'multiplicar') return `+${Math.round(efeito * 100)}%`;
+  if (melhoria.tipo === 'multiplicar') return `+${formatarNumero(Math.round(efeito * 100))}%`;
   return `+${Number(efeito.toFixed(1))}%`;
 }
 

@@ -421,3 +421,15 @@ window.addEventListener('beforeunload', () => salvar(estado));
 iniciarSite(() => salvar(estado));
 
 atualizarInterface(estado);
+
+// v0.14.0: aviso único da reformulação do Black Book (save convertido em save.js)
+if (estado.essenciaDevolvidaBB !== undefined) {
+  const devolvida = estado.essenciaDevolvidaBB;
+  delete estado.essenciaDevolvidaBB;
+  salvar(estado);
+  mostrarModal('📕 O Black Book foi reformulado!',
+    'Força, Vitalidade, Defesa, Velocidade e Cultivo agora MULTIPLICAM a cada nível ' +
+    '(cada nível vale sempre o mesmo, em vez de valer cada vez menos).\n\n' +
+    'Seus níveis foram convertidos sem perder força' +
+    (devolvida > 0 ? ` e o Black Book devolveu ${formatarNumero(devolvida)} ✨ Essência da Alma — use nas melhorias!` : '.'));
+}

@@ -43,10 +43,39 @@ export function comprarMelhoria(estado, id) {
   return true;
 }
 
-// Bônus total da melhoria. Ex.: nível 3 de "+10%" → 0.3 | nível 4 de "+1%" → 4
+// Bônus total da melhoria. Ex.: nível 4 de "+1%" (somar) → 4
+// v0.14.0 (dono): melhorias "composto" MULTIPLICAM a cada nível — nível 3 de +5% → 1,05³ − 1 = 0,158.
+// Antes somavam (+10% do valor base por nível): no nível 80 cada nível novo valia só +1%.
 export function efeitoMelhoria(estado, id) {
   const melhoria = buscar(id);
-  return melhoria ? nivelMelhoria(estado, id) * melhoria.bonus : 0;
+  if (!melhoria) return 0;
+  const nivel = nivelMelhoria(estado, id);
+  return melhoria.composto ? Math.pow(1 + melhoria.bonus, nivel) - 1 : nivel * melhoria.bonus;
+}
+
+// v0.14.0: converte os níveis de saves antigos (bônus somado, regra "antes" do config) para o
+// nível composto que dá a MESMA força ou um pouco mais, e devolve a Essência que sobrar.
+export function converterMelhoriasCompostas(estado) {
+  let devolvida = 0;
+  for (const m of BB.melhorias) {
+    if (!m.composto || !m.antes) continue;
+    const velho = nivelMelhoria(estado, m.id);
+    if (velho <= 0) continue;
+    const multiplicador = 1 + velho * m.antes.bonus;
+    const novo = Math.ceil(Math.log(multiplicador) / Math.log(1 + m.bonus) - 1e-9);
+    const gastoAntes = somaDeCustos(m.custoBase, m.antes.crescimentoCusto, 0, velho);
+    const custoAgora = somaDeCustos(m.custoBase, m.crescimentoCusto, 0, novo);
+    estado.blackbook[m.id] = novo;
+    devolvida += Math.max(0, gastoAntes - custoAgora);
+  }
+  estado.essencia += devolvida;
+  return devolvida;
+}
+
+function somaDeCustos(base, crescimento, de, ate) {
+  let total = 0;
+  for (let n = de; n < ate; n++) total += Math.ceil(base * Math.pow(crescimento, n));
+  return total;
 }
 
 // Saves antigos: devolve a Essência gasta em melhorias removidas e nos níveis

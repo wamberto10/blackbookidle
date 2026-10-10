@@ -8,7 +8,7 @@ import { REINOS } from './dados/reinos.js';
 import { FASES, MAPAS } from './sistemas/mundo.js';
 import { sentidoDivinoNoNivel } from './sistemas/atributos.js';
 import { inicioDoReino } from './sistemas/progressao.js';
-import { corrigirMelhoriasAntigas } from './sistemas/blackbook.js';
+import { corrigirMelhoriasAntigas, converterMelhoriasCompostas } from './sistemas/blackbook.js';
 import { recalcularItem } from './sistemas/equipamentos.js';
 
 const CHAVE_DO_SAVE = 'blackbook-idle-save-v1';
@@ -76,6 +76,9 @@ export function carregar() {
       }
       estado.reencarnacao.sentidoDivinoMaximo = estimado;
     }
+    // v0.14.0: Black Book com bônus composto — converte os níveis antigos sem perder força
+    // e devolve a Essência que sobrar (o aviso aparece em main.js)
+    if (versaoMenorQue(dados.versao, '0.14.0')) estado.essenciaDevolvidaBB = converterMelhoriasCompostas(estado);
     delete estado.treino;
     estado.versao = CONFIG.versao;
 

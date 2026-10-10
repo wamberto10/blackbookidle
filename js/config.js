@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.13.1',
+  versao: '0.14.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -196,14 +196,19 @@ export const CONFIG = {
     // v0.8.1 (pedido do dono): "Sombra Fugidia" (+0,5% Esquiva) foi REMOVIDA — Esquiva comprada
     // sem fim deixava o inimigo quase nunca acertar. Quem tinha níveis recebe a Essência de volta.
     removidas: { esquiva: { custoBase: 10, crescimentoCusto: 1.15 } },
+    // v0.14.0 (dono: "o up do livro está muito caro"): Ataque, Vitalidade, Defesa, Velocidade e Cultivo
+    // passaram a MULTIPLICAR a cada nível (composto: ×1,05 por nível; Velocidade ×1,02 para não dar
+    // ataque duplo para todo mundo). Antes SOMAVAM +10% do base: no nível 80 cada nível novo valia +1%
+    // e custava 359 mil. Custo +17% por nível (era 15%). Robô (5 classes): Mundo 1 em 28–38 h,
+    // Mundos 1+2 em 82–97 h, 2–3 reencarnações. "antes" = regra antiga, usada para converter saves.
     melhorias: [
-      { id: 'ataque',      nome: 'Força Ancestral',      icone: 'atr_ataque',        descricao: '+10% Ataque',          tipo: 'multiplicar', bonus: 0.10, custoBase: 5,  crescimentoCusto: 1.15 },
-      { id: 'vitalidade',  nome: 'Corpo Imortal',        icone: 'atr_vitalidade',    descricao: '+10% Vitalidade',      tipo: 'multiplicar', bonus: 0.10, custoBase: 5,  crescimentoCusto: 1.15 },
-      { id: 'defesa',      nome: 'Pele de Ferro',        icone: 'atr_defesa',        descricao: '+10% Defesa',          tipo: 'multiplicar', bonus: 0.10, custoBase: 5,  crescimentoCusto: 1.15 },
-      { id: 'velocidade',  nome: 'Passos do Vento',      icone: 'atr_velocidade',    descricao: '+5% Velocidade',       tipo: 'multiplicar', bonus: 0.05, custoBase: 8,  crescimentoCusto: 1.15 },
+      { id: 'ataque',      nome: 'Força Ancestral',      icone: 'atr_ataque',        descricao: '×1,05 Ataque',         tipo: 'multiplicar', composto: true, bonus: 0.05, custoBase: 5,  crescimentoCusto: 1.17, antes: { bonus: 0.10, crescimentoCusto: 1.15 } },
+      { id: 'vitalidade',  nome: 'Corpo Imortal',        icone: 'atr_vitalidade',    descricao: '×1,05 Vitalidade',     tipo: 'multiplicar', composto: true, bonus: 0.05, custoBase: 5,  crescimentoCusto: 1.17, antes: { bonus: 0.10, crescimentoCusto: 1.15 } },
+      { id: 'defesa',      nome: 'Pele de Ferro',        icone: 'atr_defesa',        descricao: '×1,05 Defesa',         tipo: 'multiplicar', composto: true, bonus: 0.05, custoBase: 5,  crescimentoCusto: 1.17, antes: { bonus: 0.10, crescimentoCusto: 1.15 } },
+      { id: 'velocidade',  nome: 'Passos do Vento',      icone: 'atr_velocidade',    descricao: '×1,02 Velocidade',     tipo: 'multiplicar', composto: true, bonus: 0.02, custoBase: 8,  crescimentoCusto: 1.17, antes: { bonus: 0.05, crescimentoCusto: 1.15 } },
       { id: 'critico',     nome: 'Olho Celestial',       icone: 'atr_critico',       descricao: '+1% Taxa de Crítico',  tipo: 'somar',       bonus: 1,    custoBase: 10, crescimentoCusto: 1.15, nivelMaximo: 10 },
       { id: 'danoCritico', nome: 'Golpe Devastador',     icone: 'atr_dano_critico',  descricao: '+10% Dano Crítico',    tipo: 'somar',       bonus: 10,   custoBase: 10, crescimentoCusto: 1.15, nivelMaximo: 20 },
-      { id: 'cultivo',     nome: 'Respiração Celestial', icone: 'atr_poder_cultivo', descricao: '+10% Cultivo por segundo', tipo: 'multiplicar', bonus: 0.10, custoBase: 8, crescimentoCusto: 1.15 },
+      { id: 'cultivo',     nome: 'Respiração Celestial', icone: 'atr_poder_cultivo', descricao: '×1,05 Cultivo por segundo', tipo: 'multiplicar', composto: true, bonus: 0.05, custoBase: 8, crescimentoCusto: 1.17, antes: { bonus: 0.10, crescimentoCusto: 1.15 } },
     ],
   },
 };
