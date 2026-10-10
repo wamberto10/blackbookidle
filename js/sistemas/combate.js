@@ -145,7 +145,8 @@ export function suprime(lutaOuDados, estado) {
   // v0.12.0 (dono): num mundo que você JÁ ZEROU (em qualquer vida), todos os inimigos comuns fogem —
   // sua alma já dominou aquele mundo. Nos outros mundos vale a regra de 5× o Sentido Divino.
   if (estado && mundoJaZerado(estado, fase.mundo)) return true;
-  return inimigo.sentidoDivino > 0 && jogador.sentidoDivino >= SD.supressao * inimigo.sentidoDivino;
+  const exigencia = jogador.especial?.supressao ?? SD.supressao;   // Cultivador de Alma: 3×
+  return inimigo.sentidoDivino > 0 && jogador.sentidoDivino >= exigencia * inimigo.sentidoDivino;
 }
 
 function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } no ataque duplo
@@ -186,6 +187,18 @@ function golpeDoInimigo(aoEvento) {
   const dano = calcularDano(luta.inimigo.ataque, luta.jogador.defesa);
   luta.vidaJogador -= dano;
   if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, vida: luta.vidaJogador, vidaMaxima });
+  tomarPilula(luta, aoEvento);
+}
+
+// Alquimista: uma vez por luta, com pouca vida (e ainda de pé), toma uma Pílula de Cura
+export function tomarPilula(lutaAtual, aoEvento) {
+  const pilula = lutaAtual.classe.especial.pilula;
+  const vidaMaxima = lutaAtual.jogador.vitalidade;
+  if (!pilula || lutaAtual.pilulaUsada || lutaAtual.vidaJogador <= 0 || lutaAtual.vidaJogador > vidaMaxima * pilula.limiar) return;
+  lutaAtual.pilulaUsada = true;
+  const cura = Math.min(vidaMaxima * pilula.cura, vidaMaxima - lutaAtual.vidaJogador);
+  lutaAtual.vidaJogador += cura;
+  if (aoEvento) aoEvento({ tipo: 'cura', alvo: 'jogador', valor: cura, pilula: true, vida: lutaAtual.vidaJogador, vidaMaxima });
 }
 
 function vencer(estado, aoEvento, suprimido = false) {

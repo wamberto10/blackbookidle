@@ -11,7 +11,9 @@ export const SPRITES = {
     "classes": [
       "corpo",
       "arma",
-      "elemental"
+      "elemental",
+      "alma",
+      "alquimista"
     ],
     "reinos": [
       "corpo_temperado",
@@ -32,12 +34,20 @@ export const SPRITES = {
       "ceu_aberto"
     ],
     "arteIA": [
+      "feminino_alma",
+      "feminino_alma_meditando",
+      "feminino_alquimista",
+      "feminino_alquimista_meditando",
       "feminino_arma",
       "feminino_arma_meditando",
       "feminino_corpo",
       "feminino_corpo_meditando",
       "feminino_elemental",
       "feminino_elemental_meditando",
+      "masculino_alma",
+      "masculino_alma_meditando",
+      "masculino_alquimista",
+      "masculino_alquimista_meditando",
       "masculino_arma",
       "masculino_arma_meditando",
       "masculino_corpo",
@@ -335,8 +345,12 @@ export const SPRITES = {
     ]
   },
   "efeitos": [
+    "alma",
+    "alma_critico",
     "aura_lunar",
     "chama",
+    "chama_alquimica",
+    "chama_alquimica_critica",
     "chama_critica",
     "corte",
     "corte_critico",
@@ -356,7 +370,11 @@ export const SPRITES = {
     "trovao_critico"
   ],
   "efeitosIA": [
+    "alma",
+    "alma_critico",
     "aura_lunar",
+    "chama_alquimica",
+    "chama_alquimica_critica",
     "corte",
     "corte_critico",
     "corte_inimigo",

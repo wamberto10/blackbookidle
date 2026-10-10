@@ -22,6 +22,7 @@ import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, ca
 import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
 import { desenharFundo } from './fundo.js';
 import { previsaoDaFase, textoDoPoder } from './poder.js';
+import { EFEITO_PROVISORIO } from '../dados/classes.js';
 import { SPRITES } from '../dados/sprites.js';
 import { golpesPorTurno } from '../sistemas/atributos.js';
 
@@ -188,6 +189,7 @@ function efeitoDoInimigo(inimigo, forma) {
 const EFEITOS_IA = new Set(SPRITES.efeitosIA ?? []);
 
 function tocarEfeito(lado, nome) {
+  if (!EFEITOS_EXISTENTES.has(nome)) nome = EFEITO_PROVISORIO[nome] ?? nome;   // classe nova sem imagem ainda
   const efeito = $(`cb-efeito-${lado}`);
   const ia = EFEITOS_IA.has(nome);
   efeito.style.backgroundImage = `url("${caminhoDoEfeito(nome)}")`;
@@ -282,7 +284,7 @@ export function mostrarCura(evento) {
   agendar(() => {
     vidaMostrada.jogador = { vida: evento.vida, maxima: evento.vidaMaxima };
     desenharBarras();
-    numeroFlutuante('jogador', `+${formatarNumero(evento.valor)}`, 'cura');
+    numeroFlutuante('jogador', `${evento.pilula ? 'PÍLULA DE CURA!\n' : ''}+${formatarNumero(evento.valor)}`, 'cura');
     animarClasse($('cb-sprite-jogador'), 'curando', 800);   // aura verde contornando o personagem
     // Efeito visual da Regeneração: desligado (o dono não gostou da 1ª versão, verde com folhas).
     // Para ligar de novo depois de gerar um novo cura.png: troque false por true.

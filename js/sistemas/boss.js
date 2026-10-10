@@ -23,6 +23,7 @@ import { gerarItem, receberItem } from './equipamentos.js';
 import { TIPOS_DE_NUCLEO } from './nucleos.js';
 import { RARIDADE_POR_ID } from './itens.js';
 import { liberado } from './desbloqueios.js';
+import { tomarPilula } from './combate.js';
 
 const B = CONFIG.boss;
 const TURNO = CONFIG.combate.duracaoDoTurno;
@@ -200,6 +201,7 @@ function golpeDoBoss(aoEvento) {
   const dano = calcularDano(luta.boss.ataque, luta.jogador.defesa) * (especial ? B.especial.multiplicador : 1);
   luta.vidaJogador -= dano;
   if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, especial });
+  tomarPilula(luta, aoEvento);   // Alquimista
 }
 
 function regenerar(aoEvento) {

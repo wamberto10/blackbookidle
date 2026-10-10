@@ -62,7 +62,49 @@ export const CLASSES = [
     efeito: 'gelo',
     efeitoCritico: 'gelo_critico',
   },
+  // v0.13.0 (dono): duas classes novas da lore de Martial Peak.
+  // A arte própria ainda não existe: usam a do Elemental / da Espada (ferramentas/sprites/importar_ia.py).
+  {
+    id: 'alma',
+    nome: 'Cultivador de Alma',
+    titulo: 'Guerreiro do Mar do Conhecimento',
+    descricao:
+      'Fortalece o Mar do Conhecimento acima de tudo. Seus golpes atingem direto a alma do inimigo, ' +
+      'atravessando armaduras e corpos, e a pressão da sua alma esmaga a mente dos mais fracos.',
+    multiplicar: { ataque: -0.25, vitalidade: -0.10, sentidoDivino: 1.0 },
+    somar: {},
+    // penetracao 1 = ignora toda a Defesa | supressao = inimigo foge com Sentido Divino 3× (os outros: 5×)
+    especial: { penetracao: 1.0, supressao: 3, sentidoDesdeOInicio: true },
+    nomeEspecial: 'Ataque de Alma',
+    textoEspecial: 'Os golpes ignoram toda a Defesa do inimigo. Nasce com o Sentido Divino aberto (×2) ' +
+      'e os inimigos fogem dele com só 3× o Sentido Divino deles (Supressão de Alma).',
+    efeito: 'alma',
+    efeitoCritico: 'alma_critico',
+  },
+  {
+    id: 'alquimista',
+    nome: 'Alquimista',
+    titulo: 'Mestre de Pílulas',
+    descricao:
+      'Refina pílulas com o fogo do Dao, como os mestres da Associação dos Mestres de Pílulas. ' +
+      'Luta pior que os guerreiros, mas suas pílulas aceleram o cultivo e o salvam no meio da batalha.',
+    multiplicar: { cultivo: 0.50 },   // balanceado pelo robô (v0.13.0): com ataque -10% e cultivo +40% levava 39 h (as outras ~31–35 h)
+    somar: {},
+    // pilula: uma vez por luta, com menos de "limiar" da vida, cura "cura" da Vitalidade
+    especial: { pilula: { limiar: 0.35, cura: 0.5 } },
+    nomeEspecial: 'Pílulas Espirituais',
+    textoEspecial: '+50% de Cultivo por segundo. Uma vez por luta, com menos de 35% de vida, ' +
+      'toma uma Pílula de Cura que recupera 50% da Vitalidade.',
+    efeito: 'chama_alquimica',
+    efeitoCritico: 'chama_alquimica_critica',
+  },
 ];
+
+// Efeitos das classes novas que ainda não têm imagem: usam estes até ela chegar (docs/PROMPTS_CLASSES_NOVAS.md)
+export const EFEITO_PROVISORIO = {
+  alma: 'magia_roxa', alma_critico: 'magia_roxa',
+  chama_alquimica: 'magia_azul', chama_alquimica_critica: 'magia_azul',
+};
 
 export const CLASSE_POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));
 

@@ -12,6 +12,7 @@ import { MAPAS } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo } from '../format.js';
 import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito } from './sprite.js';
 import { SPRITES } from '../dados/sprites.js';
+import { EFEITO_PROVISORIO } from '../dados/classes.js';
 
 const $ = (id) => document.getElementById(id);
 const B = CONFIG.boss;
@@ -115,6 +116,7 @@ function formatarRelogio(segundos) {
 // Folha do boss: 0–1 parado/respirando, 2 ataque, 3 técnica especial, 4 recebendo golpe, 5 derrotado
 const POSE = { ataque: 2, especial: 3, dano: 4, derrota: 5 };
 const EFEITOS_IA = new Set(SPRITES.efeitosIA ?? []);
+const EFEITOS_EXISTENTES = new Set(SPRITES.efeitos ?? []);
 const INTERVALO = 330;     // ms entre uma animação e a próxima (cabem 3 golpes num turno de 1 s)
 let proximaAnimacao = 0;
 
@@ -192,7 +194,7 @@ export function mostrarGolpeBoss(evento) {
       }, 130);
     });
   } else if (evento.tipo === 'cura') {
-    numero('boss-numeros-jogador', '+' + formatarNumero(evento.valor), 'cura');
+    numero('boss-numeros-jogador', (evento.pilula ? 'PÍLULA DE CURA!\n' : '') + '+' + formatarNumero(evento.valor), 'cura');
   }
 }
 
@@ -214,6 +216,7 @@ function poseDeDerrota() {
 }
 
 function tocarEfeito(lado, nome, grande = false) {
+  if (!EFEITOS_EXISTENTES.has(nome)) nome = EFEITO_PROVISORIO[nome] ?? nome;   // classe nova sem imagem ainda
   const efeito = $(`boss-efeito-${lado}`);
   efeito.style.backgroundImage = `url("${caminhoDoEfeito(nome)}")`;
   efeito.classList.toggle('quadros-4', EFEITOS_IA.has(nome));

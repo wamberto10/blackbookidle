@@ -6,6 +6,7 @@ import { CONFIG } from '../config.js';
 import { REINOS, REGIOES } from '../dados/reinos.js';
 import { multiplicadorMelhoria } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
+import { classeDe } from './personagem.js';
 
 const C = CONFIG.cultivo;
 
@@ -83,7 +84,8 @@ export function producaoNoNivel(nivel, indiceReino) {
 
 export function producaoPorSegundo(estado) {
   const bonusDosItens = 1 + bonusEquipamentos(estado).cultivo / 100;   // ex.: Berloque +5% Cultivo
-  return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens;
+  const bonusDaClasse = 1 + (classeDe(estado).multiplicar.cultivo ?? 0);   // Alquimista: +50%
+  return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens * bonusDaClasse;
 }
 
 export function custoParaAvancar(estado) {
