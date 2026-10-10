@@ -26,6 +26,8 @@ import { montarVip, atualizarVip } from './vip.js';
 const $ = (id) => document.getElementById(id);
 
 const elementosAtributos = {};
+const barrasTeto = {};
+const ATRIBUTOS_PRINCIPAIS = ['ataque', 'vitalidade', 'defesa', 'velocidade'];
 let ultimoNivelDesenhado = '';
 let fundoDesenhado = null;
 let painelAberto = null;
@@ -54,16 +56,22 @@ export function montarInterface(acoes) {
   $('botao-resetar').addEventListener('click', acoes.aoResetar);
   $('modal-botao').addEventListener('click', () => $('modal').classList.add('escondido'));
 
-  // ---- Lista de atributos (cria uma linha para cada) ----
-  const lista = $('lista-atributos');
+  // ---- Atributos (v0.16.0): os 4 dos núcleos em grade 2×2, os com teto com barrinha,
+  //      Poder de Cultivo e Sentido Divino lado a lado ----
   const linhas = {};
   for (const atributo of ATRIBUTOS) {
     const linha = document.createElement('div');
-    linha.className = 'atributo';
-    linha.innerHTML = `<span>${icone(atributo.icone)} ${atributo.nome}</span><strong>0</strong>`;
+    const comTeto = atributo.maximo !== undefined;
+    const principal = ATRIBUTOS_PRINCIPAIS.includes(atributo.id);
+    linha.className = 'atributo ' + (principal ? 'atributo-principal' : comTeto ? 'atributo-teto' : 'atributo-extra');
+    linha.innerHTML = principal
+      ? `<span class="atributo-nome">${icone(atributo.icone)} ${atributo.nome.replace(' (HP)', '')}</span><strong>0</strong>`
+      : `<span class="atributo-nome">${icone(atributo.icone)} ${atributo.nome}</span><strong>0</strong>` +
+        (comTeto ? '<div class="barra-teto"><div></div></div>' : '');
     elementosAtributos[atributo.id] = linha.querySelector('strong');
+    if (comTeto) barrasTeto[atributo.id] = linha.querySelector('.barra-teto > div');
     linhas[atributo.id] = linha;
-    lista.appendChild(linha);
+    $(principal ? 'lista-atributos' : comTeto ? 'lista-atributos-teto' : 'lista-atributos-extra').appendChild(linha);
   }
   montarNucleos(acoes, linhas);   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
   montarVip(acoes);               // botão 💎 e tela do VIP
@@ -218,14 +226,17 @@ function atualizarPersonagem(estado) {
     elemento.title = atributo.maximo !== undefined ? `Máximo: ${formatarAtributo(atributo.maximo, atributo.formato)}` : elemento.title;
     elemento.title = bloqueado ? 'Libera no reino Ascensão Imortal' : '';
     elemento.classList.toggle('atributo-trancado', bloqueado);
+    if (barrasTeto[atributo.id]) barrasTeto[atributo.id].style.width = `${Math.min(100, (valor / atributo.maximo) * 100)}%`;
   }
+  const vidas = estado.reencarnacao.vezes;
+  $('pers-vidas').textContent = `Vida nº ${vidas + 1} · ${vidas} ${vidas === 1 ? 'reencarnação' : 'reencarnações'}`;
   atualizarNucleos(estado);
   const analise = analisarPoder(atributos);
   $('pers-poder').textContent = formatarNumero(analise.poder);
   // A explicação aparece ao passar o mouse (ou segurar o dedo) em cada caixinha
   $('pers-poder-detalhe').innerHTML =
-    `<span class="parte-poder" title="Dano médio por golpe (Ataque + Crítico)">${icone('atr_ataque')} Ofensa <b>${formatarNumero(analise.ofensa)}</b></span>` +
-    `<span class="parte-poder" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">${icone('atr_vitalidade')} Resistência <b>${formatarNumero(analise.resistencia)}</b></span>`;
+    `<span class="parte-poder" title="Dano médio por golpe (Ataque + Crítico)">${icone('ofensa')} Ofensa <b>${formatarNumero(analise.ofensa)}</b></span>` +
+    `<span class="parte-poder" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">${icone('resistencia')} Resistência <b>${formatarNumero(analise.resistencia)}</b></span>`;
 }
 
 function atualizarNivel(estado) {
@@ -240,11 +251,12 @@ function atualizarNivel(estado) {
   $('inicio-nome').textContent = personagem.nome;
   $('pers-nome').textContent = personagem.nome;
   $('pers-classe').textContent = `${classe.nome} · ${personagem.sexo === 'feminino' ? 'Feminino' : 'Masculino'}`;
+  $('pers-classe-icone').src = `img/icones/classe_${classe.id}.png`;
   $('cb-nome-jogador').textContent = personagem.nome;
   $('pers-classe-cartao').innerHTML = `
-    <h3>${classe.nome}</h3>
-    <p>${classe.titulo}</p>
-    <p class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</p>`;
+    <div class="classe-topo">${icone('classe_' + classe.id, 'classe-icone')}<div><h3>${classe.nome}</h3><p>${classe.titulo}</p></div></div>
+    <p class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</p>
+    ${classe.tecnica ? `<p class="especial-classe tecnica-classe">${icone('tecnica')} <span><b>${classe.tecnica.nome}:</b> ${classe.tecnica.texto}</span></p>` : ''}`;
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
   $('moldura-sprite-pers').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;

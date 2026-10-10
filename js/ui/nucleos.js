@@ -118,8 +118,9 @@ export function atualizarNucleos(estado) {
   const chave = TIPOS_DE_NUCLEO.map(t => quantidade(estado, t.id)).join(',');
   if (chave !== chaveGuardados) {
     chaveGuardados = chave;
-    $('nucleos-guardados').innerHTML = 'Núcleos guardados: ' + TIPOS_DE_NUCLEO
-      .map(t => `${icone(t.icone)} ${t.nome.replace('Núcleo de ', '')}: <b>${quantidade(estado, t.id)}</b>`).join(' · ');
+    // v0.16.0: um "chip" para cada tipo de núcleo guardado
+    $('nucleos-guardados').innerHTML = '<span class="nucleos-rotulo">Núcleos guardados</span>' + TIPOS_DE_NUCLEO
+      .map(t => `<span class="chip-nucleo" style="--cor:${t.cor}">${icone(t.icone)} ${t.nome.replace('Núcleo de ', '')} <b>${quantidade(estado, t.id)}</b></span>`).join('');
   }
   if (atributoEscolhido) desenharJanela(estado);
 }

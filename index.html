@@ -76,38 +76,43 @@
        ========================================================= -->
 
   <!-- ===== Personagem ===== -->
-  <section class="painel" id="aba-personagem">
+  <section class="painel painel-personagem" id="aba-personagem">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_personagem.png" alt=""> Personagem</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
-      <div class="cartao personagem">
-        <div class="moldura-sprite pequena" id="moldura-sprite-pers">
-          <div class="circulos" aria-hidden="true"><div class="circulo externo"></div><div class="circulo interno"></div></div>
+      <!-- v0.16.0: tela de Personagem nova (retrato + identidade, placa do Poder, classe, atributos em grade) -->
+      <div class="pers-cabecalho">
+        <div class="pers-retrato" id="moldura-sprite-pers">
           <canvas id="sprite-pers" width="32" height="32"></canvas>
         </div>
-        <div class="personagem-info">
-          <dl class="ficha">
-            <dt>Nome</dt><dd id="pers-nome" class="destaque"></dd>
-            <dt>Classe</dt><dd id="pers-classe"></dd>
-            <dt>Região</dt><dd id="pers-regiao"></dd>
-            <dt>Reino</dt><dd id="pers-reino" class="destaque"></dd>
-            <dt>Estágio</dt><dd id="pers-estagio"></dd>
-          </dl>
-          <div class="bloco-poder">
-            <div class="rotulo">Poder Total</div>
-            <div id="pers-poder" class="poder"></div>
-            <div class="poder-partes" id="pers-poder-detalhe"></div>
-          </div>
+        <div class="pers-identidade">
+          <div id="pers-nome" class="pers-nome"></div>
+          <div class="pers-linha"><img class="icone-px" id="pers-classe-icone" src="img/icones/classe_corpo.png" alt=""> <span id="pers-classe"></span></div>
+          <div class="pers-reino"><span id="pers-reino"></span> · <span id="pers-estagio"></span></div>
+          <div class="pers-linha pequeno" id="pers-regiao"></div>
+          <div class="pers-linha pequeno"><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> <span id="pers-vidas"></span></div>
         </div>
       </div>
 
+      <div class="placa-poder">
+        <div class="placa-poder-rotulo">Poder Total</div>
+        <div id="pers-poder" class="placa-poder-valor"></div>
+      </div>
+      <div class="poder-partes" id="pers-poder-detalhe"></div>
+
       <div class="cartao cartao-classe" id="pers-classe-cartao"></div>
 
-      <h3>Atributos</h3>
-      <div class="atributos" id="lista-atributos"></div>
-      <p class="pequeno nucleos-guardados" id="nucleos-guardados"></p>
-      <p class="pequeno dica">💠 Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de Ataque, Vitalidade, Defesa ou Velocidade para usar: cada ponto dá +1% para sempre.</p>
-      <p class="pequeno dica"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
-      <p class="pequeno dica"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
+      <h3 class="pers-titulo">Atributos</h3>
+      <div class="atributos-grade" id="lista-atributos"></div>
+      <div class="atributos-teto" id="lista-atributos-teto"></div>
+      <div class="atributos-extra" id="lista-atributos-extra"></div>
+      <div class="nucleos-chips" id="nucleos-guardados"></div>
+
+      <details class="recolhivel">
+        <summary>Dicas</summary>
+        <p class="pequeno">💠 Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de Ataque, Vitalidade, Defesa ou Velocidade para usar: cada ponto dá +1% para sempre.</p>
+        <p class="pequeno"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
+        <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
+      </details>
     </div>
   </section>
 

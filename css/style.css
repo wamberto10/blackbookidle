@@ -1439,7 +1439,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 
 /* Botões comuns e principais (as abas, ícones, cartas e itens têm visual próprio) */
-button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]) {
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo) {
   border: 12px solid transparent;
   border-image: var(--imagem-botao) 24 fill / 12px stretch;
   border-radius: 0;
@@ -1661,3 +1661,109 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .tabela-comparacao .dif.igual  { color: var(--texto-fraco); }
 /* Linha da recompensa no combate: um respiro depois das barras de vida */
 .linha:has(#cb-recompensa) { margin-top: 12px; }
+
+/* =============================================================
+   v0.16.0: TELA DE PERSONAGEM NOVA
+   Fundo de IA (img/fundos/personagem.jpg), retrato na moldura redonda,
+   placa do Poder Total (placa_poder.png) e atributos em quadrinhos (placa_atributo.png).
+   ============================================================= */
+.painel-personagem {
+  background:
+    linear-gradient(rgba(10, 8, 16, 0.55), rgba(10, 8, 16, 0.80)),
+    url('../img/fundos/personagem.jpg') center / cover no-repeat,
+    #0a080e;
+}
+.painel-personagem .painel-corpo { display: flex; flex-direction: column; gap: 10px; }
+.painel-personagem .cartao { margin-bottom: 0; }
+
+/* Cabeçalho: retrato + identidade */
+.pers-cabecalho { display: flex; align-items: center; gap: 14px; }
+.pers-retrato {
+  --aura: #6fcf8a;
+  position: relative;
+  flex: none;
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  background:
+    url('../img/interface/moldura_retrato.png') center / contain no-repeat,
+    radial-gradient(circle, color-mix(in srgb, var(--aura) 35%, transparent) 0%, transparent 46%);
+}
+.pers-retrato canvas { width: 96px; height: 96px; margin-top: 4px; }
+.pers-identidade { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pers-nome { font-size: 1.25rem; font-weight: bold; color: #fff; text-shadow: 0 2px 3px #000; overflow-wrap: anywhere; }
+.pers-reino { color: var(--destaque); font-weight: bold; }
+.pers-linha { display: flex; align-items: center; gap: 6px; }
+.pers-linha .icone-px { width: 20px; height: 20px; }
+
+/* Placa do Poder Total */
+.placa-poder {
+  height: 72px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  border: 0 solid transparent;
+  border-width: 0 60px;
+  border-image-source: url('../img/interface/placa_poder.png');
+  border-image-slice: 0 47 fill;
+  border-image-width: 0 60px;
+  border-image-repeat: stretch;
+}
+.placa-poder-rotulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--texto-fraco); }
+.placa-poder-valor { font-size: 1.6rem; font-weight: bold; line-height: 1.1; color: #ffe08a; text-shadow: 0 0 8px rgba(255, 200, 80, 0.45), 0 2px 2px #000; }
+.painel-personagem .poder-partes { justify-content: center; margin-top: 0; }
+.painel-personagem .parte-poder { background: rgba(10, 8, 16, 0.75); font-size: 0.85rem; }
+.painel-personagem .parte-poder .icone-px { width: 20px; height: 20px; }
+
+/* Cartão da classe: passiva + técnica especial */
+.classe-topo { display: flex; align-items: center; gap: 10px; }
+.classe-topo h3 { margin: 0; }
+.classe-icone { width: 40px; height: 40px; flex: none; }
+.tecnica-classe { display: flex; align-items: flex-start; gap: 6px; background: rgba(140, 90, 255, 0.12); border-color: rgba(170, 130, 255, 0.45); }
+.tecnica-classe .icone-px { width: 20px; height: 20px; flex: none; }
+
+.pers-titulo { margin: 4px 0 0; }
+
+/* Atributos: quadrinhos com moldura de IA */
+.painel-personagem .atributo {
+  border: 10px solid transparent;
+  border-image: url('../img/interface/placa_atributo.png') 20 fill / 10px stretch;
+  border-radius: 0;
+  background: none;
+  padding: 2px 4px;
+}
+.painel-personagem .atributo .icone-px { width: 22px; height: 22px; vertical-align: -5px; }
+.atributos-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.atributo.atributo-principal { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; gap: 2px 6px; }
+.atributo-principal .atributo-nome { grid-column: 1 / -1; font-size: 0.8rem; color: var(--texto-fraco); }
+.atributo-principal > strong { margin-left: 0; font-size: 1.15rem; color: #fff; }
+.painel-personagem .atributo .botao-nucleo {
+  margin-left: 0; width: 30px; height: 30px; padding: 0; border: 1px solid var(--destaque); border-image: none;
+  border-radius: 50%; background: radial-gradient(circle, rgba(212, 168, 74, 0.25), rgba(20, 14, 24, 0.95)); box-shadow: 0 0 6px rgba(212, 168, 74, 0.35);
+}
+.painel-personagem .atributo .botao-nucleo:disabled { box-shadow: none; }
+.atributo-principal .pontos-nucleo { font-size: 0.75rem; }
+
+.atributos-teto { display: flex; flex-direction: column; gap: 6px; }
+.atributo.atributo-teto { flex-wrap: wrap; }
+.atributo-teto .atributo-nome { flex: 1; }
+.barra-teto { flex-basis: 100%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.barra-teto > div { height: 100%; width: 0; background: linear-gradient(90deg, #8a6a2a, var(--destaque)); transition: width 0.3s; }
+
+.atributos-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.atributo.atributo-extra { flex-direction: column; align-items: flex-start; gap: 2px; }
+.atributo-extra .atributo-nome { font-size: 0.8rem; color: var(--texto-fraco); white-space: normal; }
+.atributo-extra > strong { margin-left: 0; color: #fff; }
+
+/* Núcleos guardados em "chips" */
+.nucleos-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.nucleos-rotulo { width: 100%; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-fraco); }
+.chip-nucleo {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 0.82rem;
+  background: rgba(10, 8, 16, 0.75); border: 1px solid color-mix(in srgb, var(--cor) 60%, transparent); border-radius: 999px;
+}
+.chip-nucleo b { color: var(--cor); }
+.chip-nucleo .icone-px { width: 18px; height: 18px; }
+.painel-personagem .recolhivel { margin-top: 0; background: rgba(10, 8, 16, 0.7); }
