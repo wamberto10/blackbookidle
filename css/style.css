@@ -1018,9 +1018,24 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 .coluna-slots .slot-nome, .coluna-slots .slot-aviso { display: none; }   /* nome aparece ao tocar (detalhes) */
 
 /* Ações da mochila, logo acima da grade */
-.acoes-mochila { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0; }
-.acoes-mochila button { width: 100%; margin: 0; }
-.acoes-secundarias button { font-size: 0.8rem; }
+/* v0.14.1: cabeçalho, barra de ferramentas compacta, filtros numa linha, partes recolhíveis */
+.mochila-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.mochila-cabecalho h3 { margin: 0; }
+.chave-auto { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--texto-fraco); cursor: pointer; white-space: nowrap; }
+.chave-auto input { display: none; }
+.chave-auto .chave { width: 32px; height: 18px; border-radius: 9px; background: #3a3448; position: relative; transition: background 0.2s; flex: none; }
+.chave-auto .chave::after { content: ''; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #c8c0d8; transition: left 0.2s; }
+.chave-auto input:checked + .chave { background: var(--destaque); }
+.chave-auto input:checked + .chave::after { left: 16px; background: #fff; }
+.ferramentas-mochila { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
+#mochila-conteudo .ferramentas-mochila button {   /* o ID vence o visual de moldura dourada dos botões comuns */
+  border: 1px solid var(--borda); border-image: none; border-radius: 8px; background: var(--painel-claro);
+  min-height: 34px; padding: 4px 2px; font-size: 0.75rem; line-height: 1.15; color: var(--texto);
+}
+#mochila-conteudo .ferramentas-mochila #mesclar-tudo:not(:disabled) { border-color: var(--destaque); color: var(--destaque); }
+.recolhivel { margin-top: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--borda); border-radius: 8px; padding: 8px 10px; }
+.recolhivel summary { cursor: pointer; font-weight: bold; font-size: 0.85rem; color: var(--destaque); }
+.recolhivel p { margin: 8px 0 2px; line-height: 1.5; }
 .item-melhor-legenda { color: #6fef6f; }
 
 .slot-item {
@@ -1064,7 +1079,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 .item-melhor { position: absolute; left: 3px; top: 1px; font-size: 0.7rem; color: #6fef6f; text-shadow: 0 1px 2px #000; }
 
-.grade-itens { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; margin-top: 10px; }
+.grade-itens { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-top: 8px; }
 .celula-item {
   position: relative;
   aspect-ratio: 1;
@@ -1076,7 +1091,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
   border-radius: 6px;
   box-shadow: inset 0 0 12px -4px var(--cor-raridade, transparent);
 }
-.celula-item .icone-px { width: 32px; height: 32px; }
+.celula-item .icone-px { width: 40px; height: 40px; }
 .celula-item.vazia { border-width: 1px; box-shadow: none; }
 .grade-itens > p { grid-column: 1 / -1; margin: 4px 0; }   /* "Nenhum item guardado" ocupa a linha toda */
 
@@ -1100,7 +1115,9 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 .icone-px.icone-chance { width: 24px; height: 24px; }
 
 /* Abas por tipo de item */
-.filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+.filtros { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.filtros .filtro { flex: none; }
+.filtro span { display: none; }   /* v0.14.1: só o ícone e a quantidade (o nome aparece ao segurar o dedo / passar o mouse) */
 .filtro {
   display: flex;
   align-items: center;

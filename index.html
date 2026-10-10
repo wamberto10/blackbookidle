@@ -244,34 +244,38 @@
         <!-- Detalhes do item clicado -->
         <div class="cartao detalhe-item escondido" id="item-detalhe"></div>
 
-        <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
-        <!-- Ações rápidas logo acima da grade (antes ficavam lá embaixo, depois de todos os itens) -->
-        <div class="acoes-mochila">
-          <button id="mesclar-tudo" class="principal">✨ Mesclar tudo</button>
+        <!-- v0.14.1: mochila reorganizada — ações numa barra compacta, filtros numa linha,
+             ajuda e chances de drop recolhíveis -->
+        <div class="mochila-cabecalho">
+          <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
+          <label class="chave-auto" title="Vestir automaticamente os itens que aumentam o Poder Total">
+            <input type="checkbox" id="opcao-auto-equipar"><span class="chave"></span> Auto-vestir
+          </label>
+        </div>
+        <div class="ferramentas-mochila">
+          <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais">✨ Mesclar</button>
           <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo">🗑️ Obsoletos</button>
+          <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila">🗑️ Comuns</button>
+          <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila">🗑️ +Incomuns</button>
         </div>
-        <div class="acoes-mochila acoes-secundarias">
-          <button id="desmanchar-comuns">🗑️ Comuns</button>
-          <button id="desmanchar-incomuns">🗑️ Comuns e Incomuns</button>
-        </div>
-        <label class="opcao">
-          <input type="checkbox" id="opcao-auto-equipar">
-          Vestir automaticamente os itens que aumentam o Poder Total
-        </label>
-        <!-- Abas por tipo de item -->
+        <!-- Abas por tipo de item (uma linha, rola para o lado se não couber) -->
         <div class="filtros" id="filtros-itens"></div>
         <!-- Itens iguais (mesmo tipo e tier) aparecem empilhados -->
         <div class="grade-itens" id="grade-itens"></div>
 
-        <p class="pequeno dica">
-          Toque numa pilha para <b>Equipar</b>, <b>Desmanchar</b> ou <b>Mesclar</b> (3 iguais viram 1 do grau seguinte, até ★5; o tier não muda).
-          <span class="item-melhor-legenda">▲</span> = melhor que o vestido · <span class="item-potencial">⬆</span> = fica melhor se melhorar até o nível máximo.
-          <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
-          Ao reencarnar, os equipamentos, a mochila e as Pedras ficam.
-        </p>
-
-        <h3>Chances de drop</h3>
-        <div class="cartao" id="chances-drop"></div>
+        <details class="recolhivel">
+          <summary>ⓘ Como funciona a mochila</summary>
+          <p class="pequeno">
+            Toque numa pilha para <b>Equipar</b>, <b>Desmanchar</b> ou <b>Mesclar</b> (3 iguais viram 1 do grau seguinte, até ★5; o tier não muda).<br>
+            <span class="item-melhor-legenda">▲</span> = melhor que o vestido · <span class="item-potencial">⬆</span> = fica melhor se melhorar até o nível máximo.<br>
+            <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
+            Ao reencarnar, os equipamentos, a mochila e as Pedras ficam.
+          </p>
+        </details>
+        <details class="recolhivel">
+          <summary>🎲 Chances de drop neste mapa</summary>
+          <div id="chances-drop"></div>
+        </details>
       </div>
     </div>
   </section>

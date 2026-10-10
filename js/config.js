@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.14.0',
+  versao: '0.14.2',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -150,7 +150,7 @@ export const CONFIG = {
     renasceMinutos: 10,                // volta 10 min depois de ser derrotado
     // Recompensa (igual para todos que causaram dano): 10 Núcleos de rank aleatório
     // (chances proporcionais às do drop: ~59% Baixo, ~37% Médio, ~4% Alto) + 1 item Ancestral
-    // de espaço aleatório, do seu mapa atual (melhor que um Lendário ★5 do mesmo mapa)
+    // de espaço aleatório, do mapa SEGUINTE ao seu (v0.14.2: melhor que um Lendário ★5 de 1 mapa à frente)
     nucleos: 10,
     // Técnica especial (v0.11.0): a cada 5 turnos do boss, 1 turno concentrando a luz da lua
     // (não ataca) e no seguinte a Lâmina da Lua Crescente (×2,5 o dano normal). Em média o boss

@@ -162,6 +162,7 @@ function desenharFiltros(estado) {
       : estado.mochila.filter(i => i.slot === opcao.id).length;
     const botao = document.createElement('button');
     botao.className = 'filtro' + (filtroTipo === opcao.id ? ' ativo' : '');
+    botao.title = `${opcao.nome} (${quantidade})`;
     if (quantidade === 0 && opcao.id !== 'todos') botao.classList.add('vazio');
     botao.innerHTML = `${opcao.id === 'todos' ? icone('aba_mochila') : iconeEquipamento(opcao.id, 'comum')}
       <span>${opcao.nome}</span><small>${quantidade}</small>`;

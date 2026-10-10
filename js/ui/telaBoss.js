@@ -30,7 +30,7 @@ export function montarTelaBoss(acoes) {
   $('boss-nome').textContent = B.nome;
   $('boss-recompensa').innerHTML =
     `🎁 Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
-    `e <b style="color:#ff6ad5">1 item Ancestral</b> (espaço aleatório, melhor que um Lendário do seu mapa). ` +
+    `e <b style="color:#ff6ad5">1 item Ancestral</b> (espaço aleatório, melhor que um Lendário do mapa seguinte ao seu). ` +
     `Ele volta ${B.renasceMinutos} minutos depois de derrotado.`;
   desenharSpriteDeInimigo($('boss-sprite'), B.aparencia);
   // Fundo próprio do evento (img/fundos/boss.jpg); se não existir, fica o fundo escuro do CSS

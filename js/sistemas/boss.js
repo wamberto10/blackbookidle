@@ -223,19 +223,27 @@ function terminar(estado, aoEvento, motivo) {
 // ---- Boss derrotado: recompensa para todos que causaram dano ----
 function derrotarBoss(estado, aoEvento) {
   const dano = luta.danoNestaLuta;
-  const atributos = luta.boss;
   luta = null;
   const b = estado.boss;
   b.vida = 0;
   b.derrotas = (b.derrotas ?? 0) + 1;
   b.voltaEm = Date.now() + B.renasceMinutos * 60 * 1000;
   b.descansoAte = 0;
-  const recompensa = darRecompensa(estado, atributos);
+  const recompensa = darRecompensa(estado);
   if (aoEvento) aoEvento({ tipo: 'boss-derrotado', dano, recompensa, rank: rankDeDano(estado) });
 }
 
 // Sorteia 10 Núcleos (chances proporcionais às do drop normal) e 1 item Ancestral
-export function darRecompensa(estado, atributos = atributosDoBoss(estado)) {
+// Fase base do item Ancestral: o chefe do mapa SEGUINTE ao mapa em que você está.
+// v0.14.2 (dono): antes era o mapa do último chefe vencido; agora o item é melhor que um
+// Lendário de 1 mapa à frente (sem passar do último mapa do jogo).
+export function faseDoItemAncestral(estado) {
+  const faseAtual = Math.min(estado.combate.fasesConcluidas + 1, FASES.length - 1);
+  const mapa = Math.min(FASES[faseAtual].mapa + 1, FASES[FASES.length - 1].mapa);
+  return chefeDoMapa(mapa).indice;
+}
+
+export function darRecompensa(estado) {
   const nucleos = { baixo: 0, medio: 0, alto: 0 };
   const totalChance = TIPOS_DE_NUCLEO.reduce((s, t) => s + t.chance, 0);
   for (let i = 0; i < B.nucleos; i++) {
@@ -244,8 +252,8 @@ export function darRecompensa(estado, atributos = atributosDoBoss(estado)) {
     nucleos[tipo.id] += 1;
     estado.nucleos[tipo.id] = (estado.nucleos[tipo.id] ?? 0) + 1;
   }
-  // Item Ancestral do seu mapa (base = chefe do mapa), espaço aleatório, ★1
-  const item = gerarItem(estado, FASES[atributos.faseDoChefe], null, RARIDADE_POR_ID.ancestral, 1);
+  // Item Ancestral do mapa seguinte ao seu (base = chefe daquele mapa), espaço aleatório, ★1
+  const item = gerarItem(estado, FASES[faseDoItemAncestral(estado)], null, RARIDADE_POR_ID.ancestral, 1);
   const destino = receberItem(estado, item);
   return { nucleos, item: destino };
 }
