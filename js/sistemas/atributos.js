@@ -32,6 +32,13 @@ export const ATRIBUTOS = [
 // Reino a partir do qual o Sentido Divino aparece (Ascensão Imortal)
 const REINO_SENTIDO_DIVINO = REINOS.findIndex(r => r.liberaSentidoDivino);
 
+// Sentido Divino do jogador num nível (0 antes da Ascensão Imortal). Usado também para estimar
+// o Sentido Divino guardado de saves antigos.
+export function sentidoDivinoNoNivel(nivel, indiceReino) {
+  if (indiceReino < REINO_SENTIDO_DIVINO) return 0;
+  return atributosBase(nivel, indiceReino).sentidoDivino * Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, indiceReino);
+}
+
 export function sentidoDivinoLiberado(estado) {
   return estado.reino >= REINO_SENTIDO_DIVINO;
 }
@@ -75,7 +82,8 @@ export function calcularAtributos(estado) {
     defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa'),
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
-    sentidoDivino: sentidoDivinoLiberado(estado) ? base.sentidoDivino : 0,
+    // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado
+    sentidoDivino: Math.max(sentidoDivinoLiberado(estado) ? base.sentidoDivino : 0, estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
   };

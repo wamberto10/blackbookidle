@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.11.3',
+  versao: '0.12.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -118,6 +118,16 @@ export const CONFIG = {
     pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
     bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
     atributos: { ataque: 0.25, defesa: 0.25, vitalidade: 0.25 },   // +25% no total (v0.9.15, dono: era +50%)
+  },
+
+  // ---- Sentido Divino (v0.12.0, ideia do dono) ----
+  // Supressão de Alma: se o seu Sentido Divino for 5× (ou mais) o do inimigo, ele foge apavorado
+  // antes da luta = vitória na hora, com recompensa normal. Chefes e mini-chefes nunca fogem.
+  // "A alma se lembra": o maior Sentido Divino já alcançado continua ao reencarnar.
+  // Num mundo que você já zerou (em qualquer vida), TODOS os inimigos comuns dele fogem.
+  sentidoDivino: {
+    supressao: 5,
+    imunes: ['miniChefe', 'chefe'],
   },
 
   // ---- Evento de Boss (v0.11.0, ideia do dono) ----

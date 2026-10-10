@@ -5,7 +5,9 @@
 import { CONFIG } from './config.js';
 import { criarEstadoInicial } from './estado.js';
 import { REINOS } from './dados/reinos.js';
-import { FASES } from './sistemas/mundo.js';
+import { FASES, MAPAS } from './sistemas/mundo.js';
+import { sentidoDivinoNoNivel } from './sistemas/atributos.js';
+import { inicioDoReino } from './sistemas/progressao.js';
 import { corrigirMelhoriasAntigas } from './sistemas/blackbook.js';
 import { recalcularItem } from './sistemas/equipamentos.js';
 
@@ -62,6 +64,17 @@ export function carregar() {
     if (versaoMenorQue(dados.versao, '0.9.2')) {
       for (const slot in estado.equipados) estado.equipados[slot] = recalcularItem(estado.equipados[slot]);
       estado.mochila = estado.mochila.map(recalcularItem);
+    }
+    // v0.12.0 "a alma se lembra": saves antigos não guardavam o Sentido Divino. Estima pelo mapa mais
+    // longe já alcançado (o Sentido Divino de quem começa o reino daquele mapa) ou pelo desta vida.
+    if (dados.reencarnacao?.sentidoDivinoMaximo === undefined) {
+      const melhor = Math.max(estado.reencarnacao.melhorFaseDeTodas, estado.combate.fasesConcluidas);
+      let estimado = sentidoDivinoNoNivel(inicioDoReino(estado.reino) + estado.estagio, estado.reino);
+      if (melhor >= 0) {
+        const mapa = MAPAS[FASES[melhor].mapa];
+        estimado = Math.max(estimado, sentidoDivinoNoNivel(inicioDoReino(mapa.reino) + (mapa.inicioNoReino ?? 0), mapa.reino));
+      }
+      estado.reencarnacao.sentidoDivinoMaximo = estimado;
     }
     delete estado.treino;
     estado.versao = CONFIG.versao;

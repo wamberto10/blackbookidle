@@ -142,7 +142,8 @@ function aoEventoCombate(evento) {
     animarVitoria(evento);
     const fase = evento.fase;
     registrarBatalha(
-      `✔ ${fase.inimigo.nome} derrotado: +${formatarNumero(evento.cultivo)} Cultivo, +${formatarNumero(evento.pedras)} 💎` +
+      `${evento.suprimido ? `💨 ${fase.inimigo.nome} fugiu (Supressão de Alma)` : `✔ ${fase.inimigo.nome} derrotado`}: ` +
+      `+${formatarNumero(evento.cultivo)} Cultivo, +${formatarNumero(evento.pedras)} 💎` +
       (evento.primeira ? ' (primeira vitória!)' : ''), 'vitoria');
     if (evento.drop) avisarDrop(evento.drop);
     if (evento.nucleo) {

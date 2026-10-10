@@ -54,6 +54,7 @@ export function criarEstadoInicial() {
       vezes: 0,
       melhorFaseDeTodas: -1,   // fase mais distante já vencida em qualquer vida
       faseDaUltima: -1,        // fase em que reencarnou da última vez (-1 = nunca)
+      sentidoDivinoMaximo: 0,  // "a alma se lembra": maior Sentido Divino já alcançado (fica ao reencarnar)
       essenciaTotal: 0,
     },
     opcoes: {

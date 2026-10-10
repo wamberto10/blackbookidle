@@ -13,7 +13,7 @@
 //  - Derrota ou tempo esgotado: volta uma fase e desliga o avanço automático.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { FASES, MUNDOS_JOGAVEIS, faseLiberada } from './mundo.js';
+import { FASES, MUNDOS_JOGAVEIS, faseLiberada, mundoJaZerado } from './mundo.js';
 import { calcularAtributos, dano, golpesPorTurno } from './atributos.js';
 import { ganharCultivo, producaoPorSegundo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
@@ -106,6 +106,9 @@ function passo(estado, dt, aoEvento) {
     return;
   }
 
+  // Supressão de Alma: Sentido Divino 5× o do inimigo → ele foge antes de lutar (chefes nunca fogem)
+  if (luta.tempo === 0 && suprime(luta, estado)) { vencer(estado, aoEvento, true); return; }
+
   luta.tempo += dt;
   luta.relogio += dt;
 
@@ -133,6 +136,16 @@ function passo(estado, dt, aoEvento) {
   }
 
   if (luta.tempo >= CB.duracaoMaxima - 1e-9) perder(estado, aoEvento, 'tempo');
+}
+
+const SD = CONFIG.sentidoDivino;
+export function suprime(lutaOuDados, estado) {
+  const { jogador, inimigo, fase } = lutaOuDados;
+  if (SD.imunes.includes(fase.chaveTipo)) return false;
+  // v0.12.0 (dono): num mundo que você JÁ ZEROU (em qualquer vida), todos os inimigos comuns fogem —
+  // sua alma já dominou aquele mundo. Nos outros mundos vale a regra de 5× o Sentido Divino.
+  if (estado && mundoJaZerado(estado, fase.mundo)) return true;
+  return inimigo.sentidoDivino > 0 && jogador.sentidoDivino >= SD.supressao * inimigo.sentidoDivino;
 }
 
 function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } no ataque duplo
@@ -175,7 +188,7 @@ function golpeDoInimigo(aoEvento) {
   if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, vida: luta.vidaJogador, vidaMaxima });
 }
 
-function vencer(estado, aoEvento) {
+function vencer(estado, aoEvento, suprimido = false) {
   const fase = luta.fase;
   const primeira = fase.indice > estado.combate.fasesConcluidas;
   const multiplicador = primeira ? CB.bonusPrimeiraVitoria : 1;
@@ -194,7 +207,7 @@ function vencer(estado, aoEvento) {
 
   // Venceu o chefe final de um mundo pela primeira vez → o mundo (com o texto final) | null
   const ultimaDoMundo = primeira && fase.ultimaDoMundo ? MUNDOS_JOGAVEIS[fase.mundo] : null;
-  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo });
+  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo, suprimido });
 
   if (estado.combate.autoAvancar && fase.indice + 1 < FASES.length) {
     estado.combate.faseAtual = fase.indice + 1;

@@ -326,7 +326,9 @@ export function animarVitoria(evento) {
   agendar(() => {
     inimigoBloqueadoAte = Date.now() + DURACAO_DA_MORTE;
     const corpo = $('cb-corpo-inimigo');
-    animarClasse(corpo, 'morrendo');
+    // Supressão de Alma: o inimigo foge apavorado (some para a direita) em vez de cair
+    if (evento.suprimido) numeroFlutuante('inimigo', 'SUPRESSÃO DE ALMA!\n💨 Fugiu!', 'critico');
+    animarClasse(corpo, evento.suprimido ? 'fugindo' : 'morrendo');
     explodirParticulas('inimigo', 14, ['#ffffff', '#d4a84a', '#b8c8e8']);
 
     recompensaFlutuante(`+${formatarNumero(evento.cultivo)} ${icone('cultivo')}`, '', 150);
@@ -342,7 +344,7 @@ export function animarVitoria(evento) {
       vitoriasPendentes = Math.max(0, vitoriasPendentes - 1);
       chaveDesenhada = '';   // força redesenhar (pode ser outra fase)
       if (ultimoEstado) atualizarTelaCombate(ultimoEstado);
-      corpo.classList.remove('morrendo');
+      corpo.classList.remove('morrendo', 'fugindo');
       animarClasse(corpo, 'entrando', 450);
     }, DURACAO_DA_MORTE);
   });

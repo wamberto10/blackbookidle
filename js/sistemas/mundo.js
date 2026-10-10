@@ -8,7 +8,7 @@ import { MUNDOS } from '../dados/mundos.js';
 import { REINOS } from '../dados/reinos.js';
 import { TIPOS_DE_FASE, ESTRUTURA_DO_MAPA } from '../dados/fases.js';
 import { inicioDoReino, producaoNoNivel } from './progressao.js';
-import { atributosBase } from './atributos.js';
+import { atributosBase, calcularAtributos } from './atributos.js';
 import { definirInicioDaVida } from './blackbook.js';
 
 const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
@@ -64,6 +64,7 @@ MAPAS.forEach((mapa, indiceMapa) => {
         ataque: referencia.ataque * tipo.ataque * dificuldade,
         defesa: referencia.ataque * tipo.defesa * dificuldade,
         velocidade: referencia.velocidade * tipo.velocidade,
+        sentidoDivino: referencia.sentidoDivino * dificuldade,   // para a Supressão de Alma
       },
       recompensa: {
         cultivo: producaoNoNivel(nivelReferencia, mapa.reino) * tipo.cultivo,
@@ -141,6 +142,9 @@ export function textoDoInicioDaVida(estado) {
 // (Mundo 2 = Santo, 1º estágio) e as fases dos mundos anteriores já vencidas.
 // (O Mundo 1 continua começando do Corpo Temperado, 1º estágio, como sempre.)
 function comecarVidaNova(novo, anterior) {
+  // "A alma se lembra" (v0.12.0): o Sentido Divino é força da alma, não do corpo — guarda o maior já alcançado
+  novo.reencarnacao.sentidoDivinoMaximo = Math.max(anterior.reencarnacao.sentidoDivinoMaximo ?? 0,
+    calcularAtributos(anterior).sentidoDivino);
   const indiceMundo = mundoDeInicio(anterior);
   if (indiceMundo === 0) return;
   const primeira = primeiraFaseDoMundo(indiceMundo);
