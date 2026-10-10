@@ -157,7 +157,7 @@ export function preverLuta(jogador, fase, turnosMaximos) {
   const esp = jogador.especial ?? {};
   const critico = 1 + (Math.min(jogador.critico, 100) / 100) * (jogador.danoCritico / 100 - 1);
   const explosao = esp.explosaoACada ? 1 + esp.bonusExplosao / esp.explosaoACada : 1;
-  const tec = jogador.tecnica;   // técnica da classe: em média +(multiplicador − 1)/aCada por turno
+  const tec = jogador.tecnica;   // técnica da classe: em média +(multiplicador − 1)/aCada por ataque
   const media = tec ? 1 + (tec.multiplicador - 1) / tec.aCada : 1;
   const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao * media * golpesPorTurno(jogador, i);
   const turnosParaVencer = Math.ceil(i.vida / meuDano);

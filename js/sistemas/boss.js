@@ -171,7 +171,7 @@ function golpeDoJogador(estado, aoEvento, extra) {
   const { jogador, boss } = luta;
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
-  const tecnica = tecnicaDoGolpe(luta, extra);
+  const tecnica = tecnicaDoGolpe(luta);
   const defesa = boss.defesa * (1 - penetracaoDoGolpe(luta, tecnica));
   const critico = Math.random() * 100 < jogador.critico;
   let dano = calcularDano(jogador.ataque, defesa);

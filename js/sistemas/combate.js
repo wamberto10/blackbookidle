@@ -154,7 +154,7 @@ function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } n
   const jogador = luta.jogador;
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
-  const tecnica = tecnicaDoGolpe(luta, extra);   // técnica especial da classe (a cada N turnos)
+  const tecnica = tecnicaDoGolpe(luta);   // técnica especial da classe (a cada N ataques)
 
   // Mestre da Espada: Intenção da Arma ignora parte da Defesa
   const defesa = luta.inimigo.defesa * (1 - penetracaoDoGolpe(luta, tecnica));

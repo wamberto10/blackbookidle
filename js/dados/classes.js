@@ -24,10 +24,11 @@ export const CLASSES = [
     textoEspecial: 'Recupera 1% da Vitalidade máxima a cada turno.',
     efeito: 'impacto',
     efeitoCritico: 'impacto_critico',
-    // v0.15.0: técnica especial (sistemas/tecnicas.js). Dono: 'quero que a habilidade ajude a matar' →
-    // todas a cada 5 turnos, ×3,5 a ×4 (≈ +50–60% de dano em média; antes ×2,5–3 a cada 5–6 turnos ≈ +25%)
-    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 5, multiplicador: 4, cura: 0.15, efeito: 'impacto_critico',
-      texto: 'A cada 5 turnos, um soco de 400% de dano que recupera 15% da Vitalidade.' },
+    // v0.15.1 (dono): técnica especial a cada 3 ATAQUES (o contador zera a cada luta), ×1,9 de dano
+    // em todas as classes = +30% de dano em média ((1 + 1 + 1,9) ÷ 3). Os efeitos extras ficaram mais leves
+    // porque saem mais vezes.
+    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 3, multiplicador: 1.9, cura: 0.08, efeito: 'tec_sangue_dourado',
+      texto: 'A cada 3 ataques, um soco de 190% de dano que recupera 8% da Vitalidade.' },
   },
   {
     id: 'arma',
@@ -43,8 +44,8 @@ export const CLASSES = [
     textoEspecial: 'Ignora 30% da Defesa do inimigo.',
     efeito: 'corte',
     efeitoCritico: 'corte_critico',
-    tecnica: { nome: 'Corte do Céu Partido', aCada: 5, multiplicador: 4, penetracao: 1, efeito: 'corte_critico',
-      texto: 'A cada 5 turnos, um corte de 400% de dano que ignora toda a Defesa.' },
+    tecnica: { nome: 'Corte do Céu Partido', aCada: 3, multiplicador: 1.9, penetracao: 1, efeito: 'tec_ceu_partido',
+      texto: 'A cada 3 ataques, um corte de 190% de dano que ignora toda a Defesa.' },
   },
   {
     id: 'elemental',
@@ -67,8 +68,8 @@ export const CLASSES = [
     ],
     efeito: 'gelo',
     efeitoCritico: 'gelo_critico',
-    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 5, multiplicador: 3.5, congela: 1, efeito: 'gelo_critico',
-      texto: 'A cada 5 turnos, uma tempestade de 350% de dano que congela o inimigo (ele perde o próximo ataque).' },
+    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 3, multiplicador: 1.9, congela: 1, efeito: 'tec_tempestade_gelo',
+      texto: 'A cada 3 ataques, uma tempestade de 190% de dano que congela o inimigo (ele perde o próximo ataque).' },
   },
   // v0.13.0 (dono): duas classes novas da lore de Martial Peak.
   // A arte própria ainda não existe: usam a do Elemental / da Espada (ferramentas/sprites/importar_ia.py).
@@ -88,8 +89,8 @@ export const CLASSES = [
       'e os inimigos fogem dele com só 3× o Sentido Divino deles (Supressão de Alma).',
     efeito: 'alma',
     efeitoCritico: 'alma_critico',
-    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 5, multiplicador: 3.5, enfraquece: 0.15, efeito: 'alma_critico',
-      texto: 'A cada 5 turnos, uma lança de 350% de dano que devora a alma do inimigo: o Ataque dele cai 15% até o fim da luta (até −50%).' },
+    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 3, multiplicador: 1.9, enfraquece: 0.10, efeito: 'tec_lanca_alma',
+      texto: 'A cada 3 ataques, uma lança de 190% de dano que devora a alma do inimigo: o Ataque dele cai 10% até o fim da luta (até −50%).' },
   },
   {
     id: 'alquimista',
@@ -107,8 +108,8 @@ export const CLASSES = [
       'toma uma Pílula de Cura que recupera 50% da Vitalidade.',
     efeito: 'chama_alquimica',
     efeitoCritico: 'chama_alquimica_critica',
-    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 5, multiplicador: 3.5, recarregaPilula: true, efeito: 'chama_alquimica_critica',
-      texto: 'A cada 5 turnos, uma explosão de fogo alquímico de 350% de dano que recarrega a Pílula de Cura.' },
+    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 3, multiplicador: 1.9, recarregaPilula: true, efeito: 'tec_caldeirao_celestial',
+      texto: 'A cada 3 ataques, uma explosão de fogo alquímico de 190% de dano que recarrega a Pílula de Cura (1 vez por luta).' },
   },
 ];
 
@@ -116,6 +117,9 @@ export const CLASSES = [
 export const EFEITO_PROVISORIO = {
   alma: 'magia_roxa', alma_critico: 'magia_roxa',
   chama_alquimica: 'magia_azul', chama_alquimica_critica: 'magia_azul',
+  // Técnicas especiais (v0.15.0): efeito exclusivo de cada uma; até a imagem chegar, o crítico da classe
+  tec_sangue_dourado: 'impacto_critico', tec_ceu_partido: 'corte_critico', tec_tempestade_gelo: 'gelo_critico',
+  tec_lanca_alma: 'alma_critico', tec_caldeirao_celestial: 'chama_alquimica_critica',
 };
 
 export const CLASSE_POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));

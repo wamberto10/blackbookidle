@@ -1,28 +1,24 @@
 // =============================================================
 // sistemas/tecnicas.js — TÉCNICA ESPECIAL DE CADA CLASSE (v0.15.0, ideia do dono)
 //
-// A cada "aCada" turnos, o primeiro golpe do herói no turno vira a técnica da
+// A cada "aCada" ataques do herói (contador zera a cada luta), o golpe vira a técnica da
 // classe (dados em dados/classes.js → tecnica): dano × multiplicador, mais um
 // efeito próprio. Usado pelo combate das fases e pela luta do boss.
 //   cura          → recupera essa fração da Vitalidade (Refinador Corporal)
 //   penetracao    → ignora essa fração da Defesa (Mestre da Espada)
 //   congela       → o inimigo perde esse número de ataques (Cultivador Elemental)
 //   enfraquece    → o Ataque do inimigo cai essa fração, até o fim da luta (Cultivador de Alma)
-//   recarregaPilula → a Pílula de Cura volta a ficar disponível (Alquimista)
+//   recarregaPilula → a Pílula de Cura volta a ficar disponível, 1 vez por luta (Alquimista)
 // =============================================================
 
-// A técnica "carrega" com os turnos de combate e NÃO zera entre uma luta e outra: contra inimigos
-// que caem em 2–3 turnos ela também sai (antes, com o contador zerando a cada luta, quem matava
-// rápido quase nunca via a técnica).
-let carga = 0;
-
-// A técnica sai neste golpe? (o 2º golpe do ataque duplo não conta como turno novo)
-export function tecnicaDoGolpe(luta, extra = {}) {
+// v0.15.1 (dono): a técnica sai a cada "aCada" ATAQUES do herói (todo golpe conta, inclusive o 2º
+// do ataque duplo) e o contador ZERA a cada luta — não acumula de uma luta para a outra.
+export function tecnicaDoGolpe(luta) {
   const tecnica = luta.classe.tecnica;
-  if (!tecnica || extra.segundo) return null;
-  carga += 1;
-  if (carga < tecnica.aCada) return null;
-  carga = 0;
+  if (!tecnica) return null;
+  luta.ataquesParaTecnica = (luta.ataquesParaTecnica ?? 0) + 1;
+  if (luta.ataquesParaTecnica < tecnica.aCada) return null;
+  luta.ataquesParaTecnica = 0;
   return tecnica;
 }
 
@@ -44,7 +40,10 @@ export function efeitosDaTecnica(luta, tecnica) {
     luta.fraquezaDoInimigo = Math.max(0.5, (luta.fraquezaDoInimigo ?? 1) * (1 - tecnica.enfraquece));
     efeitos.enfraqueceu = true;
   }
-  if (tecnica.recarregaPilula && luta.pilulaUsada) { luta.pilulaUsada = false; efeitos.pilula = true; }
+  // Alquimista: recarrega a Pílula de Cura só 1 vez por luta
+  if (tecnica.recarregaPilula && luta.pilulaUsada && !luta.pilulaRecarregada) {
+    luta.pilulaUsada = false; luta.pilulaRecarregada = true; efeitos.pilula = true;
+  }
   return efeitos;
 }
 
