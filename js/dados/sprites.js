@@ -29,8 +29,9 @@ export const SPRITES = {
       "rei_origem",
       "origem_dao",
       "imperador",
-      "grande_imperador",
       "pseudo_grande_imperador",
+      "grande_imperador",
+      "meio_ceu_aberto",
       "ceu_aberto"
     ],
     "arteIA": [
@@ -347,6 +348,7 @@ export const SPRITES = {
   "efeitos": [
     "alma",
     "alma_critico",
+    "aura_cultivo",
     "aura_lunar",
     "chama",
     "chama_alquimica",
@@ -372,6 +374,7 @@ export const SPRITES = {
   "efeitosIA": [
     "alma",
     "alma_critico",
+    "aura_cultivo",
     "aura_lunar",
     "chama_alquimica",
     "chama_alquimica_critica",

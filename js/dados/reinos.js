@@ -129,19 +129,30 @@ export const REINOS = [
     desbloqueio: 'Você se tornou um Imperador. Seu Qi agora é Emperor Qi.',
     mapaParaRomper: 24,
   },
+  // v0.17.0 (dono, conferido com a lore): Imperador → Pseudo-Grande Imperador → Grande Imperador →
+  // Meio-Passo do Céu Aberto → Céu Aberto. (Antes o Grande Imperador vinha antes do Pseudo, e o
+  // "Pseudo-Grande Imperador / Meio-Aberto" misturava duas coisas.) O Pseudo-Grande Imperador tem
+  // 1 estágio, como o Grande Imperador tinha nesta posição: o balanceamento até o Mundo 2 não muda.
+  {
+    id: 'pseudo_grande_imperador', nome: 'Pseudo-Grande Imperador', regiao: 2,
+    estagios: ['Gargalo do Caminho Celestial'], corManto: '#7f6f3f',
+    descricao: 'Além da 3ª Ordem de Imperador. O Caminho Celestial do seu mundo ainda não reconhece você: é o gargalo antes de se tornar Grande Imperador.',
+    desbloqueio: 'Você se tornou um Pseudo-Grande Imperador. O Caminho Celestial ainda não o reconhece.',
+    mapaParaRomper: 30,
+  },
   {
     id: 'grande_imperador', nome: 'Grande Imperador', regiao: 2,
-    // Sistema especial (reconhecimento pelo mundo e Selo do Dao) — será feito em etapa futura
     estagios: ['Reconhecimento do Mundo'], corManto: '#bf9f2f',
-    descricao: 'Sistema especial de reconhecimento pelo mundo e condensação do Selo do Dao.',
-    desbloqueio: 'O mundo reconhece sua existência.',
+    descricao: 'Reconhecido pela Vontade do Mundo, você condensa o Selo do Dao.',
+    desbloqueio: 'O mundo reconhece sua existência. Você condensou o Selo do Dao.',
     mapaParaRomper: 36,
   },
   {
-    id: 'pseudo_grande_imperador', nome: 'Pseudo-Grande Imperador / Meio-Aberto', regiao: 2,
+    id: 'meio_ceu_aberto', nome: 'Meio-Passo do Céu Aberto', regiao: 2,
     estagios: ['1 Elemento', '2 Elementos', '3 Elementos', '4 Elementos', '5 Elementos'], corManto: '#5f5f5f',
-    descricao: 'Transição para o Universo Exterior. Condensação de 1 a 5 elementos fundamentais (Yin, Yang, Ouro, Madeira, Água, Fogo, Terra).',
-    desbloqueio: 'Você começa a condensar os elementos fundamentais.',
+    descricao: 'Ainda dentro do reino Imperador: condensação de 1 a 5 dos elementos fundamentais (Yin, Yang, Ouro, Madeira, Água, Fogo, Terra) no Selo do Dao.',
+    desbloqueio: 'Você começa a condensar os elementos fundamentais no Selo do Dao.',
+    mapaParaRomper: 42,
   },
 
   // ===================== REGIÃO 4 =====================
