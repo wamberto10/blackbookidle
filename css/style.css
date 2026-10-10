@@ -972,6 +972,14 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
   z-index: 5;
 }
 .aviso-chefe.aparecendo { animation: aviso-chefe 1.6s ease-out; }
+.tecnica-classe { margin-top: 6px; border-color: #ffb03a !important; }
+/* v0.15.0: nome da técnica especial da classe, no alto da arena */
+.aviso-tecnica {
+  position: absolute; left: 0; right: 0; top: 10%; z-index: 6; text-align: center; pointer-events: none; padding: 0 8px;
+  font-weight: bold; font-size: 1.05rem; color: #fff6d8; letter-spacing: 1px;
+  text-shadow: 0 0 8px #ffb03a, 0 0 2px #000, 0 2px 3px #000; opacity: 0;
+}
+.aviso-tecnica.aparecendo { animation: aviso-chefe 1.3s ease-out; }
 @keyframes aviso-chefe {
   0%   { opacity: 0; transform: scaleX(0.2); }
   15%  { opacity: 1; transform: scaleX(1.05); }

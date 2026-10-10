@@ -218,6 +218,15 @@ export function mostrarGolpe(evento) {
     return;
   }
 
+  // Tempestade de Gelo Místico: o inimigo congelado perde o ataque
+  if (evento.congelado) {
+    agendar(() => {
+      numeroFlutuante('inimigo', '❄️ CONGELADO!', 'critico');
+      animarClasse($('cb-sprite-inimigo'), 'atingido', 300);
+    });
+    return;
+  }
+
   // Ataque duplo: o 1º golpe deixa só um intervalo curto até o 2º, para os dois (mais o do
   // inimigo) caberem no turno de 1 s. Antes a fila atrasava, juntava os golpes e parecia um só.
   const intervalo = evento.duplo && !evento.segundo ? INTERVALO_GOLPE_DUPLO : INTERVALO_ENTRE_GOLPES;
@@ -255,19 +264,23 @@ export function mostrarGolpe(evento) {
         elemento = classe.elementos[posicao];
       }
       const visual = elemento ?? classe;
-      const efeito = atacante === 'jogador'
-        ? (forte ? visual?.efeitoCritico ?? 'corte_critico' : visual?.efeito ?? 'corte')
-        : efeitoDoInimigo(lutaMostrada?.fase.inimigo, forma);
+      const tecnica = atacante === 'jogador' ? evento.tecnica : null;   // técnica especial da classe
+      const efeito = tecnica ? tecnica.efeito
+        : atacante === 'jogador'
+          ? (forte ? visual?.efeitoCritico ?? 'corte_critico' : visual?.efeito ?? 'corte')
+          : efeitoDoInimigo(lutaMostrada?.fase.inimigo, forma);
+      if (tecnica) mostrarTecnica(evento);
       tocarEfeito(alvo, efeito);
       animarClasse($(`cb-sprite-${alvo}`), 'atingido', 300);
       // Cada aviso numa linha, com o dano embaixo (antes ficava tudo numa linha e saía da arena)
-      const prefixo = (evento.segundo ? 'GOLPE DUPLO!\n' : '') +
+      // Na técnica especial o nome já aparece no letreiro do alto da arena: o número mostra só o dano
+      const prefixo = tecnica ? '' : (evento.segundo ? 'GOLPE DUPLO!\n' : '') +
         (evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}!\n` : evento.critico ? 'CRÍTICO!\n' : '');
       const numero = numeroFlutuante(alvo, prefixo + formatarNumero(evento.dano),
         (forte ? 'critico' : '') + (evento.elemental ? ' elemental' : '') + (alvo === 'jogador' ? ' recebido' : ''));
       if (elemento && atacante === 'jogador') numero.style.color = elemento.cor;
 
-      if (forte) {
+      if (forte || tecnica) {
         animarClasse($('arena'), 'tremendo', 300);
         animarClasse($('arena-clarao'), 'clarao-critico', 250);
       }
@@ -359,6 +372,24 @@ export function animarDerrota() {
     animarClasse($('cb-corpo-jogador'), 'caindo', 900);
     animarClasse($('arena-clarao'), 'clarao-derrota', 600);
   });
+}
+
+// Técnica especial da classe: nome grande na arena + o efeito extra dela
+function mostrarTecnica(evento) {
+  const aviso = $('aviso-tecnica');
+  aviso.textContent = `✦ ${evento.tecnica.nome} ✦`;
+  animarClasse(aviso, 'aparecendo', 1300);
+  animarClasse($('arena-clarao'), 'clarao-critico', 300);
+  const efeitos = evento.efeitos ?? {};
+  if (efeitos.cura) {
+    vidaMostrada.jogador = { vida: evento.vidaJogador, maxima: evento.vidaMaximaJogador };
+    desenharBarras();
+    numeroFlutuante('jogador', `+${formatarNumero(efeitos.cura)}`, 'cura');
+    animarClasse($('cb-sprite-jogador'), 'curando', 800);
+  }
+  if (efeitos.congelou) setTimeout(() => numeroFlutuante('inimigo', '❄️ Congelado!', 'elemental'), 250);
+  if (efeitos.enfraqueceu) setTimeout(() => numeroFlutuante('inimigo', '👁️ Alma enfraquecida!', 'elemental'), 250);
+  if (efeitos.pilula) setTimeout(() => numeroFlutuante('jogador', '💊 Pílula recarregada!', 'cura'), 250);
 }
 
 // Aviso de chefe no começo da luta

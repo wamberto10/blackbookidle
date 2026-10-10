@@ -138,15 +138,23 @@ export function mostrarGolpeBoss(evento) {
       mostrarQuadro($('boss-jogador'), 2, 280);
       animar($('boss-corpo-jogador'), 'boss-avanca-direita');
       setTimeout(() => {
-        const forte = evento.critico || evento.elemental;
-        tocarEfeito('boss', forte ? classe?.efeitoCritico ?? 'corte_critico' : classe?.efeito ?? 'corte');
+        const forte = evento.critico || evento.elemental || evento.tecnica;
+        tocarEfeito('boss', evento.tecnica ? evento.tecnica.efeito : forte ? classe?.efeitoCritico ?? 'corte_critico' : classe?.efeito ?? 'corte');
+        if (evento.tecnica) {
+          aviso(`✦ ${evento.tecnica.nome} ✦`, 'tecnica');
+          const e = evento.efeitos ?? {};
+          if (e.cura) numero('boss-numeros-jogador', '+' + formatarNumero(e.cura), 'cura');
+          if (e.congelou) numero('boss-numeros-boss', '❄️ Congelado!', 'esquiva');
+          if (e.enfraqueceu) numero('boss-numeros-boss', '👁️ Alma enfraquecida!', 'esquiva');
+          if (e.pilula) numero('boss-numeros-jogador', '💊 Pílula recarregada!', 'cura');
+        }
         if (forte) {
           mostrarQuadro($('boss-sprite'), POSE.dano, 380);          // crítico: o boss recua
           animar($('boss-arena'), 'boss-tremendo');
         } else {
           animar($('boss-sprite'), 'boss-atingido');
         }
-        const prefixo = evento.elemental ? 'EXPLOSÃO!\n' : evento.critico ? 'CRÍTICO!\n' : '';
+        const prefixo = evento.tecnica ? '' : evento.elemental ? 'EXPLOSÃO!\n' : evento.critico ? 'CRÍTICO!\n' : '';
         numero('boss-numeros-boss', prefixo + formatarNumero(evento.dano), forte ? 'critico' : '');
       }, 120);
     }, evento.duplo && !evento.segundo ? 200 : INTERVALO);
@@ -157,6 +165,8 @@ export function mostrarGolpeBoss(evento) {
       animar($('boss-aura'), 'ativa');
       aviso('🌙 O Mestre concentra a luz da lua...', 'carregando');
     });
+  } else if (evento.tipo === 'golpe' && evento.alvo === 'jogador' && evento.congelado) {
+    agendar(() => numero('boss-numeros-boss', '❄️ CONGELADO!', 'esquiva'));
   } else if (evento.tipo === 'golpe' && evento.alvo === 'jogador' && evento.especial) {
     // Lâmina da Lua Crescente: tela escurece, nome da técnica, a lua explode no herói
     agendar(() => {

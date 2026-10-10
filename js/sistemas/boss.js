@@ -24,6 +24,7 @@ import { TIPOS_DE_NUCLEO } from './nucleos.js';
 import { RARIDADE_POR_ID } from './itens.js';
 import { liberado } from './desbloqueios.js';
 import { tomarPilula } from './combate.js';
+import { tecnicaDoGolpe, penetracaoDoGolpe, efeitosDaTecnica, inimigoCongelado, forcaDoInimigo } from './tecnicas.js';
 
 const B = CONFIG.boss;
 const TURNO = CONFIG.combate.duracaoDoTurno;
@@ -170,10 +171,12 @@ function golpeDoJogador(estado, aoEvento, extra) {
   const { jogador, boss } = luta;
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
-  const defesa = boss.defesa * (1 - (especial.penetracao ?? 0));
+  const tecnica = tecnicaDoGolpe(luta, extra);
+  const defesa = boss.defesa * (1 - penetracaoDoGolpe(luta, tecnica));
   const critico = Math.random() * 100 < jogador.critico;
   let dano = calcularDano(jogador.ataque, defesa);
   if (critico) dano *= jogador.danoCritico / 100;
+  if (tecnica) dano *= tecnica.multiplicador;
   const elemental = !!especial.explosaoACada && luta.golpesDoJogador % especial.explosaoACada === 0;
   if (elemental) dano *= 1 + especial.bonusExplosao;
 
@@ -182,7 +185,8 @@ function golpeDoJogador(estado, aoEvento, extra) {
   if (estado.boss.vida < 1e-12) estado.boss.vida = 0;
   luta.danoNestaLuta += fracao;
   somarDano(estado, fracao);
-  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, numero: luta.golpesDoJogador, ...extra });
+  const efeitos = tecnica ? efeitosDaTecnica(luta, tecnica) : null;
+  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, tecnica, efeitos, numero: luta.golpesDoJogador, ...extra });
 }
 
 // Ciclo de B.especial.aCada turnos: golpes normais, 1 turno concentrando e a técnica especial
@@ -194,11 +198,15 @@ function golpeDoBoss(aoEvento) {
     return;
   }
   const especial = posicao === 0;                   // solta a Lâmina da Lua Crescente
+  if (inimigoCongelado(luta)) {                     // Tempestade de Gelo Místico
+    if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', congelado: true });
+    return;
+  }
   if (Math.random() * 100 < luta.jogador.esquiva) {
     if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', esquiva: true, especial });
     return;
   }
-  const dano = calcularDano(luta.boss.ataque, luta.jogador.defesa) * (especial ? B.especial.multiplicador : 1);
+  const dano = calcularDano(luta.boss.ataque * forcaDoInimigo(luta), luta.jogador.defesa) * (especial ? B.especial.multiplicador : 1);
   luta.vidaJogador -= dano;
   if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, especial });
   tomarPilula(luta, aoEvento);   // Alquimista

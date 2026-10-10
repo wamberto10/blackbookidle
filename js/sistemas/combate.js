@@ -20,6 +20,7 @@ import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
 import { tentarNucleo } from './nucleos.js';
 import { classeDe } from './personagem.js';
+import { tecnicaDoGolpe, penetracaoDoGolpe, efeitosDaTecnica, inimigoCongelado, forcaDoInimigo } from './tecnicas.js';
 
 const CB = CONFIG.combate;
 
@@ -153,21 +154,24 @@ function golpeDoJogador(aoEvento, extra = {}) {   // extra: { duplo, segundo } n
   const jogador = luta.jogador;
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
+  const tecnica = tecnicaDoGolpe(luta, extra);   // técnica especial da classe (a cada N turnos)
 
   // Mestre da Espada: Intenção da Arma ignora parte da Defesa
-  const defesa = luta.inimigo.defesa * (1 - (especial.penetracao ?? 0));
+  const defesa = luta.inimigo.defesa * (1 - penetracaoDoGolpe(luta, tecnica));
   const critico = Math.random() * 100 < jogador.critico;
   let dano = calcularDano(jogador.ataque, defesa);
   if (critico) dano *= jogador.danoCritico / 100;
+  if (tecnica) dano *= tecnica.multiplicador;
 
   // Cultivador Elemental: a cada N golpes, uma Explosão Elemental
   const elemental = !!especial.explosaoACada && luta.golpesDoJogador % especial.explosaoACada === 0;
   if (elemental) dano *= 1 + especial.bonusExplosao;
 
   luta.vidaInimigo -= dano;
+  const efeitos = tecnica ? efeitosDaTecnica(luta, tecnica) : null;
   // "vida" e "vidaMaxima" deixam a tela atualizar a barra no momento da animação do golpe
   // "numero" = quantos golpes o jogador já deu (a tela usa para alternar os elementos)
-  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, numero: luta.golpesDoJogador, vida: luta.vidaInimigo, vidaMaxima: luta.inimigo.vida, ...extra });
+  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, tecnica, efeitos, numero: luta.golpesDoJogador, vida: luta.vidaInimigo, vidaMaxima: luta.inimigo.vida, vidaJogador: luta.vidaJogador, vidaMaximaJogador: luta.jogador.vitalidade, ...extra });
 }
 
 function regenerar(aoEvento) {
@@ -180,11 +184,16 @@ function regenerar(aoEvento) {
 
 function golpeDoInimigo(aoEvento) {
   const vidaMaxima = luta.jogador.vitalidade;
+  // Tempestade de Gelo Místico: congelado, o inimigo perde o ataque
+  if (inimigoCongelado(luta)) {
+    if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', congelado: true, vida: luta.vidaJogador, vidaMaxima });
+    return;
+  }
   if (Math.random() * 100 < luta.jogador.esquiva) {
     if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', esquiva: true, vida: luta.vidaJogador, vidaMaxima });
     return;
   }
-  const dano = calcularDano(luta.inimigo.ataque, luta.jogador.defesa);
+  const dano = calcularDano(luta.inimigo.ataque * forcaDoInimigo(luta), luta.jogador.defesa);
   luta.vidaJogador -= dano;
   if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, vida: luta.vidaJogador, vidaMaxima });
   tomarPilula(luta, aoEvento);

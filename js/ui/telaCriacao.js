@@ -41,7 +41,8 @@ export function montarTelaCriacao(aoConfirmar) {
       <b class="nome-classe">${classe.nome}</b>
       <small class="titulo-classe">${classe.titulo}</small>
       <p>${classe.descricao}</p>
-      <div class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</div>`;
+      <div class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</div>
+      ${classe.tecnica ? `<div class="especial-classe tecnica-classe"><b>✦ ${classe.tecnica.nome}:</b> ${classe.tecnica.texto}</div>` : ''}`;
     carta.addEventListener('click', () => { escolha.classe = classe.id; atualizarEtapa2(); });
     caixaClasse.appendChild(carta);
   }

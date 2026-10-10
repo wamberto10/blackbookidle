@@ -24,6 +24,10 @@ export const CLASSES = [
     textoEspecial: 'Recupera 1% da Vitalidade máxima a cada turno.',
     efeito: 'impacto',
     efeitoCritico: 'impacto_critico',
+    // v0.15.0: técnica especial (sistemas/tecnicas.js). Dono: 'quero que a habilidade ajude a matar' →
+    // todas a cada 5 turnos, ×3,5 a ×4 (≈ +50–60% de dano em média; antes ×2,5–3 a cada 5–6 turnos ≈ +25%)
+    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 5, multiplicador: 4, cura: 0.15, efeito: 'impacto_critico',
+      texto: 'A cada 5 turnos, um soco de 400% de dano que recupera 15% da Vitalidade.' },
   },
   {
     id: 'arma',
@@ -39,6 +43,8 @@ export const CLASSES = [
     textoEspecial: 'Ignora 30% da Defesa do inimigo.',
     efeito: 'corte',
     efeitoCritico: 'corte_critico',
+    tecnica: { nome: 'Corte do Céu Partido', aCada: 5, multiplicador: 4, penetracao: 1, efeito: 'corte_critico',
+      texto: 'A cada 5 turnos, um corte de 400% de dano que ignora toda a Defesa.' },
   },
   {
     id: 'elemental',
@@ -61,6 +67,8 @@ export const CLASSES = [
     ],
     efeito: 'gelo',
     efeitoCritico: 'gelo_critico',
+    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 5, multiplicador: 3.5, congela: 1, efeito: 'gelo_critico',
+      texto: 'A cada 5 turnos, uma tempestade de 350% de dano que congela o inimigo (ele perde o próximo ataque).' },
   },
   // v0.13.0 (dono): duas classes novas da lore de Martial Peak.
   // A arte própria ainda não existe: usam a do Elemental / da Espada (ferramentas/sprites/importar_ia.py).
@@ -80,6 +88,8 @@ export const CLASSES = [
       'e os inimigos fogem dele com só 3× o Sentido Divino deles (Supressão de Alma).',
     efeito: 'alma',
     efeitoCritico: 'alma_critico',
+    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 5, multiplicador: 3.5, enfraquece: 0.15, efeito: 'alma_critico',
+      texto: 'A cada 5 turnos, uma lança de 350% de dano que devora a alma do inimigo: o Ataque dele cai 15% até o fim da luta (até −50%).' },
   },
   {
     id: 'alquimista',
@@ -97,6 +107,8 @@ export const CLASSES = [
       'toma uma Pílula de Cura que recupera 50% da Vitalidade.',
     efeito: 'chama_alquimica',
     efeitoCritico: 'chama_alquimica_critica',
+    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 5, multiplicador: 3.5, recarregaPilula: true, efeito: 'chama_alquimica_critica',
+      texto: 'A cada 5 turnos, uma explosão de fogo alquímico de 350% de dano que recarrega a Pílula de Cura.' },
   },
 ];
 

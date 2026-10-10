@@ -88,6 +88,7 @@ export function calcularAtributos(estado) {
       estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
+    tecnica: c.tecnica,
   };
 }
 
@@ -156,7 +157,9 @@ export function preverLuta(jogador, fase, turnosMaximos) {
   const esp = jogador.especial ?? {};
   const critico = 1 + (Math.min(jogador.critico, 100) / 100) * (jogador.danoCritico / 100 - 1);
   const explosao = esp.explosaoACada ? 1 + esp.bonusExplosao / esp.explosaoACada : 1;
-  const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao * golpesPorTurno(jogador, i);
+  const tec = jogador.tecnica;   // técnica da classe: em média +(multiplicador − 1)/aCada por turno
+  const media = tec ? 1 + (tec.multiplicador - 1) / tec.aCada : 1;
+  const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao * media * golpesPorTurno(jogador, i);
   const turnosParaVencer = Math.ceil(i.vida / meuDano);
 
   const recebido = dano(i.ataque, jogador.defesa) * (1 - jogador.esquiva / 100);
