@@ -973,6 +973,13 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 .aviso-chefe.aparecendo { animation: aviso-chefe 1.6s ease-out; }
 .tecnica-classe { margin-top: 6px; border-color: #ffb03a !important; }
+/* v0.15.2: aviso de que o herói está no boss do evento (a fase fica pausada) */
+.aviso-boss-ativo {
+  position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 12px; text-align: center; background: rgba(8, 6, 24, 0.78); color: #e8e0ff; text-shadow: 0 1px 2px #000;
+}
+.aviso-boss-ativo small { color: #c8c0d8; max-width: 300px; }
+.aviso-boss-ativo button { margin-top: 4px; }
 /* v0.15.0: nome da técnica especial da classe, no alto da arena */
 .aviso-tecnica {
   position: absolute; left: 0; right: 0; top: 10%; z-index: 6; text-align: center; pointer-events: none; padding: 0 8px;

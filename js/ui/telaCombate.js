@@ -25,6 +25,8 @@ import { previsaoDaFase, textoDoPoder } from './poder.js';
 import { EFEITO_PROVISORIO } from '../dados/classes.js';
 import { SPRITES } from '../dados/sprites.js';
 import { golpesPorTurno } from '../sistemas/atributos.js';
+import { lutaDoBoss } from '../sistemas/boss.js';
+import { abrirTelaBoss } from './telaBoss.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -56,6 +58,7 @@ export function montarTelaCombate(acoes) {
   $('cb-anterior').addEventListener('click', () => acoes.aoMudarFase(-1));
   $('cb-proxima').addEventListener('click', () => acoes.aoMudarFase(+1));
   $('cb-auto').addEventListener('change', (e) => acoes.aoMudarAutoCombate(e.target.checked));
+  $('aviso-boss-ver').addEventListener('click', abrirTelaBoss);
 }
 
 function telaVisivel() {
@@ -102,6 +105,16 @@ export function atualizarTelaCombate(estado) {
   ultimoEstado = estado;
   const fase = FASES[estado.combate.faseAtual];
   const luta = lutaAtual();
+
+  // v0.15.2: enquanto o herói luta contra o boss do evento, a luta da fase fica PAUSADA — avisa,
+  // senão parece que o jogo travou (dono achou que travou com o "Atacar sozinho" ligado)
+  const lutaBoss = lutaDoBoss();
+  $('aviso-boss-ativo').classList.toggle('escondido', !lutaBoss);
+  if (lutaBoss) {
+    $('aviso-boss-ativo-texto').textContent = estado.opcoes.bossAuto
+      ? '"Atacar sozinho" está ligado. A fase continua quando a luta do boss acabar (desligue na tela do boss se quiser só as fases).'
+      : 'A fase continua quando a luta do boss acabar.';
+  }
   // Segurança: se a aba ficou em segundo plano e uma animação nunca terminou, libera depois de 5 s
   if (vitoriasPendentes > 0 && Date.now() - pendenteDesde > 5000) vitoriasPendentes = 0;
   const inimigoLivre = vitoriasPendentes === 0 && Date.now() >= inimigoBloqueadoAte;
