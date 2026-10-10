@@ -24,8 +24,15 @@ export function nivelMelhoria(estado, id) {
 }
 
 export function custoMelhoria(estado, id) {
-  const melhoria = buscar(id);
-  return Math.ceil(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, nivelMelhoria(estado, id)));
+  return custoNoNivel(buscar(id), nivelMelhoria(estado, id));
+}
+
+// Custo do nível n → n+1. v0.17.2: com "custoAlto", a partir do nível X o custo cresce mais devagar.
+export function custoNoNivel(melhoria, n) {
+  const alto = melhoria.custoAlto;
+  if (!alto || n <= alto.aPartirDoNivel) return Math.ceil(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, n));
+  return Math.ceil(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, alto.aPartirDoNivel)
+    * Math.pow(alto.crescimento, n - alto.aPartirDoNivel));
 }
 
 // true = a melhoria já está no nível máximo (só algumas têm limite)
@@ -64,7 +71,8 @@ export function converterMelhoriasCompostas(estado) {
     const multiplicador = 1 + velho * m.antes.bonus;
     const novo = Math.ceil(Math.log(multiplicador) / Math.log(1 + m.bonus) - 1e-9);
     const gastoAntes = somaDeCustos(m.custoBase, m.antes.crescimentoCusto, 0, velho);
-    const custoAgora = somaDeCustos(m.custoBase, m.crescimentoCusto, 0, novo);
+    let custoAgora = 0;
+    for (let n = 0; n < novo; n++) custoAgora += custoNoNivel(m, n);
     estado.blackbook[m.id] = novo;
     devolvida += Math.max(0, gastoAntes - custoAgora);
   }

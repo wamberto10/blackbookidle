@@ -59,6 +59,8 @@ export function montarTelaCombate(acoes) {
   $('cb-proxima').addEventListener('click', () => acoes.aoMudarFase(+1));
   $('cb-auto').addEventListener('change', (e) => acoes.aoMudarAutoCombate(e.target.checked));
   $('aviso-boss-ver').addEventListener('click', abrirTelaBoss);
+  // v0.17.1: registro compacto (3 linhas); tocar no título abre as 8 mais recentes
+  $('cb-registro-titulo').addEventListener('click', () => $('cb-registro-caixa').classList.toggle('aberto'));
 }
 
 function telaVisivel() {

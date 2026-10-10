@@ -1439,7 +1439,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 
 /* Botões comuns e principais (as abas, ícones, cartas e itens têm visual próprio) */
-button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem) {
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo) {
   border: 12px solid transparent;
   border-image: var(--imagem-botao) 24 fill / 12px stretch;
   border-radius: 0;
@@ -2092,3 +2092,83 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
   from { opacity: 1; margin-top: 0; }
   to   { opacity: 0; margin-top: -48px; }
 }
+
+/* =============================================================
+   v0.17.1: REWORK DA ABA COMBATE
+   Arena grande (metade da tela) com o placar por cima, lutadores maiores,
+   controles numa linha e registro de batalha compacto.
+   ============================================================= */
+#aba-combate .painel-corpo { padding-top: 8px; }
+.combate-novo { display: flex; flex-direction: column; gap: 8px; }
+.combate-novo.escondido { display: none; }
+.cb-cabecalho h3 { margin: 0; font-size: 1.05rem; }
+.cb-cabecalho .linha { margin-bottom: 1px; }
+
+#aba-combate .arena {
+  height: clamp(300px, 54vh, 480px);
+  margin: 0;
+  border: 1px solid rgba(212, 168, 74, 0.55);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), inset 0 0 30px rgba(0, 0, 0, 0.45);
+}
+#aba-combate .arena::after {
+  background: linear-gradient(rgba(10, 8, 14, 0.62), rgba(10, 8, 14, 0) 30%, rgba(10, 8, 14, 0.05) 60%, rgba(10, 8, 14, 0.6));
+}
+#aba-combate .arena-palco { padding: 0 6px 26px; grid-template-columns: 1fr 12px 1fr; }
+#aba-combate .lutador canvas { width: 150px; height: 150px; }
+#aba-combate .lutador canvas.sprite-chefe { width: 180px; height: 180px; }
+#aba-combate .efeito { width: 110px; height: 110px; margin: -55px 0 0 -55px; }
+#aba-combate .numero-dano { top: -6px; font-size: 1.15rem; }
+#aba-combate .aviso-tecnica { top: 34%; }
+#aba-combate .aviso-chefe { top: 42%; }
+
+/* Placar por cima da arena */
+.hud-luta {
+  position: absolute; top: 6px; left: 8px; right: 8px; z-index: 4;
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: start;
+  pointer-events: none;
+}
+.hud-luta * { pointer-events: auto; }
+.hud-lado { min-width: 0; display: flex; flex-direction: column; gap: 2px; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.hud-inimigo { text-align: right; align-items: flex-end; }
+.hud-lado .lutador-nome {
+  max-width: 100%; font-size: 0.82rem; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hud-lado .barra.barra-vida {
+  width: 100%; height: 11px; padding: 0; margin: 1px 0 0;
+  border: 1px solid rgba(212, 168, 74, 0.8); border-image: none; border-radius: 3px;
+  background: rgba(0, 0, 0, 0.7); overflow: hidden;
+}
+.hud-inimigo .barra-vida { transform: scaleX(-1); }       /* a vida do inimigo esvazia em direção ao centro */
+.hud-numeros { font-size: 0.68rem; color: #fff; font-variant-numeric: tabular-nums; }
+.hud-lado .lutador-stats { justify-content: flex-start; gap: 2px 8px; font-size: 0.68rem; color: #e8e0f0; }
+.hud-inimigo .lutador-stats { justify-content: flex-end; }
+.hud-lado .lutador-stats .icone-px { width: 13px; height: 13px; }
+.hud-lado .etiqueta { font-size: 0.62rem; padding: 0 5px; }
+#aba-combate .versus { padding: 2px 0 0; font-size: 1.15rem; line-height: 1; }
+#aba-combate .versus .pequeno { font-size: 0.68rem; margin-top: 2px; }
+
+/* Controles numa linha */
+.cb-controles { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 8px; }
+.cb-controles .cb-seta { height: 44px; min-height: 0; padding: 0; font-size: 1rem; }
+.cb-recompensa { display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.3; }
+.cb-recompensa small { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-fraco); }
+.cb-recompensa span { font-size: 0.9rem; }
+.cb-recompensa .icone-px { width: 16px; height: 16px; vertical-align: -3px; }
+.cb-chave { justify-content: center; white-space: normal; }
+
+/* Registro de batalha compacto */
+.cb-registro-caixa { border: 1px solid var(--borda); border-radius: 8px; background: rgba(12, 9, 16, 0.6); padding: 4px 10px 6px; }
+.cb-registro-titulo {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 0; padding: 2px 0;
+  border: none; border-image: none; background: none; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-fraco);
+}
+.cb-registro-caixa.aberto .cb-registro-titulo span { transform: rotate(180deg); }
+.cb-registro-caixa .registro { font-size: 0.74rem; }
+.cb-registro-caixa .registro li { padding: 2px 0; line-height: 1.3; }
+.cb-registro-caixa:not(.aberto) .registro li:nth-child(n+4) { display: none; }
+.hud-jogador .lutador-nome { align-self: flex-start; }
+.hud-inimigo .lutador-nome { align-self: flex-end; }
+#aba-combate .lutador canvas { width: clamp(140px, 46vw, 210px); height: clamp(140px, 46vw, 210px); }
+#aba-combate .lutador canvas.sprite-chefe { width: clamp(170px, 54vw, 250px); height: clamp(170px, 54vw, 250px); }
+.cb-registro-caixa:not(.aberto) .registro li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

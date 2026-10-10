@@ -159,81 +159,90 @@
       <div class="bloqueado" id="combate-bloqueado">
         ⚔️ O combate será liberado no <b>5º estágio do Corpo Temperado</b>.
       </div>
-      <div id="combate-conteudo" class="escondido">
-        <div class="cartao">
+      <!-- v0.17.1: rework da aba Combate — arena grande com o placar (nome, vida, poder) por cima,
+           controles numa linha só e registro de batalha compacto -->
+      <div id="combate-conteudo" class="escondido combate-novo">
+        <div class="cb-cabecalho">
           <div class="linha pequeno"><span id="cb-mapa"></span><span id="cb-numero"></span></div>
           <h3 id="cb-local"></h3>
+        </div>
 
-          <!-- Arena: cenário do mapa ao fundo, lutadores no "palco" -->
-          <div class="arena" id="arena">
-            <canvas id="arena-fundo" class="arena-fundo"></canvas>
-            <div class="arena-palco">
-              <div class="lutador" id="cb-lado-jogador">
-                <div class="corpo-lutador" id="cb-corpo-jogador">
-                  <div class="sombra-chao"></div>
-                  <canvas id="cb-sprite-jogador" width="32" height="32"></canvas>
-                  <div class="efeito" id="cb-efeito-jogador"></div>
-                </div>
-              </div>
-              <div class="versus">
-                <div>VS</div>
-                <div class="pequeno" id="cb-tempo"></div>
-              </div>
-              <div class="lutador" id="cb-lado-inimigo">
-                <div class="corpo-lutador" id="cb-corpo-inimigo">
-                  <div class="sombra-chao"></div>
-                  <canvas id="cb-sprite-inimigo" width="32" height="32"></canvas>
-                  <div class="efeito" id="cb-efeito-inimigo"></div>
-                </div>
-              </div>
-            </div>
-            <div class="aviso-chefe" id="aviso-chefe"></div>
-            <div class="aviso-tecnica" id="aviso-tecnica"></div>
-            <!-- v0.15.2: o herói está lutando contra o boss do evento ("Atacar sozinho"): a fase fica pausada -->
-            <div class="aviso-boss-ativo escondido" id="aviso-boss-ativo">
-              <div>🌙 Lutando contra o <b>Mestre do Salão Ying Yue</b></div>
-              <small id="aviso-boss-ativo-texto">A fase continua quando a luta do boss acabar.</small>
-              <button id="aviso-boss-ver" class="principal">Ver a luta do boss</button>
-            </div>
-            <div class="arena-clarao" id="arena-clarao"></div>
-          </div>
+        <div class="arena" id="arena">
+          <canvas id="arena-fundo" class="arena-fundo"></canvas>
 
-          <!-- Nomes e barras de vida: 4 linhas alinhadas (nome | poder e velocidade | barra | vida) -->
-          <div class="infos-lutadores">
-            <div class="info-lutador">
+          <!-- Placar por cima da arena (estilo jogo de luta) -->
+          <div class="hud-luta">
+            <div class="hud-lado hud-jogador">
               <div class="lutador-nome" id="cb-nome-jogador">Você</div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida" id="cb-vida-jogador"></div></div>
+              <div class="hud-numeros">
+                <span class="lutador-vida" id="cb-vida-jogador-texto"></span>
+              </div>
               <div class="lutador-stats">
                 <span class="poder-lutador">Poder <b id="cb-poder-jogador"></b></span>
                 <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-jogador"></span></span>
               </div>
-              <div class="barra barra-vida"><div class="barra-preenchida vida" id="cb-vida-jogador"></div></div>
-              <div class="pequeno lutador-vida" id="cb-vida-jogador-texto"></div>
             </div>
-            <div class="info-lutador">
+            <div class="versus">
+              <div>VS</div>
+              <div class="pequeno" id="cb-tempo"></div>
+            </div>
+            <div class="hud-lado hud-inimigo">
               <div class="lutador-nome" id="cb-nome-inimigo"></div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida inimigo" id="cb-vida-inimigo"></div></div>
+              <div class="hud-numeros">
+                <span class="lutador-vida" id="cb-vida-inimigo-texto"></span>
+              </div>
               <div class="lutador-stats">
                 <span id="cb-tipo" class="etiqueta"></span>
                 <span class="poder-lutador">Poder <b id="cb-poder-inimigo"></b></span>
                 <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-inimigo"></span></span>
               </div>
-              <div class="barra barra-vida"><div class="barra-preenchida vida inimigo" id="cb-vida-inimigo"></div></div>
-              <div class="pequeno lutador-vida" id="cb-vida-inimigo-texto"></div>
             </div>
           </div>
 
-          <div class="linha pequeno"><span>Recompensa:</span><span id="cb-recompensa"></span></div>
-          <div class="botoes">
-            <button id="cb-anterior">◀ Fase anterior</button>
-            <button id="cb-proxima">Próxima fase ▶</button>
+          <div class="arena-palco">
+            <div class="lutador" id="cb-lado-jogador">
+              <div class="corpo-lutador" id="cb-corpo-jogador">
+                <div class="sombra-chao"></div>
+                <canvas id="cb-sprite-jogador" width="32" height="32"></canvas>
+                <div class="efeito" id="cb-efeito-jogador"></div>
+              </div>
+            </div>
+            <div></div>
+            <div class="lutador" id="cb-lado-inimigo">
+              <div class="corpo-lutador" id="cb-corpo-inimigo">
+                <div class="sombra-chao"></div>
+                <canvas id="cb-sprite-inimigo" width="32" height="32"></canvas>
+                <div class="efeito" id="cb-efeito-inimigo"></div>
+              </div>
+            </div>
           </div>
-          <label class="opcao">
-            <input type="checkbox" id="cb-auto">
-            Avançar para a próxima fase automaticamente ao vencer
-          </label>
+          <div class="aviso-chefe" id="aviso-chefe"></div>
+          <div class="aviso-tecnica" id="aviso-tecnica"></div>
+          <!-- v0.15.2: o herói está lutando contra o boss do evento ("Atacar sozinho"): a fase fica pausada -->
+          <div class="aviso-boss-ativo escondido" id="aviso-boss-ativo">
+            <div>🌙 Lutando contra o <b>Mestre do Salão Ying Yue</b></div>
+            <small id="aviso-boss-ativo-texto">A fase continua quando a luta do boss acabar.</small>
+            <button id="aviso-boss-ver" class="principal">Ver a luta do boss</button>
+          </div>
+          <div class="arena-clarao" id="arena-clarao"></div>
         </div>
 
-        <div class="cartao">
-          <h3>Registro de batalha</h3>
+        <!-- Controles: fase anterior | recompensa | próxima fase -->
+        <div class="cb-controles">
+          <button id="cb-anterior" class="cb-seta" title="Fase anterior">◀</button>
+          <div class="cb-recompensa"><small>Recompensa por vitória</small><span id="cb-recompensa"></span></div>
+          <button id="cb-proxima" class="cb-seta" title="Próxima fase">▶</button>
+        </div>
+        <label class="chave-auto cb-chave">
+          <input type="checkbox" id="cb-auto"><span class="chave"></span>
+          <span>Avançar de fase sozinho ao vencer</span>
+        </label>
+
+        <!-- Registro compacto: mostra as 3 últimas linhas; tocar no título mostra as 8 -->
+        <div class="cb-registro-caixa" id="cb-registro-caixa">
+          <button class="cb-registro-titulo" id="cb-registro-titulo">Registro de batalha <span>▾</span></button>
           <ul class="registro" id="cb-registro"></ul>
         </div>
       </div>
