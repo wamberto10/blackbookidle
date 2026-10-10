@@ -1767,3 +1767,38 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .chip-nucleo b { color: var(--cor); }
 .chip-nucleo .icone-px { width: 18px; height: 18px; }
 .painel-personagem .recolhivel { margin-top: 0; background: rgba(10, 8, 16, 0.7); }
+
+/* v0.16.1: enquadramento da tela de Personagem (tamanhos de letra e espaços iguais em toda a tela) */
+.pers-cabecalho { gap: 10px; }
+.pers-retrato { width: 132px; height: 132px; }
+.pers-retrato canvas { width: 112px; height: 112px; margin-top: 2px; }
+.pers-identidade { flex: 1; gap: 2px; }
+.pers-nome { font-size: 1.15rem; line-height: 1.2; }
+.pers-identidade .pers-linha, .pers-reino { font-size: 0.85rem; line-height: 1.3; }
+.pers-identidade .pers-linha.pequeno { font-size: 0.78rem; }
+.pers-identidade .pers-linha .icone-px { width: 18px; height: 18px; flex: none; }
+.pers-classe-sexo { color: var(--texto-fraco); }
+
+.placa-poder { height: 60px; }
+.placa-poder-rotulo { font-size: 0.65rem; }
+.placa-poder-valor { font-size: 1.4rem; }
+.painel-personagem .parte-poder { font-size: 0.8rem; padding: 3px 8px; }
+.painel-personagem .parte-poder .icone-px { width: 18px; height: 18px; }
+
+.painel-personagem .cartao-classe h3 { font-size: 1rem; }
+.painel-personagem .cartao-classe .classe-topo p { font-size: 0.8rem; }
+.painel-personagem .cartao-classe .especial-classe { font-size: 0.78rem; line-height: 1.4; margin-top: 6px; }
+.classe-icone { width: 34px; height: 34px; }
+.tecnica-classe .icone-px { width: 18px; height: 18px; }
+
+.pers-titulo { font-size: 1rem; }
+.painel-personagem .atributo { font-size: 0.85rem; }
+.painel-personagem .atributo .icone-px { width: 20px; height: 20px; vertical-align: -5px; }
+.atributo-principal .atributo-nome, .atributo-extra .atributo-nome, .atributo-teto .atributo-nome { font-size: 0.78rem; color: var(--texto-fraco); }
+.atributo-principal > strong, .atributo-extra > strong { font-size: 1.05rem; }
+.atributo-teto > strong { font-size: 0.9rem; color: #fff; }
+.atributo.atributo-teto { gap: 4px 8px; padding: 0 4px; }
+.barra-teto { height: 5px; }
+.painel-personagem .atributo .botao-nucleo { width: 28px; height: 28px; font-size: 1rem; }
+.chip-nucleo { font-size: 0.78rem; }
+.chip-nucleo .icone-px { width: 16px; height: 16px; }

@@ -250,7 +250,7 @@ function atualizarNivel(estado) {
   desenharPersonagem($('sprite-pers'), reino.id, 'meditando', personagem);
   $('inicio-nome').textContent = personagem.nome;
   $('pers-nome').textContent = personagem.nome;
-  $('pers-classe').textContent = `${classe.nome} · ${personagem.sexo === 'feminino' ? 'Feminino' : 'Masculino'}`;
+  $('pers-classe').innerHTML = `${classe.nome} <span class="pers-classe-sexo">· ${personagem.sexo === 'feminino' ? '♀' : '♂'}</span>`;
   $('pers-classe-icone').src = `img/icones/classe_${classe.id}.png`;
   $('cb-nome-jogador').textContent = personagem.nome;
   $('pers-classe-cartao').innerHTML = `
