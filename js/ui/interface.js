@@ -77,6 +77,15 @@ export function montarInterface(acoes) {
   montarVip(acoes);               // botão 💎 e tela do VIP
   montarTelaBoss(acoes);          // botão BOSS e tela do Evento de Boss
 
+  // Personagem sentado no chão do cenário (recalcula quando a janela ou o painel mudam de tamanho)
+  window.addEventListener('resize', posicionarNoChao);
+  if (window.ResizeObserver) {
+    const observador = new ResizeObserver(posicionarNoChao);
+    observador.observe(document.querySelector('.inicio'));
+    observador.observe(document.querySelector('.inicio-cultivo'));
+  }
+  posicionarNoChao();
+
   montarTelaCombate(acoes);
   montarTelaMapa(acoes);
   montarTelaMochila(acoes);
@@ -152,6 +161,29 @@ function atualizarFundo(estado) {
   }
 }
 
+// ---- v0.16.3: personagem sentado no "chão" do cenário ----
+// Os fundos (540×960) têm o chão / círculo do mapa a ~73% da altura. O fundo cobre a janela
+// inteira (cover, centralizado), então a altura do chão na tela muda com o formato da janela:
+// calcula onde ele ficou e senta o personagem ali, sem nunca entrar no painel de cultivo.
+const CHAO_DO_FUNDO = 0.735;
+
+function posicionarNoChao() {
+  const inicio = document.querySelector('.inicio');
+  const moldura = $('moldura-sprite');
+  const painel = document.querySelector('.inicio-cultivo');
+  if (!inicio || !moldura || !painel) return;
+  const fundo = document.querySelector('.fundo-mundo:not(.escondido)') ?? $('fundo-mundo');
+  const tela = fundo.getBoundingClientRect();
+  const escala = Math.max(tela.width / 540, tela.height / 960);
+  const alturaImagem = 960 * escala;
+  const chao = tela.top + (tela.height - alturaImagem) / 2 + CHAO_DO_FUNDO * alturaImagem;
+  const caixa = inicio.getBoundingClientRect();
+  const limite = painel.getBoundingClientRect().top - 2;        // não entra no painel
+  const minimo = $('inicio-local').getBoundingClientRect().bottom + moldura.offsetHeight + 8;
+  const y = Math.max(minimo, Math.min(chao, limite)) - caixa.top + inicio.scrollTop;
+  moldura.style.setProperty('--chao-y', `${Math.round(y)}px`);
+}
+
 // ---- Cultivo: tela inicial e painel Cultivo ----
 function atualizarCultivo(estado, producao) {
   // VIP: o botão liga/desliga o Meditar automático; sem VIP, é por clique
@@ -163,6 +195,9 @@ function atualizarCultivo(estado, producao) {
     $(id).textContent = textoMeditar;
     $(id).classList.toggle('meditar-auto', auto);
   }
+  // v0.16.3: na tela inicial o painel ficou mais baixo — texto curto para caber numa linha
+  $('inicio-meditar').textContent = estado.vip ? `Auto: ${auto ? 'LIGADO' : 'DESLIGADO'}` : textoMeditar.replace('🧘 ', '');
+  $('inicio-meditar').title = textoMeditar;
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
   // Requisito de combate para romper o reino
@@ -206,7 +241,8 @@ function atualizarCultivo(estado, producao) {
 
   for (const id of ['botao-avancar', 'inicio-avancar']) {
     const botao = $(id);
-    botao.textContent = textoBotao;
+    // Tela inicial: o botão tem imagem (avançar / romper), então o texto vai sem o emoji
+    botao.textContent = id === 'inicio-avancar' ? textoBotao.replace(/^\S+\s/, '') : textoBotao;
     botao.classList.toggle('rompimento', rompimento);
     botao.disabled = !P.podeAvancar(estado);
   }

@@ -50,13 +50,16 @@
       <canvas id="sprite" width="32" height="32"></canvas>
     </div>
 
-    <div class="cartao inicio-cultivo">
-      <div class="linha pequeno"><span>Próximo: <b id="inicio-proximo"></b></span><span id="inicio-tempo"></span></div>
-      <div class="barra"><div class="barra-preenchida" id="inicio-barra"></div></div>
+    <!-- v0.16.3: painel simplificado — barra com o texto dentro + 2 botões baixos -->
+    <div class="inicio-cultivo">
+      <div class="barra barra-inicio">
+        <div class="barra-preenchida" id="inicio-barra"></div>
+        <div class="barra-texto"><span><b id="inicio-proximo"></b></span><span id="inicio-tempo"></span></div>
+      </div>
       <div class="requisito" id="inicio-requisito"></div>
       <div class="botoes">
-        <button id="inicio-meditar">🧘 Meditar</button>
-        <button id="inicio-avancar" class="principal">Avançar</button>
+        <button id="inicio-meditar" class="botao-imagem">Meditar</button>
+        <button id="inicio-avancar" class="botao-imagem">Avançar</button>
       </div>
     </div>
   </main>

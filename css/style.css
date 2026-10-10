@@ -1439,7 +1439,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 
 /* Botões comuns e principais (as abas, ícones, cartas e itens têm visual próprio) */
-button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo) {
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem) {
   border: 12px solid transparent;
   border-image: var(--imagem-botao) 24 fill / 12px stretch;
   border-radius: 0;
@@ -1839,3 +1839,165 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .painel-personagem .atributo .botao-nucleo::after { width: 2px; height: 12px; margin: -6px 0 0 -1px; }
 /* A coluna da tela não pode "espremer" os blocos (a placa do Poder ficava com 17 px de altura) */
 .painel-personagem .painel-corpo > * { flex-shrink: 0; }
+
+/* v0.16.3: aura de cultivo nova (estilo da aura lunar do boss: chamas em camadas contornando o corpo).
+   O "buraco" do corpo ocupa ~40% da largura do quadro, por isso a aura é maior que o personagem,
+   e a base das chamas fica um pouco abaixo dele (escondida atrás do painel de cultivo). */
+.aura-cultivo {
+  --tamanho-aura: 320px;
+  bottom: -44px;
+  opacity: 1;
+  animation-duration: 0.8s;
+}
+
+/* v0.16.3: tela inicial — personagem maior, sentado no chão do cenário (posição calculada em
+   interface.js → --chao-y = onde fica a base dele) e painel de cultivo mais baixo */
+.inicio > .moldura-sprite {
+  position: absolute;
+  left: 50%;
+  top: var(--chao-y, 70%);
+  width: 170px;
+  height: 170px;
+  transform: translate(-50%, -100%);
+  z-index: 1;
+}
+.inicio > .moldura-sprite canvas { width: 170px; height: 170px; }
+.inicio > .moldura-sprite .aura-cultivo { --tamanho-aura: 400px; bottom: -70px; }
+.inicio-cultivo { padding: 0 4px; }
+.inicio-cultivo .linha { font-size: 0.78rem; }
+.inicio-cultivo .barra { margin: 4px 0; }
+.inicio-cultivo .botoes { margin-top: 4px; gap: 6px; }
+.inicio-cultivo .botoes button {
+  min-height: 0;
+  height: 42px;
+  border-width: 10px;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 420px) {
+  .inicio-cultivo .botoes button { font-size: 0.78rem; padding: 0 2px; }
+}
+
+/* v0.16.3: painel de cultivo da tela inicial simplificado (bem mais baixo) */
+.inicio-cultivo {
+  padding: 6px 8px 8px;
+  border: 1px solid rgba(212, 168, 74, 0.55);
+  border-radius: 10px;
+  background: rgba(12, 9, 16, 0.78);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.barra.barra-inicio { position: relative; height: 24px; margin: 0; }
+.barra-inicio .barra-texto {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  color: #fff;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.barra-inicio .barra-texto > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.inicio-cultivo .requisito { margin-top: 4px; font-size: 0.75rem; text-align: center; }
+.inicio-cultivo .botoes { margin-top: 6px; }
+.inicio-cultivo .botoes button { height: 36px; border-width: 9px; font-size: 0.8rem; }
+
+/* Versão A: botões estreitos e centralizados */
+.inicio-cultivo .botoes { justify-content: center; }
+.inicio-cultivo .botoes button { flex: 0 1 150px; }
+
+
+/* v0.16.3: botões de imagem do painel de cultivo (img/interface/botao_auto/avancar/romper.png)
+   [imagem] texto curto ao lado. O "auto" fica apagado quando está desligado. */
+.inicio-cultivo .botoes { justify-content: center; gap: 18px; }
+.inicio-cultivo .botoes button.botao-imagem {
+  flex: 0 1 auto;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 0;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  color: var(--texto);
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+}
+.botao-imagem::before {
+  content: '';
+  flex: none;
+  width: 46px;
+  height: 45px;
+  background: center / contain no-repeat;
+}
+#inicio-meditar::before { background-image: url('../img/interface/botao_auto.png'); filter: grayscale(0.85) brightness(0.6); }
+#inicio-meditar.meditar-auto::before { filter: drop-shadow(0 0 6px rgba(110, 240, 140, 0.8)); }
+#inicio-meditar.meditar-auto { color: #a8f0b4 !important; box-shadow: none; }
+#inicio-avancar::before { background-image: url('../img/interface/botao_avancar.png'); filter: drop-shadow(0 0 5px rgba(255, 210, 90, 0.6)); }
+#inicio-avancar.rompimento::before { background-image: url('../img/interface/botao_romper.png'); filter: drop-shadow(0 0 7px rgba(255, 90, 60, 0.8)); }
+#inicio-avancar { color: #ffe08a; font-weight: bold; }
+#inicio-avancar.rompimento { color: #ffb08a; }
+.inicio-cultivo .botoes button.botao-imagem:disabled { opacity: 0.45; }
+
+/* v0.16.3: SEM painel — botão de auto num canto, avançar no outro (menores), nome e tempo no meio
+   e a barra de cultivo fina embaixo, de ponta a ponta */
+.inicio-cultivo {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "req req req" "med texto av" "barra barra barra";
+  align-items: end;
+  gap: 4px 6px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.inicio-cultivo .requisito { grid-area: req; margin: 0; text-shadow: 0 1px 2px #000; }
+.inicio-cultivo .botoes { display: contents; }
+.inicio-cultivo .botoes button.botao-imagem {
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  height: auto;
+  padding: 0;
+  font-size: 0.66rem;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+}
+.inicio-cultivo #inicio-meditar { grid-area: med; }
+.inicio-cultivo #inicio-avancar { grid-area: av; }
+.botao-imagem::before { width: 40px; height: 39px; }
+.barra.barra-inicio {
+  grid-area: barra;
+  height: 7px;
+  padding: 0;
+  border: 1px solid rgba(212, 168, 74, 0.7);
+  border-image: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  overflow: visible;
+}
+.barra-inicio .barra-preenchida { border-radius: 3px; }
+/* nome e tempo na linha dos botões, no meio */
+.barra-inicio .barra-texto {
+  inset: auto 86px calc(100% + 8px) 86px;
+  height: auto;
+  padding: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0;
+  font-size: 0.72rem;
+  text-align: center;
+  overflow: visible;
+}
+.barra-inicio .barra-texto > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.barra-inicio #inicio-tempo { font-size: 0.66rem; color: #e8d8a8; }
