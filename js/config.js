@@ -5,7 +5,7 @@
 // =============================================================
 
 export const CONFIG = {
-  versao: '0.13.0',
+  versao: '0.13.1',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -72,6 +72,9 @@ export const CONFIG = {
     // Ex.: comum do Mapa 1 = 1 | chefe do Mapa 1 = 26 | chefe do Mapa 12 = ~17 mil
     // (serão usadas para subir o nível dos equipamentos, na Etapa 3)
     crescimentoPedras: 1.05,
+    // v0.13.1 (dono achou o farm de Pedras baixo): ×2 em toda vitória. Antes, levar 1 Lendário
+    // até +20 levava ~8 h de farm (o conjunto de 10, ~83 h); agora ~4 h (~41 h).
+    multiplicadorPedras: 2,
     // v0.8.0: cada mapa tem inimigos mais fortes que o anterior (Vida, Ataque e Defesa ×1,31^mapa).
     // Cria "muralhas" que só caem depois de reencarnar e comprar melhorias no Black Book.
     // v0.8.1: era 1.32 — compensa a Esquiva que saiu do Black Book (robô: 81–90 h, 3 reencarnações)

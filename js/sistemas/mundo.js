@@ -68,7 +68,7 @@ MAPAS.forEach((mapa, indiceMapa) => {
       },
       recompensa: {
         cultivo: producaoNoNivel(nivelReferencia, mapa.reino) * tipo.cultivo,
-        pedras: Math.ceil(tipo.pedras * Math.pow(CONFIG.combate.crescimentoPedras, indice)),
+        pedras: Math.ceil(tipo.pedras * Math.pow(CONFIG.combate.crescimentoPedras, indice) * CONFIG.combate.multiplicadorPedras),
       },
     });
   });
