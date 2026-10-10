@@ -24,11 +24,10 @@ export const CLASSES = [
     textoEspecial: 'Recupera 1% da Vitalidade máxima a cada turno.',
     efeito: 'impacto',
     efeitoCritico: 'impacto_critico',
-    // v0.15.1 (dono): técnica especial a cada 3 ATAQUES (o contador zera a cada luta), ×1,9 de dano
-    // em todas as classes = +30% de dano em média ((1 + 1 + 1,9) ÷ 3). Os efeitos extras ficaram mais leves
-    // porque saem mais vezes.
-    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 3, multiplicador: 1.9, cura: 0.08, efeito: 'tec_sangue_dourado',
-      texto: 'A cada 3 ataques, um soco de 190% de dano que recupera 8% da Vitalidade.' },
+    // v0.15.3 (dono): técnica especial no 4º ATAQUE (o contador zera a cada luta), ×3 de dano
+    // em todas as classes = +50% de dano em média ((1 + 1 + 1 + 3) ÷ 4). (v0.15.1: a cada 3, ×1,9 = +30%.)
+    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 4, multiplicador: 3, cura: 0.08, efeito: 'tec_sangue_dourado',
+      texto: 'A cada 4 ataques, um soco de 300% de dano que recupera 8% da Vitalidade.' },
   },
   {
     id: 'arma',
@@ -44,8 +43,8 @@ export const CLASSES = [
     textoEspecial: 'Ignora 30% da Defesa do inimigo.',
     efeito: 'corte',
     efeitoCritico: 'corte_critico',
-    tecnica: { nome: 'Corte do Céu Partido', aCada: 3, multiplicador: 1.9, penetracao: 1, efeito: 'tec_ceu_partido',
-      texto: 'A cada 3 ataques, um corte de 190% de dano que ignora toda a Defesa.' },
+    tecnica: { nome: 'Corte do Céu Partido', aCada: 4, multiplicador: 3, penetracao: 1, efeito: 'tec_ceu_partido',
+      texto: 'A cada 4 ataques, um corte de 300% de dano que ignora toda a Defesa.' },
   },
   {
     id: 'elemental',
@@ -68,8 +67,8 @@ export const CLASSES = [
     ],
     efeito: 'gelo',
     efeitoCritico: 'gelo_critico',
-    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 3, multiplicador: 1.9, congela: 1, efeito: 'tec_tempestade_gelo',
-      texto: 'A cada 3 ataques, uma tempestade de 190% de dano que congela o inimigo (ele perde o próximo ataque).' },
+    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 4, multiplicador: 3, congela: 1, efeito: 'tec_tempestade_gelo',
+      texto: 'A cada 4 ataques, uma tempestade de 300% de dano que congela o inimigo (ele perde o próximo ataque).' },
   },
   // v0.13.0 (dono): duas classes novas da lore de Martial Peak.
   // A arte própria ainda não existe: usam a do Elemental / da Espada (ferramentas/sprites/importar_ia.py).
@@ -89,8 +88,8 @@ export const CLASSES = [
       'e os inimigos fogem dele com só 3× o Sentido Divino deles (Supressão de Alma).',
     efeito: 'alma',
     efeitoCritico: 'alma_critico',
-    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 3, multiplicador: 1.9, enfraquece: 0.10, efeito: 'tec_lanca_alma',
-      texto: 'A cada 3 ataques, uma lança de 190% de dano que devora a alma do inimigo: o Ataque dele cai 10% até o fim da luta (até −50%).' },
+    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 4, multiplicador: 3, enfraquece: 0.10, efeito: 'tec_lanca_alma',
+      texto: 'A cada 4 ataques, uma lança de 300% de dano que devora a alma do inimigo: o Ataque dele cai 10% até o fim da luta (até −50%).' },
   },
   {
     id: 'alquimista',
@@ -108,8 +107,8 @@ export const CLASSES = [
       'toma uma Pílula de Cura que recupera 50% da Vitalidade.',
     efeito: 'chama_alquimica',
     efeitoCritico: 'chama_alquimica_critica',
-    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 3, multiplicador: 1.9, recarregaPilula: true, efeito: 'tec_caldeirao_celestial',
-      texto: 'A cada 3 ataques, uma explosão de fogo alquímico de 190% de dano que recarrega a Pílula de Cura (1 vez por luta).' },
+    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 4, multiplicador: 3, recarregaPilula: true, efeito: 'tec_caldeirao_celestial',
+      texto: 'A cada 4 ataques, uma explosão de fogo alquímico de 300% de dano que recarrega a Pílula de Cura (1 vez por luta).' },
   },
 ];
 
