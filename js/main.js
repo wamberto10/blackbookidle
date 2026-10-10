@@ -18,7 +18,7 @@ import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
 import { MUNDO, MAPAS, textoDoInicioDaVida } from './sistemas/mundo.js';
 import { salvar, carregar, apagarSave, segundosOffline } from './save.js';
-import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar } from './ui/interface.js';
+import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar, mostrarGanhoMeditacao } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
 import { focarMapaDaFase } from './ui/telaMapa.js';
 import { formatarNumero, formatarTempo } from './format.js';
@@ -194,10 +194,16 @@ function depoisDeMexerNosItens() {
 
 // 3) Monta a tela e diz o que cada botão faz
 montarInterface({
-  aoMeditar: () => {
+  aoMeditar: (botao) => {
     // VIP: o botão vira liga/desliga do Meditar automático (deixa de ser por clique)
-    if (estado.vip) estado.opcoes.meditarAuto = !estado.opcoes.meditarAuto;
-    else P.meditar(estado);
+    if (estado.vip) {
+      estado.opcoes.meditarAuto = !estado.opcoes.meditarAuto;
+      mostrarMensagem(estado.opcoes.meditarAuto
+        ? '🧘 Meditar automático LIGADO (medita sozinho com o jogo aberto).'
+        : '🧘 Meditar automático DESLIGADO.');
+    } else {
+      mostrarGanhoMeditacao(botao, P.meditar(estado));   // v0.16.5: mostra quanto ganhou
+    }
     atualizarInterface(estado);
   },
   aoAvancar: () => {

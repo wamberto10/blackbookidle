@@ -46,8 +46,8 @@ export function montarInterface(acoes) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharPainel(); });
 
   // ---- Botões de cultivo (existem na tela inicial e no painel Cultivo) ----
-  $('botao-meditar').addEventListener('click', acoes.aoMeditar);
-  $('inicio-meditar').addEventListener('click', acoes.aoMeditar);
+  $('botao-meditar').addEventListener('click', (e) => acoes.aoMeditar(e.currentTarget));
+  $('inicio-meditar').addEventListener('click', (e) => acoes.aoMeditar(e.currentTarget));
   $('botao-avancar').addEventListener('click', acoes.aoAvancar);
   $('inicio-avancar').addEventListener('click', acoes.aoAvancar);
   $('opcao-auto').addEventListener('change', (e) => acoes.aoMudarAuto(e.target.checked));
@@ -194,6 +194,8 @@ function atualizarCultivo(estado, producao) {
   for (const id of ['botao-meditar', 'inicio-meditar']) {
     $(id).textContent = textoMeditar.replace('🧘 ', '');
     $(id).classList.toggle('meditar-auto', auto);
+    // Só o "auto DESLIGADO" do VIP fica apagado (sem VIP o botão medita por toque: fica colorido)
+    $(id).classList.toggle('auto-desligado', estado.vip && !auto);
   }
   // v0.16.3: na tela inicial o painel ficou mais baixo — texto curto para caber numa linha
   $('inicio-meditar').textContent = estado.vip ? `Auto: ${auto ? 'LIGADO' : 'DESLIGADO'}` : textoMeditar.replace('🧘 ', '');
@@ -368,6 +370,23 @@ export function motivoParaNaoAvancar(estado) {
 }
 
 // ---- Efeitos ----
+// v0.16.5: "+55.05M" subindo do botão Meditar a cada toque (antes o toque não dava retorno nenhum
+// e parecia que o botão não funcionava — o ganho é pequeno perto do cultivo total)
+export function mostrarGanhoMeditacao(botao, ganho) {
+  if (!botao) return;
+  const caixa = botao.getBoundingClientRect();
+  const texto = document.createElement('span');
+  texto.className = 'ganho-meditacao';
+  texto.textContent = `+${formatarNumero(ganho)}`;
+  texto.style.left = `${caixa.left + caixa.width / 2 + (Math.random() * 24 - 12)}px`;
+  texto.style.top = `${caixa.top}px`;
+  document.body.appendChild(texto);
+  setTimeout(() => texto.remove(), 900);
+  botao.classList.remove('meditou');
+  void botao.offsetWidth;            // reinicia a animação do "pulo" do botão
+  botao.classList.add('meditou');
+}
+
 let temporizadorMensagem = null;
 
 export function mostrarMensagem(texto) {

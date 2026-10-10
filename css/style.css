@@ -1938,7 +1938,8 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
   height: 45px;
   background: center / contain no-repeat;
 }
-#inicio-meditar::before, #botao-meditar::before { background-image: url('../img/interface/botao_auto.png'); filter: grayscale(0.85) brightness(0.6); }
+#inicio-meditar::before, #botao-meditar::before { background-image: url('../img/interface/botao_auto.png'); }
+#inicio-meditar.auto-desligado::before, #botao-meditar.auto-desligado::before { filter: grayscale(0.85) brightness(0.6); }
 #inicio-meditar.meditar-auto::before, #botao-meditar.meditar-auto::before { filter: drop-shadow(0 0 6px rgba(110, 240, 140, 0.8)); }
 #inicio-meditar.meditar-auto, #botao-meditar.meditar-auto { color: #a8f0b4 !important; box-shadow: none; }
 #inicio-avancar::before, #botao-avancar::before { background-image: url('../img/interface/botao_avancar.png'); filter: drop-shadow(0 0 5px rgba(255, 210, 90, 0.6)); }
@@ -2075,3 +2076,19 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 }
 /* v0.16.4: aviso acima dos botões da tela inicial (antes cobria o Auto e o Avançar) */
 .mensagem { bottom: calc(var(--altura-abas) + 84px); }
+
+/* v0.16.5: retorno do toque no Meditar — o botão "afunda" e o ganho sobe flutuando */
+.botao-imagem::before { transition: transform 0.08s; }
+.botao-imagem:active::before { transform: scale(0.9); }
+.botao-imagem.meditou::before { animation: meditou 0.25s ease-out; }
+@keyframes meditou { 40% { transform: scale(0.88); filter: brightness(1.6) drop-shadow(0 0 8px #b8ffc8); } }
+.ganho-meditacao {
+  position: fixed; z-index: 80; pointer-events: none; transform: translateX(-50%);
+  font-weight: bold; font-size: 0.95rem; color: #b8ffc8; white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 6px rgba(90, 220, 120, 0.8);
+  animation: ganho-subir 0.9s ease-out forwards;
+}
+@keyframes ganho-subir {
+  from { opacity: 1; margin-top: 0; }
+  to   { opacity: 0; margin-top: -48px; }
+}
