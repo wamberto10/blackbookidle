@@ -1938,13 +1938,13 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
   height: 45px;
   background: center / contain no-repeat;
 }
-#inicio-meditar::before { background-image: url('../img/interface/botao_auto.png'); filter: grayscale(0.85) brightness(0.6); }
-#inicio-meditar.meditar-auto::before { filter: drop-shadow(0 0 6px rgba(110, 240, 140, 0.8)); }
-#inicio-meditar.meditar-auto { color: #a8f0b4 !important; box-shadow: none; }
-#inicio-avancar::before { background-image: url('../img/interface/botao_avancar.png'); filter: drop-shadow(0 0 5px rgba(255, 210, 90, 0.6)); }
-#inicio-avancar.rompimento::before { background-image: url('../img/interface/botao_romper.png'); filter: drop-shadow(0 0 7px rgba(255, 90, 60, 0.8)); }
-#inicio-avancar { color: #ffe08a; font-weight: bold; }
-#inicio-avancar.rompimento { color: #ffb08a; }
+#inicio-meditar::before, #botao-meditar::before { background-image: url('../img/interface/botao_auto.png'); filter: grayscale(0.85) brightness(0.6); }
+#inicio-meditar.meditar-auto::before, #botao-meditar.meditar-auto::before { filter: drop-shadow(0 0 6px rgba(110, 240, 140, 0.8)); }
+#inicio-meditar.meditar-auto, #botao-meditar.meditar-auto { color: #a8f0b4 !important; box-shadow: none; }
+#inicio-avancar::before, #botao-avancar::before { background-image: url('../img/interface/botao_avancar.png'); filter: drop-shadow(0 0 5px rgba(255, 210, 90, 0.6)); }
+#inicio-avancar.rompimento::before, #botao-avancar.rompimento::before { background-image: url('../img/interface/botao_romper.png'); filter: drop-shadow(0 0 7px rgba(255, 90, 60, 0.8)); }
+#inicio-avancar, #botao-avancar { color: #ffe08a; font-weight: bold; }
+#inicio-avancar.rompimento, #botao-avancar.rompimento { color: #ffb08a; }
 .inicio-cultivo .botoes button.botao-imagem:disabled { opacity: 0.45; }
 
 /* v0.16.3: SEM painel — botão de auto num canto, avançar no outro (menores), nome e tempo no meio
@@ -2001,3 +2001,77 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 }
 .barra-inicio .barra-texto > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .barra-inicio #inicio-tempo { font-size: 0.66rem; color: #e8d8a8; }
+
+/* v0.16.4: botão de avançar BLOQUEADO (ainda não dá): apagado, mas o toque explica o motivo */
+.botao-imagem.indisponivel { opacity: 0.55; }
+.botao-imagem.indisponivel::before { filter: grayscale(0.6) brightness(0.75) !important; }
+.botao-imagem.trancado::after { content: '🔒'; position: absolute; top: -2px; left: 28px; font-size: 13px; }
+.inicio-cultivo .botoes button.botao-imagem, .cult-botoes button.botao-imagem { position: relative; }
+
+/* =============================================================
+   v0.16.4: ABA CULTIVO NOVA (mesmo estilo da tela de Personagem)
+   ============================================================= */
+.painel-cultivo {
+  background:
+    linear-gradient(rgba(10, 8, 16, 0.55), rgba(10, 8, 16, 0.82)),
+    url('../img/fundos/personagem.jpg') center / cover no-repeat,
+    #0a080e;
+}
+.painel-cultivo .painel-corpo { display: flex; flex-direction: column; gap: 10px; }
+.painel-cultivo .painel-corpo > * { flex-shrink: 0; }
+.painel-cultivo .cartao { margin-bottom: 0; }
+.cult-rotulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-fraco); }
+
+/* Reino atual + estágios em bolinhas */
+.cult-reino { text-align: center; padding: 4px 0; }
+.cult-reino h3 { margin: 2px 0 6px; font-size: 1.35rem; color: var(--destaque); text-shadow: 0 2px 4px #000, 0 0 10px rgba(212, 168, 74, 0.35); }
+.cult-reino p { margin: 8px auto 0; max-width: 420px; font-size: 0.82rem; color: var(--texto-fraco); line-height: 1.4; }
+.cult-estagios { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; }
+.cult-estagios span { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(212, 168, 74, 0.6); background: rgba(0, 0, 0, 0.5); }
+.cult-estagios span.feito { background: var(--destaque); }
+.cult-estagios span.atual { background: #fff3c4; box-shadow: 0 0 8px var(--destaque); }
+.cult-estagios b { width: 100%; margin-top: 4px; font-size: 0.85rem; font-weight: normal; color: var(--texto); }
+
+/* Progresso */
+.cult-progresso .linha { align-items: baseline; }
+.cult-progresso .linha strong { font-size: 0.9rem; text-align: right; }
+.cult-progresso .barra { margin: 6px 0 4px; }
+#cult-producao { color: #b8e86a; }
+.cult-botoes { display: flex; justify-content: space-around; gap: 10px; margin-top: 10px; }
+.cult-botoes button.botao-imagem {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; height: auto; padding: 0;
+  border: none; background: none; font-size: 0.78rem; text-align: center; white-space: normal; max-width: 140px;
+  color: var(--texto); text-shadow: 0 1px 2px #000;
+}
+.cult-botoes .botao-imagem::before { width: 60px; height: 58px; }
+.cult-botoes .botao-imagem.trancado::after { left: calc(50% + 16px); top: -4px; }
+.cult-chave { margin-top: 12px; white-space: normal; align-items: flex-start; }
+.cult-chave .chave { margin-top: 2px; }
+.cult-chave small { display: block; color: var(--texto-fraco); font-size: 0.72rem; }
+
+/* Caminho do Cultivo em linha do tempo */
+.cult-titulo { margin: 4px 0 0; }
+.caminho.caminho-tempo { gap: 0; position: relative; padding-left: 4px; }
+.caminho-tempo li {
+  position: relative; display: flex; align-items: center; gap: 10px; justify-content: flex-start;
+  padding: 7px 8px 7px 26px; border: none; border-radius: 6px; background: none; font-size: 0.9rem;
+}
+.caminho-tempo li:not(.caminho-regiao)::before {      /* a linha vertical */
+  content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: rgba(212, 168, 74, 0.35);
+}
+.caminho-tempo .marcador {
+  position: absolute; left: 4px; top: 50%; width: 14px; height: 14px; margin-top: -7px; border-radius: 50%;
+  border: 2px solid rgba(212, 168, 74, 0.6); background: #120e18; z-index: 1;
+}
+.caminho-tempo .concluido { opacity: 0.75; }
+.caminho-tempo .concluido .marcador { background: var(--destaque); border-color: var(--destaque); }
+.caminho-tempo .atual { background: rgba(212, 168, 74, 0.12); color: var(--destaque); font-weight: bold; }
+.caminho-tempo .atual .marcador { background: #fff3c4; border-color: #fff; box-shadow: 0 0 10px var(--destaque); }
+.caminho-tempo .atual small { color: var(--texto); font-weight: normal; margin-left: 6px; }
+.caminho-tempo .proximo { color: var(--texto); }
+.caminho-tempo .oculto { color: var(--texto-fraco); opacity: 0.45; }
+.caminho-tempo .caminho-regiao {
+  padding: 12px 0 4px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-fraco);
+}
+/* v0.16.4: aviso acima dos botões da tela inicial (antes cobria o Auto e o Avançar) */
+.mensagem { bottom: calc(var(--altura-abas) + 84px); }

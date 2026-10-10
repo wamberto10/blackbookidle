@@ -120,31 +120,35 @@
   </section>
 
   <!-- ===== Cultivo ===== -->
-  <section class="painel" id="aba-cultivo">
+  <section class="painel painel-cultivo" id="aba-cultivo">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_cultivo.png" alt=""> Cultivo</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
-      <div class="cartao">
-        <div class="linha"><span>Próximo:</span><strong id="cult-proximo"></strong></div>
-        <div class="barra"><div class="barra-preenchida" id="cult-barra"></div></div>
-        <div class="linha pequeno"><span id="cult-progresso"></span><span id="cult-tempo"></span></div>
-        <div class="requisito" id="cult-requisito"></div>
-        <div class="botoes">
-          <button id="botao-meditar">🧘 Meditar</button>
-          <button id="botao-avancar" class="principal">Avançar</button>
-        </div>
-        <label class="opcao">
-          <input type="checkbox" id="opcao-auto">
-          Avançar estágios automaticamente (rompimentos de reino são manuais; com o 💎 VIP, automáticos)
-        </label>
-      </div>
-
-      <div class="cartao">
+      <!-- v0.16.4: aba Cultivo nova — reino atual com os estágios, progresso, botões de imagem e caminho em linha do tempo -->
+      <div class="cult-reino">
+        <small class="cult-rotulo">Reino atual</small>
         <h3 id="cult-reino-nome"></h3>
+        <div class="cult-estagios" id="cult-estagios"></div>
         <p id="cult-reino-desc"></p>
       </div>
 
-      <h3>Caminho do Cultivo</h3>
-      <ol class="caminho" id="lista-caminho"></ol>
+      <div class="cartao cult-progresso">
+        <div class="linha"><span class="cult-rotulo">Próximo</span><strong id="cult-proximo"></strong></div>
+        <div class="barra"><div class="barra-preenchida" id="cult-barra"></div></div>
+        <div class="linha pequeno"><span id="cult-progresso"></span><span id="cult-tempo"></span></div>
+        <div class="linha pequeno"><span>Produção</span><span id="cult-producao"></span></div>
+        <div class="requisito" id="cult-requisito"></div>
+        <div class="cult-botoes">
+          <button id="botao-meditar" class="botao-imagem">Meditar</button>
+          <button id="botao-avancar" class="botao-imagem">Avançar</button>
+        </div>
+        <label class="chave-auto cult-chave">
+          <input type="checkbox" id="opcao-auto"><span class="chave"></span>
+          <span>Avançar estágios sozinho <small>(rompimentos de reino são manuais; com o 💎 VIP, automáticos)</small></span>
+        </label>
+      </div>
+
+      <h3 class="cult-titulo">Caminho do Cultivo</h3>
+      <ol class="caminho caminho-tempo" id="lista-caminho"></ol>
     </div>
   </section>
 

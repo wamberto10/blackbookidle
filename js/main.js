@@ -18,7 +18,7 @@ import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
 import { MUNDO, MAPAS, textoDoInicioDaVida } from './sistemas/mundo.js';
 import { salvar, carregar, apagarSave, segundosOffline } from './save.js';
-import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba } from './ui/interface.js';
+import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
 import { focarMapaDaFase } from './ui/telaMapa.js';
 import { formatarNumero, formatarTempo } from './format.js';
@@ -205,6 +205,8 @@ montarInterface({
     if (evento) {
       aoAvancarNivel(evento);
       salvar(estado); // avanço é importante: salva na hora
+    } else {
+      mostrarMensagem(motivoParaNaoAvancar(estado));   // v0.16.4: explica por que não avançou
     }
     atualizarInterface(estado);
   },

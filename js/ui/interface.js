@@ -192,7 +192,7 @@ function atualizarCultivo(estado, producao) {
     ? `🧘 Meditar automático: ${auto ? 'LIGADO' : 'DESLIGADO'}`
     : `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
   for (const id of ['botao-meditar', 'inicio-meditar']) {
-    $(id).textContent = textoMeditar;
+    $(id).textContent = textoMeditar.replace('🧘 ', '');
     $(id).classList.toggle('meditar-auto', auto);
   }
   // v0.16.3: na tela inicial o painel ficou mais baixo — texto curto para caber numa linha
@@ -237,14 +237,18 @@ function atualizarCultivo(estado, producao) {
   $('inicio-barra').style.width = largura;
   $('cult-progresso').textContent = progressoTexto;
   $('cult-tempo').textContent = tempo;
+  $('cult-producao').textContent = `+${formatarNumero(producao)}/s`;
   $('inicio-tempo').textContent = tempo;
 
   for (const id of ['botao-avancar', 'inicio-avancar']) {
     const botao = $(id);
-    // Tela inicial: o botão tem imagem (avançar / romper), então o texto vai sem o emoji
-    botao.textContent = id === 'inicio-avancar' ? textoBotao.replace(/^\S+\s/, '') : textoBotao;
+    // Os botões têm imagem (avançar / romper), então o texto vai sem o emoji.
+    // v0.16.4: bloqueado NÃO é mais "disabled" — o toque mostra o motivo (dono achou que o botão
+    // não funcionava, porque o toque num botão desativado não fazia nada)
+    botao.textContent = textoBotao.replace(/^\S+\s/, '');
     botao.classList.toggle('rompimento', rompimento);
-    botao.disabled = !P.podeAvancar(estado);
+    botao.classList.toggle('indisponivel', !P.podeAvancar(estado));
+    botao.classList.toggle('trancado', Boolean(requisito && !requisito.cumprido));
   }
 }
 
@@ -304,33 +308,63 @@ function atualizarNivel(estado) {
   // Descrição do reino no painel Cultivo
   $('cult-reino-nome').textContent = reino.nome;
   $('cult-reino-desc').textContent = reino.descricao;
+  $('cult-estagios').innerHTML = reino.estagios.map((_, i) =>
+    `<span class="${i < estado.estagio ? 'feito' : i === estado.estagio ? 'atual' : ''}" title="${reino.estagios[i]}"></span>`).join('') +
+    `<b>${P.nomeDoEstagio(estado)}</b>`;
 
   // Caminho do Cultivo: concluídos, atual, próximo e ocultos (???)
   const lista = $('lista-caminho');
   lista.innerHTML = '';
+  let regiaoAnterior = null;
   REINOS.forEach((r, indice) => {
+    // v0.16.4: título da região quando ela muda (antes repetia em todas as linhas)
+    if (indice <= estado.reino + 1 && r.regiao !== regiaoAnterior) {
+      regiaoAnterior = r.regiao;
+      const titulo = document.createElement('li');
+      titulo.className = 'caminho-regiao';
+      titulo.textContent = REGIOES[r.regiao].nome;
+      lista.appendChild(titulo);
+    }
     const item = document.createElement('li');
     let classe;
     let texto;
 
     if (indice < estado.reino) {
       classe = 'concluido';
-      texto = `✔ ${r.nome}`;
+      texto = r.nome;
     } else if (indice === estado.reino) {
       classe = 'atual';
-      texto = `➤ ${r.nome} (${estado.estagio + 1}/${r.estagios.length})`;
+      texto = `${r.nome} <small>${estado.estagio + 1}/${r.estagios.length}</small>`;
     } else if (indice === estado.reino + 1) {
       classe = 'proximo';
       texto = `${r.nome}`;
     } else {
+      // v0.16.4: os reinos ocultos viram UMA linha só ("??? · mais N reinos ocultos")
+      if (indice > estado.reino + 2) return;
+      const ocultos = REINOS.length - indice;
       classe = 'oculto';
-      texto = '???';
+      texto = ocultos > 1 ? `??? <small>mais ${ocultos} reinos ocultos</small>` : '???';
     }
 
     item.className = classe;
-    item.innerHTML = `<span>${texto}</span><small>${indice <= estado.reino + 1 ? REGIOES[r.regiao].nome : ''}</small>`;
+    item.innerHTML = `<i class="marcador"></i><span>${texto}</span>`;
     lista.appendChild(item);
   });
+}
+
+// v0.16.4: por que o botão de avançar está bloqueado (mostrado ao tocar nele)
+export function motivoParaNaoAvancar(estado) {
+  if (P.noNivelMaximo(estado)) return '✨ Você chegou ao ápice (por enquanto).';
+  const requisito = P.requisitoDoRompimento(estado);
+  if (requisito && !requisito.cumprido) {
+    const chefe = chefeDoMapa(requisito.mapa - 1);
+    return chefe
+      ? `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
+      : '🔒 O próximo reino será liberado no próximo mundo (em breve).';
+  }
+  const falta = P.custoParaAvancar(estado) - estado.cultivo;
+  const producao = P.producaoPorSegundo(estado);
+  return `⏳ Falta ${formatarNumero(Math.ceil(falta))} de Cultivo (≈ ${formatarTempo(falta / producao)}).`;
 }
 
 // ---- Efeitos ----
