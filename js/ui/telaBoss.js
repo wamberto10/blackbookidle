@@ -10,7 +10,7 @@ import * as BOSS from '../sistemas/boss.js';
 import { REINOS } from '../dados/reinos.js';
 import { MAPAS } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo } from '../format.js';
-import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito } from './sprite.js';
+import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito, icone } from './sprite.js';
 import { SPRITES } from '../dados/sprites.js';
 import { EFEITO_PROVISORIO } from '../dados/classes.js';
 
@@ -29,7 +29,7 @@ export function montarTelaBoss(acoes) {
   $('boss-auto').addEventListener('change', (e) => acoesGuardadas.aoMudarBossAuto(e.target.checked));
   $('boss-nome').textContent = B.nome;
   $('boss-recompensa').innerHTML =
-    `🎁 Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
+    `${icone('recompensa')} Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
     `e <b style="color:#ff6ad5">1 item Ancestral</b> (espaço aleatório, melhor que um Lendário do mapa seguinte ao seu). ` +
     `Ele volta ${B.renasceMinutos} minutos depois de derrotado.`;
   desenharSpriteDeInimigo($('boss-sprite'), B.aparencia);

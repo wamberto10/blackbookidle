@@ -2229,3 +2229,13 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 #aba-mapa      { --fundo-aba: url('../img/fundos/mapa.jpg'); }
 #aba-blackbook { --fundo-aba: url('../img/fundos/blackbook.jpg'); }
 #aba-opcoes    { --fundo-aba: url('../img/fundos/opcoes.jpg'); }
+
+/* v0.17.5: ícones de imagem no lugar dos emojis */
+.icone-mapa-trancado .icone-px { width: 30px; height: 30px; opacity: 0.75; }
+.grade-fases .icone-px { width: 18px; height: 18px; }
+#cb-tempo .icone-px, #boss-tempo .icone-px { width: 14px; height: 14px; vertical-align: -2px; margin-right: 2px; }
+#mesclar-tudo .icone-px, .recolhivel summary .icone-px, .cartao h3 .icone-px, .boss-titulo .icone-px { width: 20px; height: 20px; vertical-align: -4px; }
+#bb-reencarnar .icone-px, .melhoria button .icone-px, #bb-ganho .icone-px { width: 18px; height: 18px; vertical-align: -3px; }
+.melhoria button, #bb-reencarnar { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.melhoria button { flex-wrap: nowrap; white-space: nowrap; }
+#mochila-conteudo .ferramentas-mochila .icone-px { width: 18px; height: 18px; vertical-align: -4px; }

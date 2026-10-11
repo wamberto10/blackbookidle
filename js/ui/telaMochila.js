@@ -112,7 +112,8 @@ export function atualizarTelaMochila(estado) {
   $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
   const quantosObsoletos = EQ.obsoletos(estado).itens.length;
-  $('desmanchar-obsoletos').textContent = `🗑️ Obsoletos (${quantosObsoletos})`;
+  const textoObs = `${icone('desmanchar')} Obsoletos (${quantosObsoletos})`;
+  if ($('desmanchar-obsoletos').dataset.html !== textoObs) { $('desmanchar-obsoletos').dataset.html = textoObs; $('desmanchar-obsoletos').innerHTML = textoObs; }
   $('desmanchar-obsoletos').disabled = quantosObsoletos === 0;
   desenharEspacos(estado);
   desenharDetalhe(estado);

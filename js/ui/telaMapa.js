@@ -87,7 +87,7 @@ function redesenhar(estado) {
     cartao.style.setProperty('--cor-mapa', mapa.cor);
     cartao.innerHTML = liberado
       ? `${iconeDoMapa(indice, 'icone-mapa')}<span class="nome-mapa">${indice + 1}. ${mapa.nome}</span><small>${vencidas}/12</small>`
-      : `<span class="icone-mapa-trancado">🔒</span><span class="nome-mapa">${indice + 1}. ???</span><small>&nbsp;</small>`;
+      : `<span class="icone-mapa-trancado">${icone('cadeado')}</span><span class="nome-mapa">${indice + 1}. ???</span><small>&nbsp;</small>`;
     cartao.addEventListener('click', () => {
       mapaSelecionado = indice;
       chaveDesenhada = '';
@@ -118,9 +118,9 @@ function redesenhar(estado) {
     botao.innerHTML = liberada
       ? `<b>${fase.numero}</b>${icone(fase.tipo.sprite, 'icone-fase')}<small>${fase.local}</small><small class="inimigo-fase">${fase.inimigo.nome}</small>
          <small class="poder-fase ${previsao.classe}">Poder ${textoDoPoder(previsao.poderInimigo)}</small>`
-      : `<b>${fase.numero}</b><span>🔒</span><small>???</small>`;
+      : `<b>${fase.numero}</b><span>${icone('cadeado')}</span><small>???</small>`;
     botao.title = liberada
-      ? `${fase.tipo.nome} — ${textoDaPrevisao(previsao)}. Recompensa: ${formatarNumero(cultivoDaVitoria(estado, fase))} Cultivo, ${formatarNumero(fase.recompensa.pedras)} 💎`
+      ? `${fase.tipo.nome} — ${textoDaPrevisao(previsao)}. Recompensa: ${formatarNumero(cultivoDaVitoria(estado, fase))} Cultivo, ${formatarNumero(fase.recompensa.pedras)} Pedras`
       : 'Vença a fase anterior para liberar';
     botao.addEventListener('click', () => acoesGuardadas.aoEscolherFase(fase.indice));
     grade.appendChild(botao);
@@ -146,7 +146,7 @@ function redesenhar(estado) {
       proximoMostrado = true;
       item.className = 'proximo';
       item.innerHTML = jogavel
-        ? `<span>🔒 Mundo ${indice + 1} — ${outro.nome}</span><small>Vença o chefe final do Mundo ${indice}</small>`
+        ? `<span>${icone('cadeado')} Mundo ${indice + 1} — ${outro.nome}</span><small>Vença o chefe final do Mundo ${indice}</small>`
         : `<span>Mundo ${indice + 1} — ${outro.nome}</span><small>Em desenvolvimento</small>`;
     } else {
       item.className = 'oculto';

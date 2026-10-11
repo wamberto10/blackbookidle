@@ -12,6 +12,11 @@ const $ = (id) => document.getElementById(id);
 
 const elementosMelhorias = {};
 
+// Troca o HTML só quando muda (a tela atualiza 10×/s; recriar o botão no meio do toque perde o clique)
+function html(el, texto) {
+  if (el.dataset.html !== texto) { el.dataset.html = texto; el.innerHTML = texto; }
+}
+
 export function montarTelaBlackBook(acoes) {
   $('bb-reencarnar').addEventListener('click', acoes.aoReencarnar);
 
@@ -63,16 +68,16 @@ export function atualizarTelaBlackBook(estado) {
   // ---- Reencarnação ----
   const ganho = BB.essenciaAoReencarnar(estado);
   $('bb-fase').textContent = nomeDaFase(estado.combate.fasesConcluidas);
-  $('bb-ganho').textContent = `${formatarNumero(ganho)} ✨`;
+  html($('bb-ganho'), `${formatarNumero(ganho)} ${icone('essencia')}`);
   $('bb-inicio').textContent = textoDoInicioDaVida(estado);
   $('bb-reencarnar').disabled = !BB.podeReencarnar(estado);
-  $('bb-reencarnar').textContent = !BB.chegouOndeReencarnou(estado)
-    ? `📕 Para reencarnar de novo, vença ${nomeDaFase(BB.faseMinimaParaReencarnar(estado))} (onde você reencarnou da última vez)`
+  html($('bb-reencarnar'), !BB.chegouOndeReencarnou(estado)
+    ? `${icone('livro')} Para reencarnar de novo, vença ${nomeDaFase(BB.faseMinimaParaReencarnar(estado))} (onde você reencarnou da última vez)`
     : !BB.venceuFaseNestaVida(estado)
-      ? '📕 Vença pelo menos 1 fase nova nesta vida para poder reencarnar'
+      ? icone('livro') + ' Vença pelo menos 1 fase nova nesta vida para poder reencarnar'
     : ganho > 0
-      ? `📕 Reencarnar e receber ${formatarNumero(ganho)} ✨ Essência da Alma`
-      : '📕 Vença pelo menos 1 fase para poder reencarnar';
+      ? `${icone('livro')} Reencarnar e receber ${formatarNumero(ganho)} ${icone('essencia')} Essência da Alma`
+      : icone('livro') + ' Vença pelo menos 1 fase para poder reencarnar');
 
   // ---- Melhorias ----
   $('bb-essencia').textContent = formatarNumero(Math.floor(estado.essencia));
@@ -82,7 +87,7 @@ export function atualizarTelaBlackBook(estado) {
     const maximo = BB.noMaximo(estado, melhoria.id);
     el.nivel.textContent = `Nv. ${BB.nivelMelhoria(estado, melhoria.id)}${melhoria.nivelMaximo !== undefined ? `/${melhoria.nivelMaximo}` : ''}`;
     el.total.textContent = `Total: ${textoDoEfeito(melhoria, BB.efeitoMelhoria(estado, melhoria.id))}`;
-    el.botao.textContent = maximo ? 'Nível máximo' : `Melhorar: ${formatarNumero(custo)} ✨`;
+    html(el.botao, maximo ? 'Nível máximo' : `Melhorar: ${formatarNumero(custo)} ${icone('essencia')}`);
     el.botao.disabled = maximo || estado.essencia < custo;
   }
 

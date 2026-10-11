@@ -112,7 +112,7 @@
 
       <details class="recolhivel">
         <summary>Dicas</summary>
-        <p class="pequeno">💠 Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de Ataque, Vitalidade, Defesa ou Velocidade para usar: cada ponto dá +1% para sempre.</p>
+        <p class="pequeno"><img class="icone-px" src="img/icones/nucleo_medio.png" alt=""> Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de Ataque, Vitalidade, Defesa ou Velocidade para usar: cada ponto dá +1% para sempre.</p>
         <p class="pequeno"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
         <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
       </details>
@@ -143,7 +143,7 @@
         </div>
         <label class="chave-auto cult-chave">
           <input type="checkbox" id="opcao-auto"><span class="chave"></span>
-          <span>Avançar estágios sozinho <small>(rompimentos de reino são manuais; com o 💎 VIP, automáticos)</small></span>
+          <span>Avançar estágios sozinho <small>(rompimentos de reino são manuais; com o <img class="icone-px" src="img/icones/vip.png" alt=""> VIP, automáticos)</small></span>
         </label>
       </div>
 
@@ -222,7 +222,7 @@
           <div class="aviso-tecnica" id="aviso-tecnica"></div>
           <!-- v0.15.2: o herói está lutando contra o boss do evento ("Atacar sozinho"): a fase fica pausada -->
           <div class="aviso-boss-ativo escondido" id="aviso-boss-ativo">
-            <div>🌙 Lutando contra o <b>Mestre do Salão Ying Yue</b></div>
+            <div><img class="icone-px" src="img/icones/boss.png" alt=""> Lutando contra o <b>Mestre do Salão Ying Yue</b></div>
             <small id="aviso-boss-ativo-texto">A fase continua quando a luta do boss acabar.</small>
             <button id="aviso-boss-ver" class="principal">Ver a luta do boss</button>
           </div>
@@ -281,10 +281,10 @@
           </label>
         </div>
         <div class="ferramentas-mochila">
-          <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais">✨ Mesclar</button>
-          <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo">🗑️ Obsoletos</button>
-          <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila">🗑️ Comuns</button>
-          <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila">🗑️ +Incomuns</button>
+          <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais"><img class="icone-px" src="img/icones/mesclar.png" alt=""> Mesclar</button>
+          <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Obsoletos</button>
+          <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Comuns</button>
+          <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> +Incomuns</button>
         </div>
         <!-- Abas por tipo de item (uma linha, rola para o lado se não couber) -->
         <div class="filtros" id="filtros-itens"></div>
@@ -301,7 +301,7 @@
           </p>
         </details>
         <details class="recolhivel">
-          <summary>🎲 Chances de drop neste mapa</summary>
+          <summary><img class="icone-px" src="img/icones/chances.png" alt=""> Chances de drop neste mapa</summary>
           <div id="chances-drop"></div>
         </details>
       </div>
@@ -343,7 +343,7 @@
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/livro.png" alt=""> Black Book</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
       <div class="bloqueado" id="blackbook-bloqueado">
-        📕 O Black Book será liberado quando você completar o <b>Corpo Temperado</b>.
+        <img class="icone-px" src="img/icones/livro.png" alt=""> O Black Book será liberado quando você completar o <b>Corpo Temperado</b>.
       </div>
       <div id="blackbook-conteudo" class="escondido">
         <div class="cartao livro">
@@ -356,7 +356,7 @@
         </div>
 
         <div class="cartao">
-          <h3>🔄 Reencarnação</h3>
+          <h3><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> Reencarnação</h3>
           <div class="bb-dados">
             <div><small>Mais longe nesta vida</small><strong id="bb-fase"></strong></div>
             <div><small>Essência ao reencarnar</small><strong id="bb-ganho" class="destaque"></strong></div>
@@ -369,14 +369,14 @@
           <button id="bb-reencarnar" class="principal rompimento largo">📕 Reencarnar</button>
         </div>
 
-        <h3>Melhorias permanentes <small class="pequeno">— você tem ✨ <span id="bb-essencia">0</span> Essência da Alma</small></h3>
+        <h3>Melhorias permanentes <small class="pequeno">— você tem <img class="icone-px" src="img/icones/essencia.png" alt=""> <span id="bb-essencia">0</span> Essência da Alma</small></h3>
         <div class="lista-melhorias" id="lista-melhorias"></div>
 
         <h3>Registro das vidas</h3>
         <div class="atributos">
-          <div class="atributo"><span>🔄 Reencarnações</span><strong id="bb-vezes">0</strong></div>
+          <div class="atributo"><span><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> Reencarnações</span><strong id="bb-vezes">0</strong></div>
           <div class="atributo"><span>🏔️ Mais longe (todas as vidas)</span><strong id="bb-recorde"></strong></div>
-          <div class="atributo"><span>✨ Essência ganha no total</span><strong id="bb-total">0</strong></div>
+          <div class="atributo"><span><img class="icone-px" src="img/icones/essencia.png" alt=""> Essência ganha no total</span><strong id="bb-total">0</strong></div>
         </div>
       </div>
     </div>
@@ -443,7 +443,7 @@
       <!-- Topo: nome, vida do boss e fechar -->
       <div class="boss-topo">
         <button class="boss-fechar" id="tela-boss-fechar" title="Voltar">✕</button>
-        <h2 class="boss-titulo">🌙 <span id="boss-nome"></span></h2>
+        <h2 class="boss-titulo"><img class="icone-px" src="img/icones/boss.png" alt=""> <span id="boss-nome"></span></h2>
         <p class="boss-edicao" id="boss-edicao"></p>
         <div class="boss-barra"><div class="boss-barra-cheia" id="boss-vida"></div><span id="boss-vida-texto"></span></div>
         <p class="boss-tempo" id="boss-tempo"></p>
@@ -474,7 +474,7 @@
         <button id="boss-lutar" class="principal largo"></button>
         <label class="boss-auto chave-auto"><input type="checkbox" id="boss-auto"><span class="chave"></span><span>⚔️ Atacar sozinho <small>(quando ele voltar e depois de cada descanso)</small></span></label>
         <details class="boss-info">
-          <summary>🏆 Rank de dano e recompensa</summary>
+          <summary><img class="icone-px" src="img/icones/trofeu.png" alt=""> Rank de dano e recompensa</summary>
           <ol class="boss-rank" id="boss-rank"></ol>
           <p class="pequeno" id="boss-recompensa"></p>
           <p class="pequeno dica">O evento ainda é local: cada jogador enfrenta o seu boss. O rank entre jogadores chega quando o evento ficar online.</p>

@@ -175,9 +175,8 @@ export function atualizarTelaCombate(estado) {
   desenharBarras();
 
   if (luta) {
-    $('cb-tempo').textContent = luta.pausa > 0
-      ? 'Preparando...'
-      : `⏳ ${Math.ceil(CONFIG.combate.duracaoMaxima - luta.tempo)}s`;
+    const textoTempo = luta.pausa > 0 ? 'Preparando...' : `${icone('tempo')}${Math.ceil(CONFIG.combate.duracaoMaxima - luta.tempo)}s`;
+    if ($('cb-tempo').dataset.html !== textoTempo) { $('cb-tempo').dataset.html = textoTempo; $('cb-tempo').innerHTML = textoTempo; }
   }
 
   $('cb-anterior').disabled = estado.combate.faseAtual === 0;
