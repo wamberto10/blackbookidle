@@ -54,7 +54,7 @@ function redesenhar(estado) {
   // ---- Mundo do mapa aberto (nome, lema, descrição) e botões para trocar de mundo ----
   const indiceMundo = MAPAS[mapaSelecionado].mundo;
   const mundo = MUNDOS_JOGAVEIS[indiceMundo];
-  $('mapa-mundo-nome').textContent = `Mundo ${indiceMundo + 1} — ${mundo.nome}`;
+  $('mapa-mundo-nome').textContent = `Mundo ${indiceMundo + 1} · ${mundo.nome.split(' — ')[0]}`;   // v0.17.4: sem repetir "Mundo"
   $('mapa-mundo-lema').textContent = mundo.lema;
   $('mapa-mundo-desc').textContent = mundo.descricao;
 

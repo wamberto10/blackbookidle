@@ -317,10 +317,10 @@
       </div>
       <div id="mapa-conteudo" class="escondido">
         <div class="abas-mundo escondido" id="abas-mundo"></div>
-        <div class="cartao">
+        <div class="cartao cartao-mundo">
           <h3 id="mapa-mundo-nome"></h3>
           <p class="lema" id="mapa-mundo-lema"></p>
-          <p id="mapa-mundo-desc"></p>
+          <details class="recolhivel mundo-sobre"><summary>Sobre este mundo</summary><p id="mapa-mundo-desc"></p></details>
         </div>
 
         <div class="grade-mapas" id="lista-mapas"></div>
@@ -348,17 +348,20 @@
       <div id="blackbook-conteudo" class="escondido">
         <div class="cartao livro">
           <p class="lema">"Toda vida chega ao fim. O que a alma conquistou, o Black Book guarda."</p>
+          <details class="recolhivel mundo-sobre"><summary>Como funciona</summary>
           <p>Quando uma fase ficar difícil demais, reencarne: o cultivo e as fases recomeçam, mas você recebe
             Essência da Alma de acordo com a fase mais distante que venceu (e guarda equipamentos, mochila,
             Pedras e Núcleos). Use a Essência aqui para fortalecer seus atributos para sempre e chegar mais
-            longe na próxima vida.</p>
+            longe na próxima vida.</p></details>
         </div>
 
         <div class="cartao">
           <h3>🔄 Reencarnação</h3>
-          <div class="linha"><span>Fase mais distante nesta vida:</span><strong id="bb-fase"></strong></div>
-          <div class="linha"><span>Essência ao reencarnar agora:</span><strong id="bb-ganho" class="destaque"></strong></div>
-          <div class="linha"><span>A próxima vida começa em:</span><strong id="bb-inicio"></strong></div>
+          <div class="bb-dados">
+            <div><small>Mais longe nesta vida</small><strong id="bb-fase"></strong></div>
+            <div><small>Essência ao reencarnar</small><strong id="bb-ganho" class="destaque"></strong></div>
+            <div class="bb-dado-largo"><small>A próxima vida começa em</small><strong id="bb-inicio"></strong></div>
+          </div>
           <p class="pequeno dica">
             ❌ Recomeça: Cultivo, reino, estágio e fases do mapa.<br>
             ✔ Fica para sempre: Essência da Alma, melhorias do Black Book, equipamentos, mochila, Pedras Espirituais, Núcleos e VIP.
@@ -469,7 +472,7 @@
       <!-- Embaixo (antes da luta): lutar, rank e recompensa -->
       <div class="boss-rodape">
         <button id="boss-lutar" class="principal largo"></button>
-        <label class="boss-auto"><input type="checkbox" id="boss-auto"> ⚔️ Atacar sozinho (quando ele voltar e depois de cada descanso)</label>
+        <label class="boss-auto chave-auto"><input type="checkbox" id="boss-auto"><span class="chave"></span><span>⚔️ Atacar sozinho <small>(quando ele voltar e depois de cada descanso)</small></span></label>
         <details class="boss-info">
           <summary>🏆 Rank de dano e recompensa</summary>
           <ol class="boss-rank" id="boss-rank"></ol>

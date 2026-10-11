@@ -1721,7 +1721,7 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .classe-topo { display: flex; align-items: center; gap: 10px; }
 .classe-topo h3 { margin: 0; }
 .classe-icone { width: 40px; height: 40px; flex: none; }
-.tecnica-classe { display: flex; align-items: flex-start; gap: 6px; background: rgba(140, 90, 255, 0.12); border-color: rgba(170, 130, 255, 0.45); }
+.cartao-classe .tecnica-classe { display: flex; align-items: flex-start; gap: 6px; background: rgba(140, 90, 255, 0.12); border-color: rgba(170, 130, 255, 0.45); }
 .tecnica-classe .icone-px { width: 20px; height: 20px; flex: none; }
 
 .pers-titulo { margin: 4px 0 0; }
@@ -2172,3 +2172,60 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 #aba-combate .lutador canvas { width: clamp(140px, 46vw, 210px); height: clamp(140px, 46vw, 210px); }
 #aba-combate .lutador canvas.sprite-chefe { width: clamp(170px, 54vw, 250px); height: clamp(170px, 54vw, 250px); }
 .cb-registro-caixa:not(.aberto) .registro li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* =============================================================
+   v0.17.4: PENTE FINO DO LAYOUT
+   ============================================================= */
+/* Topo: no celular os números grandes cortavam o nome e o reino ("Teste 4º Está…") */
+@media (max-width: 480px) {
+  .barra-topo { gap: 6px; }
+  .recursos { gap: 8px; font-size: 0.86rem; }
+  .recursos .icone-px { width: 16px; height: 16px; }
+  .topo-personagem { flex: 0 1 34%; min-width: 92px; }
+  .topo-personagem small#inicio-estagio { display: none; }     /* o estágio aparece na tela inicial */
+  .topo-reino { font-size: 0.72rem; }
+}
+
+/* Tela inicial: local em duas linhas curtas */
+.inicio-local { display: flex; flex-direction: column; align-items: center; line-height: 1.25; padding: 4px 14px 5px; }
+.inicio-local b { font-weight: normal; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.inicio-local small { font-size: 0.68rem; color: var(--texto-fraco); }
+.inicio-local .icone-px { width: 18px; height: 18px; vertical-align: -3px; }
+
+/* Mapa: cartão do mundo enxuto */
+.cartao-mundo h3 { margin: 0 0 2px; }
+.cartao-mundo .lema { margin: 0; }
+.mundo-sobre { margin-top: 6px; background: none; border: none; padding: 0; }
+.mundo-sobre summary { font-size: 0.78rem; }
+
+/* Black Book: dados da reencarnação em blocos e melhorias em 2 colunas */
+.bb-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 8px; }
+.bb-dados > div { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.04); }
+.bb-dados small { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-fraco); }
+.bb-dados strong { font-size: 0.9rem; }
+.bb-dados .bb-dado-largo { grid-column: 1 / -1; }
+.lista-melhorias { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.melhoria { flex-direction: column; align-items: stretch; gap: 6px; flex-wrap: nowrap; padding: 8px 10px; }
+.melhoria .melhoria-info b { font-size: 0.86rem; }
+.melhoria .melhoria-info .pequeno { font-size: 0.72rem; line-height: 1.35; }
+.melhoria .melhoria-info .icone-px { width: 18px; height: 18px; vertical-align: -3px; }
+.melhoria button { min-width: 0; width: 100%; min-height: 0; height: 40px; padding: 0 4px; font-size: 0.8rem; }
+
+/* Criação: personagem maior no cartão da classe */
+.carta-classe { grid-template-columns: 112px 1fr; }
+.carta-classe > canvas { width: 112px !important; height: 112px !important; }
+
+/* Boss: interruptor do "Atacar sozinho" */
+.boss-auto.chave-auto { white-space: normal; font-size: 0.82rem; color: var(--texto); }
+.boss-auto.chave-auto small { color: var(--texto-fraco); }
+.melhoria .melhoria-nivel { display: block; font-size: 0.78rem; }
+.cartao.livro .lema { margin: 0; }
+
+/* v0.17.4: fundo ilustrado em todas as abas (img/fundos/<aba>.jpg) — como Personagem e Cultivo */
+#aba-mochila, #aba-mapa, #aba-blackbook, #aba-opcoes {
+  background: linear-gradient(rgba(10, 8, 16, 0.55), rgba(10, 8, 16, 0.82)), var(--fundo-aba) center / cover no-repeat, #0a080e;
+}
+#aba-mochila   { --fundo-aba: url('../img/fundos/mochila.jpg'); }
+#aba-mapa      { --fundo-aba: url('../img/fundos/mapa.jpg'); }
+#aba-blackbook { --fundo-aba: url('../img/fundos/blackbook.jpg'); }
+#aba-opcoes    { --fundo-aba: url('../img/fundos/opcoes.jpg'); }

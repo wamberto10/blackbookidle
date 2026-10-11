@@ -117,7 +117,7 @@ function atualizarEtapa2() {
   });
   $('criacao-confirmar').disabled = !escolha.classe;
   $('criacao-confirmar').textContent = escolha.classe
-    ? `Iniciar jornada como ${CLASSES.find(c => c.id === escolha.classe).nome}`
+    ? 'Iniciar jornada ▶'
     : 'Escolha uma classe';
 
   clearInterval(demonstracao);

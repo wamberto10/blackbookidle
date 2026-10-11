@@ -45,6 +45,11 @@ function nomeDaFase(indice) {
 
 // Ex.: "+30%" para multiplicar 0.3 | "+4%" para somar 4
 function textoDoEfeito(melhoria, efeito) {
+  // v0.17.4: melhorias compostas mostram o multiplicador (×20,6) — "+1.96K%" era confuso
+  if (melhoria.composto) {
+    const mult = 1 + efeito;
+    return '×' + (mult < 100 ? mult.toFixed(mult < 10 ? 2 : 1).replace('.', ',') : formatarNumero(mult));
+  }
   if (melhoria.tipo === 'multiplicar') return `+${formatarNumero(Math.round(efeito * 100))}%`;
   return `+${Number(efeito.toFixed(1))}%`;
 }

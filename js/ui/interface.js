@@ -150,7 +150,8 @@ function atualizarFundo(estado) {
 
   if (fundoDesenhado === indiceMapa) return;
   fundoDesenhado = indiceMapa;
-  $('inicio-local').innerHTML = `${mundoDoMapa(indiceMapa).nome} · ${iconeDoMapa(indiceMapa)} ${mapa.nome}`;
+  // v0.17.4: antes "Mundo Inicial — Starting World · O Segredo do Mundo" quebrava em 3 linhas
+  $('inicio-local').innerHTML = `<b>${iconeDoMapa(indiceMapa)} ${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))} · Mapa ${indiceMapa + 1}</small>`;
 
   if (MUNDO.imagemFundo) {
     $('fundo-imagem').style.backgroundImage = `url("${MUNDO.imagemFundo}")`;
@@ -182,6 +183,11 @@ function posicionarNoChao() {
   const minimo = $('inicio-local').getBoundingClientRect().bottom + moldura.offsetHeight + 8;
   const y = Math.max(minimo, Math.min(chao, limite)) - caixa.top + inicio.scrollTop;
   moldura.style.setProperty('--chao-y', `${Math.round(y)}px`);
+}
+
+// "Mundo Inicial — Starting World" → "Mundo Inicial" (o nome em inglês fica só na aba Mapa)
+export function nomeCurtoDoMundo(mundo) {
+  return mundo.nome.split(' — ')[0];
 }
 
 // ---- Cultivo: tela inicial e painel Cultivo ----
