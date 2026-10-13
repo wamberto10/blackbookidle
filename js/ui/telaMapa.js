@@ -37,7 +37,7 @@ let chaveDesenhada = '';
 export function montarTelaMapa(acoes) {
   acoesGuardadas = acoes;
   $('md-farmar').addEventListener('click', () => {
-    if (faseSelecionada === null || !ultimoEstado) return;
+    if (faseSelecionada === null || !ultimoEstado || !faseLiberada(ultimoEstado, faseSelecionada)) return;
     acoesGuardadas.aoEscolherFase(faseSelecionada);
     acoesGuardadas.aoMudarAutoCombate(false);   // fica lutando nesta fase
   });
@@ -75,7 +75,14 @@ export function atualizarTelaMapa(estado) {
   $('mapa-conteudo').classList.toggle('escondido', !liberado);
   if (!liberado) return;
 
-  if (mapaSelecionado === null) mapaSelecionado = FASES[estado.combate.faseAtual].mapa;
+  // 8) Com o Mapa fechado não precisa calcular nada (redesenha em até 0,1 s ao abrir)
+  if (!$('aba-mapa').classList.contains('aberto')) return;
+  // Seleção que ficou inválida (reencarnou ou apagou o progresso): volta para o mapa atual
+  if (mapaSelecionado === null || !mapaLiberado(estado, mapaSelecionado)) {
+    mapaSelecionado = FASES[estado.combate.faseAtual].mapa;
+    faseSelecionada = null;
+  }
+  if (faseSelecionada !== null && !faseLiberada(estado, faseSelecionada)) faseSelecionada = null;
   if (faseSelecionada === null) faseSelecionada = faseInicialDoMapa(estado, mapaSelecionado);
 
   // Só redesenha quando algo mudou (o Poder muda as cores da previsão)

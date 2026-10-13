@@ -124,7 +124,11 @@ function iniciar() {
 
 function adicionar(p) {
   particulas.push({ vx: 0, vy: 0, grav: 0, atrito: 0.92, tam: 3, tipo: 'ponto', ...p, max: p.vida });
-  if (particulas.length > 600) particulas.splice(0, particulas.length - 600);
+  let excesso = particulas.length - 600;
+  for (let i = 0; excesso > 0 && i < particulas.length;) {
+    if (particulas[i].voo) i++;                       // projétil em voo: a chegada dispara a explosão
+    else { particulas.splice(i, 1); excesso--; }
+  }
 }
 
 // ---------------------------------------------------------------

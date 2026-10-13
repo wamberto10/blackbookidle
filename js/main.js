@@ -314,6 +314,7 @@ montarInterface({
       'A Essência, as melhorias do Black Book, seus equipamentos, a mochila e as Pedras Espirituais ficam para sempre.');
     if (!certeza) return;
 
+    BOSS.abandonarLuta(estado, aoEventoBoss);   // a luta do boss é da vida antiga
     const resultado = BB.reencarnar(estado);
     estado = resultado.estado;
     C.reiniciarLuta();
@@ -354,6 +355,7 @@ montarInterface({
   },
   aoResetar: () => {
     if (!confirm('Tem certeza? Todo o progresso será apagado.')) return;
+    BOSS.abandonarLuta(estado, aoEventoBoss);
     apagarSave();
     estado = criarEstadoInicial();
     C.reiniciarLuta();

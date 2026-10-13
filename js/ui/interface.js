@@ -204,12 +204,17 @@ function atualizarAvisos(estado) {
   // Personagem: núcleos guardados para usar
   marcar('[data-aba="personagem"]', temAlgumNucleo(estado), 'Núcleos para usar');
   // Cultivo: já dá para avançar (com o avanço automático ligado, só no rompimento manual)
-  const avancoManual = P.podeAvancar(estado) && (!estado.opcoes.autoAvancar || P.proximoEhRompimento(estado)) && !estado.vip;
+  const avancaSozinho = P.proximoEhRompimento(estado) ? estado.vip : estado.opcoes.autoAvancar;
+  const avancoManual = P.podeAvancar(estado) && !avancaSozinho;
   marcar('[data-aba="cultivo"]', avancoManual, 'Pronto para avançar');
   // Mochila: item melhor que o vestido (sem o Auto-vestir) ou pilha para mesclar
   const mochilaLiberada = liberado(estado, 'mochila');
-  const melhor = mochilaLiberada && !estado.opcoes.autoEquipar &&
-    estado.mochila.slice(0, 60).some(item => EQ.ganhoDePoder(estado, item) > 0);
+  let melhor = false;
+  if (mochilaLiberada && !estado.opcoes.autoEquipar && estado.mochila.length) {
+    const poderAtual = analisarPoder(calcularAtributos(estado)).poder;
+    melhor = estado.mochila.slice(0, 60).some(item =>
+      analisarPoder(calcularAtributos({ ...estado, equipados: { ...estado.equipados, [item.slot]: item } })).poder > poderAtual);
+  }
   marcar('[data-aba="mochila"]', melhor || (mochilaLiberada && EQ.temAlgoParaMesclar(estado)),
     melhor ? 'Item melhor na mochila' : 'Itens para mesclar');
   // Black Book: dá para comprar alguma melhoria

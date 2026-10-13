@@ -74,9 +74,11 @@ let ultimoVivo = 0;
 function laçoVivo(agora) {
   if (agora - ultimoVivo > 33 && !document.hidden) {        // ~30 quadros por segundo
     ultimoVivo = agora;
+    const painelAberto = document.querySelector('.painel.aberto');
     for (const canvas of vivos) {
       if (!canvas.isConnected) { vivos.delete(canvas); continue; }
       if (!canvas.offsetParent) continue;                    // escondido (outra aba)
+      if (painelAberto && !painelAberto.contains(canvas)) continue;   // atrás de um painel
       const img = animados.get(canvas);
       if (img?.complete && img.naturalWidth) desenharQuadro(canvas, img);
     }

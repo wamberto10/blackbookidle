@@ -2443,3 +2443,6 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
   85%  { filter: brightness(0.6) saturate(0.4); }
   100% { transform: translateX(0); filter: none; }
 }
+
+/* v0.20.1 (revisão): a aura do personagem passava da borda e a tela inicial dava para arrastar para o lado */
+.inicio { overflow-x: hidden; }
