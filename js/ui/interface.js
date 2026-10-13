@@ -272,6 +272,12 @@ export function nomeCurtoDoMundo(mundo) {
   return mundo.nome.split(' — ')[0];
 }
 
+// v0.20.2: só troca o texto quando ele muda de verdade (trocar 10×/s, no meio de um toque,
+// atrapalhava o clique dos botões Meditar e Avançar/Romper em alguns celulares)
+function trocarTexto(el, texto) {
+  if (el.textContent !== texto) el.textContent = texto;
+}
+
 // ---- Cultivo: tela inicial e painel Cultivo ----
 function atualizarCultivo(estado, producao) {
   // VIP: o botão liga/desliga o Meditar automático; sem VIP, é por clique
@@ -280,13 +286,13 @@ function atualizarCultivo(estado, producao) {
     ? `🧘 Meditar automático: ${auto ? 'LIGADO' : 'DESLIGADO'}`
     : `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
   for (const id of ['botao-meditar', 'inicio-meditar']) {
-    $(id).textContent = textoMeditar.replace('🧘 ', '');
+    trocarTexto($(id), textoMeditar.replace('🧘 ', ''));
     $(id).classList.toggle('meditar-auto', auto);
     // Só o "auto DESLIGADO" do VIP fica apagado (sem VIP o botão medita por toque: fica colorido)
     $(id).classList.toggle('auto-desligado', estado.vip && !auto);
   }
   // v0.16.3: na tela inicial o painel ficou mais baixo — texto curto para caber numa linha
-  $('inicio-meditar').textContent = estado.vip ? `Auto: ${auto ? 'LIGADO' : 'DESLIGADO'}` : textoMeditar.replace('🧘 ', '');
+  trocarTexto($('inicio-meditar'), estado.vip ? `Auto: ${auto ? 'LIGADO' : 'DESLIGADO'}` : textoMeditar.replace('🧘 ', ''));
   $('inicio-meditar').title = textoMeditar;
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
@@ -299,8 +305,8 @@ function atualizarCultivo(estado, producao) {
       ? `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
       : '🔒 O próximo reino será liberado no próximo mundo (em breve).';
   }
-  $('cult-requisito').textContent = textoRequisito;
-  $('inicio-requisito').textContent = textoRequisito;
+  trocarTexto($('cult-requisito'), textoRequisito);
+  trocarTexto($('inicio-requisito'), textoRequisito);
 
   let proximo, largura, progressoTexto, tempo, textoBotao, rompimento = false;
   if (P.noNivelMaximo(estado)) {
@@ -321,21 +327,21 @@ function atualizarCultivo(estado, producao) {
     else textoBotao = rompimento ? '⚡ Romper Reino' : '⬆️ Avançar Estágio';
   }
 
-  $('cult-proximo').textContent = proximo;
-  $('inicio-proximo').textContent = proximo;
+  trocarTexto($('cult-proximo'), proximo);
+  trocarTexto($('inicio-proximo'), proximo);
   $('cult-barra').style.width = largura;
   $('inicio-barra').style.width = largura;
-  $('cult-progresso').textContent = progressoTexto;
-  $('cult-tempo').textContent = tempo;
-  $('cult-producao').textContent = `+${formatarNumero(producao)}/s`;
-  $('inicio-tempo').textContent = tempo;
+  trocarTexto($('cult-progresso'), progressoTexto);
+  trocarTexto($('cult-tempo'), tempo);
+  trocarTexto($('cult-producao'), `+${formatarNumero(producao)}/s`);
+  trocarTexto($('inicio-tempo'), tempo);
 
   for (const id of ['botao-avancar', 'inicio-avancar']) {
     const botao = $(id);
     // Os botões têm imagem (avançar / romper), então o texto vai sem o emoji.
     // v0.16.4: bloqueado NÃO é mais "disabled" — o toque mostra o motivo (dono achou que o botão
     // não funcionava, porque o toque num botão desativado não fazia nada)
-    botao.textContent = textoBotao.replace(/^\S+\s/, '');
+    trocarTexto(botao, textoBotao.replace(/^\S+\s/, ''));
     botao.classList.toggle('rompimento', rompimento);
     botao.classList.toggle('indisponivel', !P.podeAvancar(estado));
     botao.classList.toggle('trancado', Boolean(requisito && !requisito.cumprido));
