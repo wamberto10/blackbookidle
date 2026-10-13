@@ -12,7 +12,9 @@ import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atribut
 import { liberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
-import { desenharPersonagem, icone, iconeDoMapa } from './sprite.js';
+import { desenharPersonagem, icone, iconeDoMapa, iconeEquipamento } from './sprite.js';
+import { SLOTS } from '../dados/equipamentos.js';
+import { grauDe } from '../sistemas/itens.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
 import { desenharFundo } from './fundo.js';
 import { montarTelaCombate, atualizarTelaCombate } from './telaCombate.js';
@@ -21,6 +23,10 @@ import { montarTelaBlackBook, atualizarTelaBlackBook } from './telaBlackBook.js'
 import { montarTelaMochila, atualizarTelaMochila } from './telaMochila.js';
 import { montarNucleos, atualizarNucleos } from './nucleos.js';
 import { montarVip, atualizarVip } from './vip.js';
+import { temAlgumNucleo } from '../sistemas/nucleos.js';
+import * as EQ from '../sistemas/equipamentos.js';
+import * as BB from '../sistemas/blackbook.js';
+import { podeLutar } from '../sistemas/boss.js';
 
 // Atalho para pegar elementos pelo id
 const $ = (id) => document.getElementById(id);
@@ -73,7 +79,20 @@ export function montarInterface(acoes) {
     linhas[atributo.id] = linha;
     $(principal ? 'lista-atributos' : comTeto ? 'lista-atributos-teto' : 'lista-atributos-extra').appendChild(linha);
   }
-  montarNucleos(acoes, linhas);   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
+  montarNucleos(acoes, linhas);
+  // v0.19.0: tela do herói — orbes de habilidade e pergaminho de atributos
+  $('abrir-atributos').addEventListener('click', () => $('janela-atributos').classList.remove('escondido'));
+  $('fechar-atributos').addEventListener('click', () => $('janela-atributos').classList.add('escondido'));
+  $('janela-atributos').addEventListener('click', (e) => { if (e.target.id === 'janela-atributos') e.target.classList.add('escondido'); });
+  for (const id of ['orbe-passiva', 'orbe-tecnica']) {
+    $(id).addEventListener('click', () => {
+      const dica = $('dica-habilidade');
+      const mesma = dica.dataset.orbe === id && !dica.classList.contains('escondido');
+      dica.classList.toggle('escondido', mesma);
+      dica.dataset.orbe = id;
+      dica.innerHTML = $(id).dataset.dica ?? '';
+    });
+  }   // botão "+" de Ataque, Vitalidade, Defesa e Velocidade
   montarVip(acoes);               // botão 💎 e tela do VIP
   montarTelaBoss(acoes);          // botão BOSS e tela do Evento de Boss
 
@@ -126,6 +145,7 @@ export function atualizarInterface(estado) {
   }
 
   atualizarFundo(estado);
+  atualizarAvisos(estado);
   atualizarCultivo(estado, producao);
   atualizarPersonagem(estado);
   atualizarTelaMochila(estado);
@@ -141,6 +161,61 @@ export function atualizarInterface(estado) {
   atualizarTelaMapa(estado);
   atualizarTelaBlackBook(estado);
   atualizarTelaBoss(estado);
+}
+
+// ---- v0.19.0: equipamento em volta do herói (tocar abre a Mochila) ----
+let chaveEquipamento = '';
+function desenharEquipamentoDoHeroi(estado) {
+  const chave = SLOTS.map(s => { const i = estado.equipados[s.id]; return i ? `${i.id}.${i.nivel}.${i.raridade}.${grauDe(i)}` : '-'; }).join('|');
+  if (chave === chaveEquipamento) return;
+  chaveEquipamento = chave;
+  for (const lado of ['esquerda', 'direita']) {
+    const coluna = $(`heroi-slots-${lado}`);
+    coluna.innerHTML = '';
+    for (const slot of SLOTS.filter(s => s.lado === lado)) {
+      const item = estado.equipados[slot.id];
+      const botao = document.createElement('button');
+      botao.className = 'slot-item heroi-slot' + (item ? ' raridade-' + item.raridade : ' vazio');
+      botao.title = item ? slot.nome : `${slot.nome} (vazio)`;
+      botao.innerHTML = item
+        ? `${iconeEquipamento(item.slot, item.raridade)}${item.nivel > 0 ? `<span class="item-nivel">+${item.nivel}</span>` : ''}`
+        : iconeEquipamento(slot.id, 'comum', 'fantasma');
+      botao.addEventListener('click', () => abrirPainel('mochila'));
+      coluna.appendChild(botao);
+    }
+  }
+}
+
+// ---- v0.19.0: avisos vermelhos (●) nas abas quando há algo para fazer ----
+// Calculado 1× por segundo (comparar os itens da mochila custa um pouco).
+let ultimoAviso = 0;
+function atualizarAvisos(estado) {
+  const agora = Date.now();
+  if (agora - ultimoAviso < 1000) return;
+  ultimoAviso = agora;
+  const marcar = (seletor, ligado, motivo) => {
+    const el = document.querySelector(seletor);
+    if (!el) return;
+    el.classList.toggle('tem-aviso', Boolean(ligado));
+    el.dataset.aviso = ligado ? motivo : '';
+  };
+  // Personagem: núcleos guardados para usar
+  marcar('[data-aba="personagem"]', temAlgumNucleo(estado), 'Núcleos para usar');
+  // Cultivo: já dá para avançar (com o avanço automático ligado, só no rompimento manual)
+  const avancoManual = P.podeAvancar(estado) && (!estado.opcoes.autoAvancar || P.proximoEhRompimento(estado)) && !estado.vip;
+  marcar('[data-aba="cultivo"]', avancoManual, 'Pronto para avançar');
+  // Mochila: item melhor que o vestido (sem o Auto-vestir) ou pilha para mesclar
+  const mochilaLiberada = liberado(estado, 'mochila');
+  const melhor = mochilaLiberada && !estado.opcoes.autoEquipar &&
+    estado.mochila.slice(0, 60).some(item => EQ.ganhoDePoder(estado, item) > 0);
+  marcar('[data-aba="mochila"]', melhor || (mochilaLiberada && EQ.temAlgoParaMesclar(estado)),
+    melhor ? 'Item melhor na mochila' : 'Itens para mesclar');
+  // Black Book: dá para comprar alguma melhoria
+  const livro = liberado(estado, 'blackbook') && CONFIG.blackbook.melhorias
+    .some(m => !BB.noMaximo(estado, m.id) && estado.essencia >= BB.custoMelhoria(estado, m.id));
+  marcar('[data-aba="blackbook"]', livro, 'Melhoria disponível');
+  // Boss do evento disponível
+  marcar('#botao-boss', podeLutar(estado), 'O boss está esperando');
 }
 
 // ---- Fundo: paisagem do mapa atual (ou imagem própria do mundo) ----
@@ -279,6 +354,11 @@ function atualizarPersonagem(estado) {
   const vidas = estado.reencarnacao.vezes;
   $('pers-vidas').textContent = `Vida nº ${vidas + 1} · ${vidas} ${vidas === 1 ? 'reencarnação' : 'reencarnações'}`;
   atualizarNucleos(estado);
+  $('heroi-vida').textContent = formatarNumero(atributos.vitalidade);
+  $('heroi-ataque').textContent = formatarNumero(atributos.ataque);
+  $('heroi-defesa').textContent = formatarNumero(atributos.defesa);
+  $('heroi-velocidade').textContent = formatarNumero(atributos.velocidade);
+  desenharEquipamentoDoHeroi(estado);
   const analise = analisarPoder(atributos);
   $('pers-poder').textContent = formatarNumero(analise.poder);
   // A explicação aparece ao passar o mouse (ou segurar o dedo) em cada caixinha
@@ -295,7 +375,7 @@ function atualizarNivel(estado) {
   const personagem = personagemDe(estado);
   const classe = classeDe(estado);
   desenharPersonagem($('sprite'), reino.id, 'meditando', personagem);
-  desenharPersonagem($('sprite-pers'), reino.id, 'meditando', personagem);
+  desenharPersonagem($('sprite-pers'), reino.id, 'combate', personagem);
   $('inicio-nome').textContent = personagem.nome;
   $('pers-nome').textContent = personagem.nome;
   $('pers-classe').innerHTML = `${classe.nome} <span class="pers-classe-sexo">· ${personagem.sexo === 'feminino' ? '♀' : '♂'}</span>`;
@@ -305,6 +385,13 @@ function atualizarNivel(estado) {
     <div class="classe-topo">${icone('classe_' + classe.id, 'classe-icone')}<div><h3>${classe.nome}</h3><p>${classe.titulo}</p></div></div>
     <p class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</p>
     ${classe.tecnica ? `<p class="especial-classe tecnica-classe">${icone('tecnica')} <span><b>${classe.tecnica.nome}:</b> ${classe.tecnica.texto}</span></p>` : ''}`;
+  $('orbe-passiva').innerHTML = icone('classe_' + classe.id);
+  $('orbe-passiva').dataset.dica = `<b>${classe.nomeEspecial}</b> <small>· passiva</small><p>${classe.textoEspecial}</p>`;
+  $('orbe-tecnica').innerHTML = icone('tecnica');
+  $('orbe-tecnica').classList.toggle('escondido', !classe.tecnica);
+  if (classe.tecnica) $('orbe-tecnica').dataset.dica = `<b>✦ ${classe.tecnica.nome}</b> <small>· técnica especial</small><p>${classe.tecnica.texto}</p>`;
+  const dica = $('dica-habilidade');
+  if (!dica.classList.contains('escondido')) dica.innerHTML = $(dica.dataset.orbe)?.dataset.dica ?? '';
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
   $('moldura-sprite-pers').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;

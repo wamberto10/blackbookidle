@@ -82,33 +82,52 @@
   <section class="painel painel-personagem" id="aba-personagem">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_personagem.png" alt=""> Personagem</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
-      <!-- v0.16.0: tela de Personagem nova (retrato + identidade, placa do Poder, classe, atributos em grade) -->
-      <div class="pers-cabecalho">
-        <div class="pers-retrato" id="moldura-sprite-pers">
+      <!-- v0.19.0: tela do herói (estilo AFK Arena): personagem grande com o equipamento em volta,
+           habilidades em orbes, Poder e atributos principais; a lista completa abre num pergaminho -->
+      <div class="heroi-titulo">
+        <div id="pers-nome" class="pers-nome"></div>
+        <div class="pers-linha"><img class="icone-px" id="pers-classe-icone" src="img/icones/classe_corpo.png" alt=""> <span id="pers-classe"></span></div>
+        <div class="pers-reino"><span id="pers-reino"></span> · <span id="pers-estagio"></span></div>
+      </div>
+
+      <div class="heroi-palco">
+        <div class="heroi-slots" id="heroi-slots-esquerda"></div>
+        <div class="heroi-centro" id="moldura-sprite-pers">
+          <button class="orbe-habilidade" id="orbe-passiva" title="Passiva da classe"></button>
+          <button class="orbe-habilidade orbe-tecnica" id="orbe-tecnica" title="Técnica especial"></button>
           <canvas id="sprite-pers" width="32" height="32"></canvas>
         </div>
-        <div class="pers-identidade">
-          <div id="pers-nome" class="pers-nome"></div>
-          <div class="pers-linha"><img class="icone-px" id="pers-classe-icone" src="img/icones/classe_corpo.png" alt=""> <span id="pers-classe"></span></div>
-          <div class="pers-reino"><span id="pers-reino"></span> · <span id="pers-estagio"></span></div>
-          <div class="pers-linha pequeno" id="pers-regiao"></div>
-          <div class="pers-linha pequeno"><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> <span id="pers-vidas"></span></div>
-        </div>
+        <div class="heroi-slots" id="heroi-slots-direita"></div>
       </div>
+      <div class="dica-habilidade escondido" id="dica-habilidade"></div>
 
       <div class="placa-poder">
         <div class="placa-poder-rotulo">Poder Total</div>
         <div id="pers-poder" class="placa-poder-valor"></div>
       </div>
+      <div class="heroi-stats">
+        <span title="Vitalidade"><img class="icone-px" src="img/icones/atr_vitalidade.png" alt=""><b id="heroi-vida"></b></span>
+        <span title="Ataque"><img class="icone-px" src="img/icones/atr_ataque.png" alt=""><b id="heroi-ataque"></b></span>
+        <span title="Defesa"><img class="icone-px" src="img/icones/atr_defesa.png" alt=""><b id="heroi-defesa"></b></span>
+        <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""><b id="heroi-velocidade"></b></span>
+        <button class="botao-atributos" id="abrir-atributos" title="Todos os atributos">!</button>
+      </div>
       <div class="poder-partes" id="pers-poder-detalhe"></div>
+      <div class="heroi-vida-linha pequeno"><span id="pers-regiao"></span> · <img class="icone-px" src="img/icones/reencarnacao.png" alt=""> <span id="pers-vidas"></span></div>
 
-      <div class="cartao cartao-classe" id="pers-classe-cartao"></div>
-
-      <h3 class="pers-titulo">Atributos</h3>
-      <div class="atributos-grade" id="lista-atributos"></div>
-      <div class="atributos-teto" id="lista-atributos-teto"></div>
-      <div class="atributos-extra" id="lista-atributos-extra"></div>
-      <div class="nucleos-chips" id="nucleos-guardados"></div>
+      <!-- Pergaminho com todos os atributos (e os núcleos) -->
+      <div class="janela-atributos escondido" id="janela-atributos">
+        <div class="pergaminho">
+          <div class="pergaminho-topo"><b>Atributos</b><button class="botao-icone" id="fechar-atributos">✕</button></div>
+          <div class="pergaminho-corpo">
+            <div class="cartao cartao-classe" id="pers-classe-cartao"></div>
+            <div class="atributos-grade" id="lista-atributos"></div>
+            <div class="atributos-teto" id="lista-atributos-teto"></div>
+            <div class="atributos-extra" id="lista-atributos-extra"></div>
+            <div class="nucleos-chips" id="nucleos-guardados"></div>
+          </div>
+        </div>
+      </div>
 
       <details class="recolhivel">
         <summary>Dicas</summary>
@@ -315,25 +334,39 @@
       <div class="bloqueado" id="mapa-bloqueado">
         🗺️ O Mapa será liberado no <b>5º estágio do Corpo Temperado</b>.
       </div>
-      <div id="mapa-conteudo" class="escondido">
-        <div class="abas-mundo escondido" id="abas-mundo"></div>
-        <div class="cartao cartao-mundo">
-          <h3 id="mapa-mundo-nome"></h3>
-          <p class="lema" id="mapa-mundo-lema"></p>
-          <details class="recolhivel mundo-sobre"><summary>Sobre este mundo</summary><p id="mapa-mundo-desc"></p></details>
+      <!-- v0.19.0: layout em 3 colunas (referência do dono): zonas | trilha das fases | seleção do desafio -->
+      <div id="mapa-conteudo" class="escondido mapa-novo">
+        <div class="md-coluna md-esquerda">
+          <div class="md-cabecalho"><span>Seleção da Zona</span><b id="md-mundo-nome"></b></div>
+          <div class="md-mundos" id="md-mundos"></div>
+          <div class="md-zonas" id="md-zonas"></div>
         </div>
 
-        <div class="grade-mapas" id="lista-mapas"></div>
-
-        <div class="cartao detalhe-mapa" id="mapa-detalhe">
-          <h3 id="md-nome"></h3>
-          <p id="md-desc"></p>
-          <div class="pequeno sistema-mapa" id="md-sistema"></div>
-          <div class="grade-fases" id="lista-fases"></div>
+        <div class="md-coluna md-centro">
+          <div class="md-titulo" id="md-titulo"></div>
+          <div class="md-trilha" id="md-trilha">
+            <svg class="md-caminho" id="md-caminho" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+            <div class="md-nos" id="md-nos"></div>
+          </div>
         </div>
 
-        <h3>Mundos</h3>
-        <ol class="caminho" id="lista-mundos"></ol>
+        <div class="md-coluna md-direita">
+          <div class="md-cabecalho"><span>Seleção do Desafio</span></div>
+          <div class="md-dificuldades" id="md-dificuldades"></div>
+          <div class="md-card-fase">
+            <div class="md-fase-topo">
+              <div class="md-fase-miniatura" id="md-fase-miniatura"><canvas id="md-fase-sprite" width="32" height="32"></canvas></div>
+              <div class="md-fase-info">
+                <b id="md-fase-numero"></b> <span id="md-fase-local"></span>
+                <div id="md-fase-inimigo"></div>
+              </div>
+            </div>
+            <div class="md-previsao" id="md-fase-previsao"></div>
+            <div class="md-recompensa"><small>Recompensa por vitória</small><span id="md-fase-recompensa"></span></div>
+          </div>
+          <button class="principal largo" id="md-farmar">⚔️ Farmar aqui</button>
+          <p class="pequeno md-dica">O herói fica lutando nesta fase (o avanço automático é desligado).</p>
+        </div>
       </div>
     </div>
   </section>

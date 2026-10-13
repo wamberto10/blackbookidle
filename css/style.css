@@ -1439,7 +1439,7 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 }
 
 /* Botões comuns e principais (as abas, ícones, cartas e itens têm visual próprio) */
-button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo) {
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo):not(.md-mundo):not(.md-zona):not(.md-no):not(.orbe-habilidade):not(.botao-atributos) {
   border: 12px solid transparent;
   border-image: var(--imagem-botao) 24 fill / 12px stretch;
   border-radius: 0;
@@ -2278,3 +2278,155 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 @media (prefers-reduced-motion: reduce) {
   #aba-combate .lutador canvas { animation: none !important; }
 }
+
+/* =============================================================
+   v0.19.0: ABA MAPA EM 3 COLUNAS (zonas | trilha | desafio)
+   No celular as colunas ficam empilhadas; a partir de 900 px, lado a lado.
+   ============================================================= */
+#aba-mapa .painel-corpo { padding-top: 8px; }
+.mapa-novo { display: flex; flex-direction: column; gap: 10px; }
+.mapa-novo.escondido { display: none; }
+.md-coluna { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.md-cabecalho { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-fraco); }
+.md-cabecalho b { text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--destaque); }
+
+/* Mundos */
+.md-mundos { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.md-mundo { flex: none; min-height: 0; height: 34px; padding: 0 12px; border: 1px solid var(--borda); border-image: none;
+  border-radius: 8px; background: rgba(12, 9, 16, 0.75); font-size: 0.82rem; }
+.md-mundo.selecionado { border-color: var(--destaque); color: var(--destaque); font-weight: bold; }
+.md-mundo .icone-px { width: 14px; height: 14px; vertical-align: -2px; }
+
+/* Zonas: cartões com a miniatura do fundo do mapa */
+.md-zonas { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: thin; }
+.md-zona { flex: 0 0 72%; scroll-snap-align: center; position: relative; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 2px; min-height: 0; padding: 8px 10px; text-align: left; border: 1px solid rgba(255, 255, 255, 0.12); border-image: none;
+  border-radius: 8px; overflow: hidden;
+  background: var(--cor-mapa) center / cover no-repeat; }
+.md-zona b { font-size: 0.85rem; color: #fff; }
+.md-zona small { font-size: 0.7rem; color: var(--texto-fraco); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.md-zona .md-zona-estrela { font-size: 0.75rem; color: var(--destaque); }
+.md-zona.selecionado { border-color: var(--destaque); box-shadow: inset 0 0 0 1px var(--destaque), 0 0 10px rgba(212, 168, 74, 0.35); }
+.md-zona:disabled { opacity: 0.45; }
+.md-zona .icone-px { width: 14px; height: 14px; vertical-align: -2px; }
+
+/* Centro: a trilha sobre o fundo do mapa */
+.md-titulo { font-size: 0.9rem; color: var(--texto); }
+.md-titulo b { color: var(--destaque); }
+.md-trilha { position: relative; height: clamp(380px, 62vh, 620px); border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(212, 168, 74, 0.55); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  background: #1a1420 center / cover no-repeat; }
+.md-caminho { position: absolute; inset: 0; width: 100%; height: 100%; }
+.md-caminho polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.md-caminho-base { stroke: rgba(20, 14, 10, 0.75); stroke-width: 7; stroke-dasharray: 2 8; }
+.md-caminho-feito { stroke: rgba(255, 211, 107, 0.85); stroke-width: 4; }
+.md-nos { position: absolute; inset: 0; }
+.md-no { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; min-height: 0; padding: 0; display: grid; place-items: center;
+  border: 3px solid #8a6a3a; border-image: none; border-radius: 50%; color: #fff; font-weight: bold;
+  background: radial-gradient(circle at 40% 35%, #6a5a40, #2a2014); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.7); }
+.md-no .icone-px { width: 24px; height: 24px; }
+.md-no-rotulo { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px; white-space: nowrap;
+  font-size: 0.7rem; font-weight: bold; color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.md-no.vencida { border-color: var(--destaque); background: radial-gradient(circle at 40% 35%, #c8a050, #6a4a1a); color: #fff8e0; }
+.md-no.trancada { opacity: 0.7; filter: grayscale(0.7); }
+.md-no.trancada .icone-px { width: 18px; height: 18px; }
+.md-no.tipo-miniChefe, .md-no.tipo-chefe { width: 54px; height: 54px; margin: -27px 0 0 -27px; border-color: #c03a2a; }
+.md-no.tipo-chefe.vencida, .md-no.tipo-miniChefe.vencida { border-color: var(--destaque); }
+.md-no.atual { border-color: #6fef8a; box-shadow: 0 0 0 3px rgba(111, 239, 138, 0.35), 0 0 14px rgba(111, 239, 138, 0.6); }
+.md-no.selecionado { transform: scale(1.15); box-shadow: 0 0 0 3px #fff, 0 0 16px rgba(255, 255, 255, 0.7); z-index: 2; }
+
+/* Direita: seleção do desafio */
+.md-dificuldades { display: flex; flex-direction: column; gap: 4px; }
+.dificuldade { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; font-size: 0.82rem;
+  background: rgba(12, 9, 16, 0.75); border: 1px solid var(--borda); color: var(--texto-fraco); }
+.dificuldade b { flex: 1; font-weight: normal; }
+.dificuldade .estrelas { color: #8a7a5a; letter-spacing: 1px; }
+.dificuldade small { font-size: 0.65rem; }
+.dificuldade .icone-px { width: 14px; height: 14px; }
+.dificuldade.ativa { border-color: var(--destaque); color: var(--texto); background: rgba(212, 168, 74, 0.12); }
+.dificuldade.ativa b { font-weight: bold; }
+.dificuldade.ativa .estrelas { color: var(--destaque); }
+.md-card-fase { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 10px;
+  background: rgba(12, 9, 16, 0.82); border: 1px solid rgba(212, 168, 74, 0.45); }
+.md-fase-topo { display: flex; gap: 10px; align-items: center; }
+.md-fase-miniatura { flex: none; width: 84px; height: 84px; border-radius: 8px; overflow: hidden; display: grid; place-items: end center;
+  background: #1a1420 center / cover no-repeat; border: 1px solid var(--borda); }
+.md-fase-miniatura canvas { width: 80px; height: 80px; }
+.md-fase-miniatura canvas.sprite-chefe { width: 84px; height: 84px; filter: drop-shadow(0 0 4px rgba(255, 58, 58, 0.8)); }
+.md-fase-info { min-width: 0; font-size: 0.85rem; line-height: 1.4; }
+.md-fase-info b { color: var(--destaque); }
+.md-fase-info #md-fase-inimigo { color: #fff; font-weight: bold; }
+.md-fase-info .etiqueta { font-weight: normal; font-size: 0.68rem; }
+.md-fase-info .etiqueta .icone-px { width: 12px; height: 12px; vertical-align: -2px; }
+.md-previsao { font-size: 0.75rem; }
+.md-recompensa { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+.md-recompensa small { font-size: 0.65rem; text-transform: uppercase; color: var(--texto-fraco); }
+.md-recompensa .icone-px { width: 16px; height: 16px; vertical-align: -3px; }
+#md-farmar.ativo { filter: saturate(0.6); }
+.md-dica { margin: 0; text-align: center; font-size: 0.7rem; }
+
+#aba-mapa .painel-corpo { container-type: inline-size; }
+@container (min-width: 900px) {
+  .mapa-novo { display: grid; grid-template-columns: 260px 1fr 280px; align-items: start; }
+  .md-zonas { flex-direction: column; overflow-x: visible; overflow-y: auto; max-height: 62vh; scroll-snap-type: none; }
+  .md-zona { flex: none; }
+  #aba-mapa .painel-corpo { padding-left: 16px; padding-right: 16px; }
+}
+
+/* v0.19.0: aviso vermelho (●) nas abas e no botão do boss */
+[data-aba].tem-aviso, #botao-boss.tem-aviso { position: relative; }
+[data-aba].tem-aviso::after, #botao-boss.tem-aviso::after {
+  content: '!'; position: absolute; top: 2px; right: calc(50% - 26px); z-index: 2;
+  width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center;
+  font: bold 11px/1 sans-serif; color: #fff; background: radial-gradient(circle at 35% 35%, #ff6a5a, #c01a10);
+  border: 1px solid #ffd0c8; box-shadow: 0 0 6px rgba(255, 60, 40, 0.8);
+  animation: aviso-pulsar 1.6s ease-in-out infinite;
+}
+#botao-boss.tem-aviso::after { top: -4px; right: -4px; }
+@keyframes aviso-pulsar { 50% { transform: scale(1.18); } }
+
+/* =============================================================
+   v0.19.0: TELA DO HERÓI (Personagem, estilo AFK Arena)
+   ============================================================= */
+.heroi-titulo { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.heroi-titulo .pers-nome { font-size: 1.3rem; }
+.heroi-palco { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; gap: 6px; min-height: 300px; }
+.heroi-slots { display: flex; flex-direction: column; gap: 6px; }
+.heroi-slot { width: 52px; height: 52px; min-height: 0; padding: 0; position: relative; }
+.heroi-slot .icone-px { width: 36px; height: 36px; }
+.heroi-slot .item-nivel { position: absolute; right: 2px; bottom: 0; font-size: 0.6rem; }
+.heroi-centro { position: relative; display: grid; place-items: end center; height: 300px;
+  background: radial-gradient(ellipse at 50% 88%, color-mix(in srgb, var(--aura, #6fcf8a) 40%, transparent) 0%, transparent 45%); }
+.heroi-centro canvas { width: min(230px, 100%); height: auto; aspect-ratio: 1; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.6)); }
+.orbe-habilidade { position: absolute; top: 10px; left: 0; z-index: 2; width: 54px; height: 54px; min-height: 0; padding: 0;
+  display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--destaque); border-image: none;
+  background: radial-gradient(circle at 40% 35%, #3a2a5a, #120a1e); box-shadow: 0 0 10px rgba(212, 168, 74, 0.55); }
+.orbe-habilidade.orbe-tecnica { left: auto; right: 0; border-color: #c070ff; box-shadow: 0 0 12px rgba(192, 112, 255, 0.7); }
+.orbe-habilidade .icone-px { width: 34px; height: 34px; }
+.dica-habilidade { padding: 10px 12px; border-radius: 8px; background: rgba(8, 6, 14, 0.94); border: 1px solid rgba(212, 168, 74, 0.6);
+  font-size: 0.82rem; line-height: 1.45; }
+.dica-habilidade b { color: var(--destaque); }
+.dica-habilidade small { color: var(--texto-fraco); }
+.dica-habilidade p { margin: 4px 0 0; color: var(--texto); }
+.heroi-stats { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9rem; }
+.heroi-stats span { display: inline-flex; align-items: center; gap: 4px; }
+.heroi-stats .icone-px { width: 20px; height: 20px; }
+.heroi-stats b { color: #fff; }
+.botao-atributos { width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid var(--destaque);
+  border-image: none; background: radial-gradient(circle, #5a3a10, #2a1a08); color: #ffe08a; font-weight: bold; font-size: 1rem; }
+.heroi-vida-linha { text-align: center; }
+.heroi-vida-linha .icone-px { width: 16px; height: 16px; vertical-align: -3px; }
+
+/* Pergaminho de atributos */
+.janela-atributos { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.65); }
+.janela-atributos.escondido { display: none; }
+.pergaminho { width: min(420px, 100%); max-height: 86vh; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden;
+  background: linear-gradient(#2a2016, #1a140e); border: 2px solid #b08a4a; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); }
+.pergaminho-topo { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;
+  background: linear-gradient(#6a4a20, #4a3214); color: #ffe8b0; }
+.pergaminho-corpo { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.heroi-stats { gap: 8px; flex-wrap: nowrap; font-size: 0.8rem; }
+.heroi-stats .icone-px { width: 16px; height: 16px; }
+.botao-atributos { flex: none; width: 26px; height: 26px; font-size: 0.9rem; }
