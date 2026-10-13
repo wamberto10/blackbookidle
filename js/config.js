@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.20.2',
+  versao: '0.21.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -31,6 +31,41 @@ export const CONFIG = {
     multiplicadorRompimento: 2.5,  // v0.8.5: era 4 (o 9º estágio demorava 5× o anterior)
     segundosPorMeditacao: 3,   // cada clique em Meditar = 3 segundos de produção (v0.9.5: era 1)
     meditacaoMinima: 1,
+  },
+
+  // ---- v0.21.0: melhorias do cultivo vindas da lore (sistemas/cultivoAvancado.js) ----
+  // Reclusão: o combate das fases para e o Cultivo rende mais. Quanto mais tempo, mais fundo:
+  // começa em +50% e chega a +150% depois de 4 h (conta também com o jogo fechado). O gargalo do chefe segura o reino,
+  // então é uma escolha: no robô, Reclusão à noite (fora do gargalo) ficou perto de empatar com continuar lutando.
+  reclusao: { reinoMinimo: 'elemento_inicial', bonusInicial: 0.5, bonusMaximo: 1.5, horasParaOMaximo: 4 },
+  // Iluminação: de vez em quando um brilho aparece na tela inicial; tocar = Cultivo ×2 por 60 s
+  iluminacao: { aparecerEntre: [240, 480], segundosNaTela: 20, segundos: 60, multiplicador: 2, acumuloMaximo: 180 },
+  // Arranjo de Reunião de Energia: +2% de Cultivo por nível, comprado com Pedras Espirituais (custo ×2 por nível),
+  // fica para sempre (também ao reencarnar)
+  // (robô v0.21.0: com +4%/nível e custo ×1,45 chegava ao nível 60 = +240% e o Mundo 3 caía de 107 h para 61 h)
+  arranjo: { bonusPorNivel: 0.02, custoBase: 40, crescimentoCusto: 2 },
+  // Batismo Mundial: cada rompimento a partir da Transformação do Qi = +3% Ataque, Vitalidade e Defesa
+  batismo: { primeiroReino: 'transformacao_qi', bonusPorBatismo: 0.03 },
+  // Com Sentido Divino (Ascensão Imortal, Cultivador de Alma ou "a alma se lembra"), o Meditar rende +50%
+  meditacaoComSentido: 0.5,
+  // Mestre Estelar: no Rei da Origem, refinar a Fonte Estelar (custa 1 estágio de Cultivo) = +15% Cultivo nesta vida
+  mestreEstelar: { reino: 'rei_origem', bonusCultivo: 0.15 },
+  // Pílulas de cultivo: caem dos inimigos a partir do Mapa 2 (chance = base × "pedras" do tipo da fase:
+  // comum 0,07%, chefe 1%) e sempre na 1ª vitória contra um chefe de mapa. Ficam ao reencarnar.
+  // Robô (Refinador, 6 rodadas): com tudo isto o Mundo 1 vai de 35 h para 28 h e o Mundo 3 de 107 h para 90 h.
+  // Alquimista: pílulas 25% mais fortes (com 50% o Alquimista ficava ~20% mais rápido que as outras classes no robô).
+  pilulas: {
+    mapaMinimo: 2,
+    chanceBase: 0.0007,
+    forcaAlquimista: 1.25,
+    tipos: [
+      { id: 'acumulo',    nome: 'Pílula de Acúmulo de Qi',      icone: 'pilula_acumulo',    peso: 55, segundosDeCultivo: 300,
+        texto: 'Ganha na hora 5 min de Cultivo.' },
+      { id: 'fluxo',      nome: 'Pílula do Fluxo Celestial',    icone: 'pilula_fluxo',      peso: 35, segundos: 600, multiplicador: 2,
+        texto: 'Cultivo ×2 por 10 min.' },
+      { id: 'rompimento', nome: 'Pílula Quebra-Gargalo',        icone: 'pilula_rompimento', peso: 10, desconto: 0.3, descontoMaximo: 0.5,
+        texto: 'O próximo rompimento de reino custa 30% menos.' },
+    ],
   },
 
   // ---- Atributos ----

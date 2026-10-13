@@ -19,6 +19,7 @@ import { ganharCultivo, producaoPorSegundo } from './progressao.js';
 import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
 import { tentarNucleo } from './nucleos.js';
+import { tentarPilula } from './cultivoAvancado.js';
 import { classeDe } from './personagem.js';
 import { tecnicaDoGolpe, penetracaoDoGolpe, efeitosDaTecnica, inimigoCongelado, forcaDoInimigo } from './tecnicas.js';
 
@@ -90,6 +91,8 @@ const calcularDano = dano;
 // mesmo quando o navegador atrasa ou durante a simulação offline.
 export function atualizarCombate(estado, segundos, aoEvento) {
   if (!combateLiberado(estado)) return;
+  // v0.21.0: em Reclusão o personagem não luta (a luta em andamento é abandonada, sem derrota)
+  if (estado.reclusao?.ativa) { luta = null; return; }
   let restante = segundos;
   while (restante > 0) {
     const dt = Math.min(restante, CB.passoDeSimulacao);
@@ -226,10 +229,12 @@ function vencer(estado, aoEvento, suprimido = false) {
   const drop = tentarDrop(estado, fase, primeira);
   // Chance de cair um Núcleo (Mapa 3 em diante)
   const nucleo = tentarNucleo(estado, fase);
+  // v0.21.0: chance de cair uma pílula de cultivo (Mapa 2 em diante; sempre na 1ª vitória contra um chefe)
+  const pilula = tentarPilula(estado, fase, primeira);
 
   // Venceu o chefe final de um mundo pela primeira vez → o mundo (com o texto final) | null
   const ultimaDoMundo = primeira && fase.ultimaDoMundo ? MUNDOS_JOGAVEIS[fase.mundo] : null;
-  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo, suprimido });
+  if (aoEvento) aoEvento({ tipo: 'vitoria', fase, cultivo, pedras, primeira, ultimaDoMundo, drop, nucleo, pilula, suprimido });
 
   if (estado.combate.autoAvancar && fase.indice + 1 < FASES.length) {
     estado.combate.faseAtual = fase.indice + 1;

@@ -85,17 +85,62 @@ export function producaoNoNivel(nivel, indiceReino) {
 export function producaoPorSegundo(estado) {
   const bonusDosItens = 1 + bonusEquipamentos(estado).cultivo / 100;   // ex.: Berloque +5% Cultivo
   const bonusDaClasse = 1 + (classeDe(estado).multiplicar.cultivo ?? 0);   // Alquimista: +50%
-  return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens * bonusDaClasse;
+  return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens * bonusDaClasse *
+    bonusDoCaminho(estado);
+}
+
+// ---- v0.21.0: bônus do cultivo vindos da lore (as ações ficam em sistemas/cultivoAvancado.js) ----
+const indiceDoReino = (id) => REINOS.findIndex(r => r.id === id);
+export const REINO_DA_RECLUSAO = indiceDoReino(CONFIG.reclusao.reinoMinimo);
+export const REINO_DO_MESTRE_ESTELAR = indiceDoReino(CONFIG.mestreEstelar.reino);
+const REINO_DO_1O_BATISMO = indiceDoReino(CONFIG.batismo.primeiroReino);
+const REINO_DO_SENTIDO_DIVINO = REINOS.findIndex(r => r.liberaSentidoDivino);
+const PILULA_DO_FLUXO = CONFIG.pilulas.tipos.find(t => t.id === 'fluxo');
+
+// Reclusão: +25% ao entrar, crescendo até +75% depois de 4 h (CONFIG.reclusao)
+export function bonusDaReclusao(estado) {
+  const r = estado.reclusao;
+  if (!r?.ativa) return 0;
+  const R = CONFIG.reclusao;
+  const fundo = Math.min(1, r.segundos / (R.horasParaOMaximo * 3600));
+  return R.bonusInicial + (R.bonusMaximo - R.bonusInicial) * fundo;
+}
+
+export function bonusDoArranjo(estado) {
+  return (estado.arranjo ?? 0) * CONFIG.arranjo.bonusPorNivel;
+}
+
+// Todos os bônus do caminho juntos: Reclusão, Arranjo, Mestre Estelar, Iluminação e Pílula do Fluxo
+export function bonusDoCaminho(estado) {
+  const e = estado.efeitos ?? {};
+  return (1 + bonusDaReclusao(estado)) * (1 + bonusDoArranjo(estado)) *
+    (estado.mestreEstelar ? 1 + CONFIG.mestreEstelar.bonusCultivo : 1) *
+    (e.iluminacao > 0 ? CONFIG.iluminacao.multiplicador : 1) *
+    (e.fluxo > 0 ? PILULA_DO_FLUXO.multiplicador : 1);
+}
+
+// Batismo Mundial: 1 a cada rompimento a partir da Transformação do Qi (vale nos atributos, ver atributos.js)
+export function batismosMundiais(estado) {
+  return Math.max(0, estado.reino - REINO_DO_1O_BATISMO + 1);
+}
+
+// Tem Sentido Divino? (Ascensão Imortal, Cultivador de Alma desde o início, ou "a alma se lembra")
+export function temSentidoDivino(estado) {
+  return estado.reino >= REINO_DO_SENTIDO_DIVINO || Boolean(classeDe(estado).especial?.sentidoDesdeOInicio) ||
+    (estado.reencarnacao?.sentidoDivinoMaximo ?? 0) > 0;
 }
 
 export function custoParaAvancar(estado) {
   let custo = C.custoBase * Math.pow(C.crescimentoCusto, indiceNivel(estado));
-  if (proximoEhRompimento(estado)) custo *= C.multiplicadorRompimento;
+  // v0.21.0: a Pílula Quebra-Gargalo deixa o próximo rompimento mais barato
+  if (proximoEhRompimento(estado)) custo *= C.multiplicadorRompimento * (1 - (estado.efeitos?.rompimento ?? 0));
   return Math.ceil(custo);
 }
 
 export function ganhoDaMeditacao(estado) {
-  return Math.max(C.meditacaoMinima, producaoPorSegundo(estado) * C.segundosPorMeditacao);
+  // v0.21.0: o Sentido Divino guia a meditação (+50%)
+  const sentido = temSentidoDivino(estado) ? 1 + CONFIG.meditacaoComSentido : 1;
+  return Math.max(C.meditacaoMinima, producaoPorSegundo(estado) * C.segundosPorMeditacao * sentido);
 }
 
 // ---- Ações ----
@@ -130,6 +175,7 @@ export function avancar(estado) {
     estado.reino += 1;
     estado.estagio = 0;
     estado.estatisticas.rompimentos += 1;
+    if (estado.efeitos) estado.efeitos.rompimento = 0;   // a Pílula Quebra-Gargalo foi usada neste rompimento
   } else {
     estado.estagio += 1;
   }
@@ -140,6 +186,7 @@ export function avancar(estado) {
     nome: nomeDoNivel(estado),
     reino,
     marco: reino.marcos?.[estado.estagio] ?? null,
+    batismo: rompimento && batismosMundiais(estado) > 0,   // v0.21.0: este rompimento trouxe um Batismo Mundial
   };
 }
 
@@ -149,6 +196,13 @@ export function avancar(estado) {
 export function atualizar(estado, segundos, aoEvento) {
   ganharCultivo(estado, producaoPorSegundo(estado) * segundos);
   estado.estatisticas.tempoJogado += segundos;
+  // v0.21.0: tempo da Reclusão e dos efeitos (Iluminação, Pílula do Fluxo) — conta também com o jogo fechado
+  if (estado.reclusao?.ativa) estado.reclusao.segundos += segundos;
+  const e = estado.efeitos;
+  if (e) {
+    if (e.iluminacao > 0) e.iluminacao = Math.max(0, e.iluminacao - segundos);
+    if (e.fluxo > 0) e.fluxo = Math.max(0, e.fluxo - segundos);
+  }
 
   // Avanço automático (opção "auto"): só estágios. Rompimentos são manuais...
   // ...a não ser com o VIP (v0.9.13, dono): aí o rompimento é automático assim que

@@ -44,6 +44,12 @@
       <span id="botao-boss-texto">BOSS</span>
     </button>
     <div class="inicio-local" id="inicio-local"></div>
+    <!-- v0.21.0: efeitos ativos (Reclusão, Iluminação, pílulas) — tocar abre a aba Cultivo -->
+    <div class="inicio-efeitos" id="inicio-efeitos"></div>
+    <!-- v0.21.0: Iluminação — aparece de vez em quando; tocar = Cultivo ×2 por 60 s -->
+    <button class="iluminacao escondido" id="iluminacao" title="Iluminação! Toque para compreender">
+      <img class="icone-px" src="img/icones/iluminacao.png" alt="" onerror="this.remove()">
+    </button>
 
     <div class="moldura-sprite" id="moldura-sprite">
       <div class="aura-cultivo" aria-hidden="true"></div>
@@ -156,6 +162,7 @@
         <div class="linha pequeno"><span id="cult-progresso"></span><span id="cult-tempo"></span></div>
         <div class="linha pequeno"><span>Produção</span><span id="cult-producao"></span></div>
         <div class="requisito" id="cult-requisito"></div>
+        <button id="cult-ir-chefe" class="botao-ir-chefe escondido"><img class="icone-px" src="img/icones/aba_mapa.png" alt=""> Ir ao chefe</button>
         <div class="cult-botoes">
           <button id="botao-meditar" class="botao-imagem">Meditar</button>
           <button id="botao-avancar" class="botao-imagem">Avançar</button>
@@ -164,6 +171,37 @@
           <input type="checkbox" id="opcao-auto"><span class="chave"></span>
           <span>Avançar estágios sozinho <small>(rompimentos de reino são manuais; com o <img class="icone-px" src="img/icones/vip.png" alt=""> VIP, automáticos)</small></span>
         </label>
+      </div>
+
+      <!-- v0.21.0: melhorias do cultivo vindas da lore (ui/telaCultivoAvancado.js) -->
+      <div class="cartao cult-extra" id="cult-reclusao">
+        <div class="cult-cabeca"><img class="icone-px" src="img/icones/reclusao.png" alt="">
+          <div><b>Reclusão</b><small id="reclusao-estado"></small></div>
+          <button id="botao-reclusao" class="botao-cult"></button>
+        </div>
+        <p class="cult-explica" id="reclusao-texto"></p>
+      </div>
+
+      <div class="cartao cult-extra">
+        <div class="cult-cabeca"><img class="icone-px" src="img/icones/pilula_acumulo.png" alt="">
+          <div><b>Pílulas de Cultivo</b><small id="pilulas-info"></small></div>
+        </div>
+        <div class="pilulas-grade" id="pilulas-grade"></div>
+      </div>
+
+      <div class="cartao cult-extra" id="cult-arranjo">
+        <div class="cult-cabeca"><img class="icone-px" src="img/icones/arranjo.png" alt="">
+          <div><b>Arranjo de Reunião de Energia</b><small id="arranjo-nivel"></small></div>
+          <button id="botao-arranjo" class="botao-cult"></button>
+        </div>
+        <p class="cult-explica" id="arranjo-texto"></p>
+      </div>
+
+      <div class="cartao cult-extra">
+        <div class="cult-cabeca"><img class="icone-px" src="img/icones/batismo.png" alt="">
+          <div><b>Bênçãos do Caminho</b><small>Ganhas ao avançar no cultivo</small></div>
+        </div>
+        <div class="bencaos" id="bencaos"></div>
       </div>
 
       <h3 class="cult-titulo">Caminho do Cultivo</h3>
@@ -180,6 +218,12 @@
       </div>
       <!-- v0.17.1: rework da aba Combate — arena grande com o placar (nome, vida, poder) por cima,
            controles numa linha só e registro de batalha compacto -->
+      <!-- v0.21.0: em Reclusão o combate fica pausado -->
+      <div class="aviso-reclusao escondido" id="combate-reclusao">
+        <img class="icone-px" src="img/icones/reclusao.png" alt="">
+        <span><b>Em Reclusão</b> — o combate está pausado enquanto você cultiva.</span>
+        <button id="combate-sair-reclusao">Sair</button>
+      </div>
       <div id="combate-conteudo" class="escondido combate-novo">
         <div class="cb-cabecalho">
           <div class="linha pequeno"><span id="cb-mapa"></span><span id="cb-numero"></span></div>

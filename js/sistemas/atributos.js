@@ -5,7 +5,7 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import { REINOS } from '../dados/reinos.js';
-import { indiceNivel, producaoPorSegundo } from './progressao.js';
+import { indiceNivel, producaoPorSegundo, batismosMundiais } from './progressao.js';
 import { multiplicadorMelhoria as mult, efeitoMelhoria as soma } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
 import { classeDe } from './personagem.js';
@@ -73,13 +73,15 @@ export function calcularAtributos(estado) {
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
   const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +25% (CONFIG.vip.atributos)
+  // v0.21.0: Batismo Mundial — +3% Ataque, Vitalidade e Defesa por rompimento desde a Transformação do Qi
+  const batismo = 1 + batismosMundiais(estado) * CONFIG.batismo.bonusPorBatismo;
   return {
-    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque'),
+    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo,
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
     danoCritico: Math.min(A.danoCriticoMaximo, A.danoCriticoBase + A.danoCriticoPorNivel * nivel + soma(estado, 'danoCritico') + eq.danoCritico + somaClasse('danoCritico')),
     velocidade: (base.velocidade + eq.velocidade) * mult(estado, 'velocidade') * classe('velocidade') * nucleo(estado, 'velocidade'),
-    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade'),
-    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa'),
+    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade') * batismo,
+    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo,
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado

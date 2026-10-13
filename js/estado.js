@@ -33,12 +33,19 @@ export function criarEstadoInicial() {
       vitorias: 0,
       derrotas: 0,
     },
+    // v0.21.0 (sistemas/cultivoAvancado.js) — desta vida:
+    reclusao: { ativa: false, segundos: 0 },     // Reclusão: combate parado, Cultivo maior (segundos = há quanto tempo)
+    efeitos: { iluminacao: 0, fluxo: 0, rompimento: 0 },   // segundos restantes da Iluminação e da Pílula do Fluxo;
+                                                 // rompimento = desconto do próximo rompimento (Pílula Quebra-Gargalo)
+    mestreEstelar: false,                        // refinou a Fonte Estelar nesta vida
 
     // ---- Permanente (nunca é perdido) ----
     personagem: null,    // { nome, sexo, classe } — null até passar pela tela de criação
     essencia: 0,         // Essência da Alma (ganha ao reencarnar, gasta no Black Book)
     blackbook,           // níveis das melhorias do Black Book
     vip: false,          // VIP ligado? (tela do VIP, botão 💎 da tela inicial)
+    arranjo: 0,          // v0.21.0: nível do Arranjo de Reunião de Energia
+    pilulas: { acumulo: 0, fluxo: 0, rompimento: 0 },                  // v0.21.0: pílulas de cultivo guardadas
     nucleos: { baixo: 0, medio: 0, alto: 0 },                          // núcleos guardados
     pontosNucleo: { ataque: 0, vitalidade: 0, defesa: 0, velocidade: 0 }, // pontos já usados (+1% cada)
     // Evento de Boss (sistemas/boss.js). Fica ao reencarnar: é um evento do jogo, não da vida.

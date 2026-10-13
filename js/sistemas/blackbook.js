@@ -171,6 +171,9 @@ export function reencarnar(estado) {
   novo.boss = { ...estado.boss };                    // v0.11.0: o Evento de Boss continua
   novo.vip = estado.vip;                             // o VIP continua ligado
   novo.pedras = estado.pedras;                       // v0.9.11 (dono): Pedras Espirituais também ficam
+  novo.arranjo = estado.arranjo ?? 0;                // v0.21.0: o Arranjo de Reunião de Energia fica
+  novo.pilulas = { ...estado.pilulas };              // v0.21.0: as pílulas guardadas também
+  novo.efeitos.rompimento = estado.efeitos?.rompimento ?? 0;   // Pílula Quebra-Gargalo já tomada não se perde
   novo.nucleos = { ...estado.nucleos };              // Núcleos guardados e pontos usados também ficam
   novo.pontosNucleo = { ...estado.pontosNucleo };
   novo.equipados = { ...estado.equipados };

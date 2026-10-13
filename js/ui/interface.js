@@ -27,6 +27,8 @@ import { temAlgumNucleo } from '../sistemas/nucleos.js';
 import * as EQ from '../sistemas/equipamentos.js';
 import * as BB from '../sistemas/blackbook.js';
 import { podeLutar } from '../sistemas/boss.js';
+import * as CA from '../sistemas/cultivoAvancado.js';
+import { montarCultivoAvancado, atualizarCultivoAvancado } from './telaCultivoAvancado.js';
 
 // Atalho para pegar elementos pelo id
 const $ = (id) => document.getElementById(id);
@@ -40,6 +42,13 @@ let painelAberto = null;
 
 export function montarInterface(acoes) {
   $('versao').textContent = CONFIG.versao;
+  // v0.21.0: ícone que ainda não chegou (arte de IA pendente) mostra o ícone do Cultivo em vez de "imagem quebrada"
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (img.tagName !== 'IMG' || img.dataset.reserva || !img.getAttribute('src')?.startsWith('img/icones/')) return;
+    img.dataset.reserva = '1';
+    img.src = 'img/icones/cultivo.png';
+  }, true);
 
   // ---- Abas: clicar abre o painel; clicar de novo fecha ----
   document.querySelectorAll('[data-aba]').forEach((botao) => {
@@ -111,6 +120,7 @@ export function montarInterface(acoes) {
   montarTelaMapa(acoes);
   montarTelaMochila(acoes);
   montarTelaBlackBook(acoes);
+  montarCultivoAvancado(acoes, abrirPainel);   // v0.21.0: Reclusão, Pílulas, Arranjo, Bênçãos, Iluminação
 }
 
 // ---- Painéis em tela cheia ----
@@ -149,6 +159,7 @@ export function atualizarInterface(estado) {
   atualizarFundo(estado);
   atualizarAvisos(estado);
   atualizarCultivo(estado, producao);
+  atualizarCultivoAvancado(estado, painelAberto);
   atualizarPersonagem(estado);
   atualizarTelaMochila(estado);
 
@@ -206,7 +217,10 @@ function atualizarAvisos(estado) {
   // Cultivo: já dá para avançar (com o avanço automático ligado, só no rompimento manual)
   const avancaSozinho = P.proximoEhRompimento(estado) ? estado.vip : estado.opcoes.autoAvancar;
   const avancoManual = P.podeAvancar(estado) && !avancaSozinho;
-  marcar('[data-aba="cultivo"]', avancoManual, 'Pronto para avançar');
+  // v0.21.0: também quando dá para refinar a Fonte Estelar ou há pílula de Acúmulo/Fluxo guardada
+  const pilula = (estado.pilulas.acumulo ?? 0) > 0 || ((estado.pilulas.fluxo ?? 0) > 0 && !(estado.efeitos.fluxo > 0));
+  marcar('[data-aba="cultivo"]', avancoManual || CA.podeRefinarFonteEstelar(estado) || pilula,
+    avancoManual ? 'Pronto para avançar' : pilula ? 'Pílulas para usar' : 'Fonte Estelar pronta');
   // Mochila: item melhor que o vestido (sem o Auto-vestir) ou pilha para mesclar
   const mochilaLiberada = liberado(estado, 'mochila');
   let melhor = false;
@@ -226,20 +240,35 @@ function atualizarAvisos(estado) {
 }
 
 // ---- Fundo: paisagem do mapa atual (ou imagem própria do mundo) ----
+// v0.21.0: em Reclusão a tela inicial mostra a caverna (img/fundos/reclusao.jpg, quando a arte existir)
+const FUNDO_DA_RECLUSAO = new Image();
+FUNDO_DA_RECLUSAO.src = 'img/fundos/reclusao.jpg';
+FUNDO_DA_RECLUSAO.addEventListener('load', () => { fundoDesenhado = null; });
+
 function atualizarFundo(estado) {
   const indiceMapa = liberado(estado, 'combate') ? FASES[estado.combate.faseAtual].mapa : 0;
   const mapa = MAPAS[indiceMapa];
+  const reclusao = estado.reclusao.ativa;
+  const chave = `${indiceMapa}|${reclusao}`;
 
-  if (fundoDesenhado === indiceMapa) return;
-  fundoDesenhado = indiceMapa;
+  if (fundoDesenhado === chave) return;
+  fundoDesenhado = chave;
   // v0.17.4: antes "Mundo Inicial — Starting World · O Segredo do Mundo" quebrava em 3 linhas
-  $('inicio-local').innerHTML = `<b>${iconeDoMapa(indiceMapa)} ${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))} · Mapa ${indiceMapa + 1}</small>`;
+  $('inicio-local').innerHTML = reclusao
+    ? `<b>${icone('reclusao')} Em Reclusão</b><small>${mapa.nome} · Mapa ${indiceMapa + 1}</small>`
+    : `<b>${iconeDoMapa(indiceMapa)} ${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))} · Mapa ${indiceMapa + 1}</small>`;
 
-  if (MUNDO.imagemFundo) {
+  if (reclusao && FUNDO_DA_RECLUSAO.complete && FUNDO_DA_RECLUSAO.naturalWidth) {
+    $('fundo-imagem').style.backgroundImage = `url("${FUNDO_DA_RECLUSAO.src}")`;
+    $('fundo-imagem').classList.remove('escondido');
+    $('fundo-mundo').classList.add('escondido');
+  } else if (MUNDO.imagemFundo) {
     $('fundo-imagem').style.backgroundImage = `url("${MUNDO.imagemFundo}")`;
     $('fundo-imagem').classList.remove('escondido');
     $('fundo-mundo').classList.add('escondido');
   } else {
+    $('fundo-imagem').classList.add('escondido');      // saiu da Reclusão: volta a paisagem do mapa
+    $('fundo-mundo').classList.remove('escondido');
     desenharFundo($('fundo-mundo'), mapa.cena, indiceMapa + 1);
   }
 }
@@ -297,16 +326,22 @@ function atualizarCultivo(estado, producao) {
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
   // Requisito de combate para romper o reino
+  // v0.21.0: "Gargalo" — o cultivo já está pronto, só falta o chefe (com botão "Ir ao chefe")
   const requisito = P.requisitoDoRompimento(estado);
   let textoRequisito = '';
+  let temChefe = false;
   if (requisito && !requisito.cumprido) {
     const chefe = chefeDoMapa(requisito.mapa - 1);
-    textoRequisito = chefe
-      ? `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
-      : '🔒 O próximo reino será liberado no próximo mundo (em breve).';
+    temChefe = Boolean(chefe);
+    const pronto = estado.cultivo >= P.custoParaAvancar(estado);
+    textoRequisito = !chefe ? '🔒 O próximo reino será liberado no próximo mundo (em breve).'
+      : pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas o reino só se rompe depois de derrotar ${chefe.inimigo.nome} (Mapa ${requisito.mapa}).`
+      : `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
   }
   trocarTexto($('cult-requisito'), textoRequisito);
-  trocarTexto($('inicio-requisito'), textoRequisito);
+  trocarTexto($('inicio-requisito'), textoRequisito + (temChefe ? ' ›' : ''));
+  $('inicio-requisito').classList.toggle('clicavel', temChefe);
+  $('cult-ir-chefe').classList.toggle('escondido', !temChefe);
 
   let proximo, largura, progressoTexto, tempo, textoBotao, rompimento = false;
   if (P.noNivelMaximo(estado)) {

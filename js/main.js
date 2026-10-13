@@ -10,13 +10,14 @@ import * as BB from './sistemas/blackbook.js';
 import * as EQ from './sistemas/equipamentos.js';
 import * as NU from './sistemas/nucleos.js';
 import * as BOSS from './sistemas/boss.js';
+import * as CA from './sistemas/cultivoAvancado.js';
 import { mostrarGolpeBoss, animarDerrotaDoBoss } from './ui/telaBoss.js';
 import { acabouDeLiberar } from './sistemas/desbloqueios.js';
 import { criarPersonagem, precisaCriarPersonagem } from './sistemas/personagem.js';
 import { CLASSE_POR_ID } from './dados/classes.js';
 import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
-import { MUNDO, MAPAS, textoDoInicioDaVida } from './sistemas/mundo.js';
+import { MUNDO, MAPAS, FASES, faseLiberada, textoDoInicioDaVida } from './sistemas/mundo.js';
 import { salvar, carregar, apagarSave, segundosOffline } from './save.js';
 import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar, mostrarGanhoMeditacao } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
@@ -33,7 +34,7 @@ let estado = carregar() ?? criarEstadoInicial();
 // com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
 let resumoFora = null;
 
-const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, mundoConcluido: null });
+const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0, mundoConcluido: null });
 
 // Aba escondida, mas o navegador continua rodando o jogo (computador: outra aba aberta).
 // O tempo passa normalmente, só que sem animações nem avisos — tudo vai para o resumo
@@ -51,6 +52,7 @@ function passoEscondido(segundos) {
     if (evento.primeira) r.fasesNovas += 1;
     if (evento.drop) r.itens += 1;
     if (evento.nucleo) r.nucleos += 1;
+    if (evento.pilula) r.pilulas += 1;
     if (evento.ultimaDoMundo) r.mundoConcluido = evento.ultimaDoMundo;
   });
   r.cultivo += estado.cultivoTotal - antes;
@@ -78,6 +80,7 @@ function mostrarResumoFora() {
   if (r.fasesNovas > 0) texto += `, ${r.fasesNovas} fase(s) nova(s)`;
   if (r.itens > 0) texto += `, ${r.itens} item(ns)`;
   if (r.nucleos > 0) texto += `, ${r.nucleos} núcleo(s)`;
+  if (r.pilulas > 0) texto += `, ${r.pilulas} pílula(s)`;
   mostrarMensagem(texto + '.');
   if (r.mundoConcluido) mostrarModal(r.mundoConcluido.final.titulo, r.mundoConcluido.final.texto);
   salvar(estado);
@@ -100,7 +103,12 @@ function aoAvancarNivel(evento) {
   }
   if (evento.tipo === 'rompimento') {
     animarRompimento();
-    mostrarMensagem(`⚡ ROMPIMENTO! ${evento.nome}. ${evento.reino.desbloqueio}`);
+    // v0.21.0: cada rompimento desde a Transformação do Qi traz um Batismo Mundial
+    const batismo = evento.batismo
+      ? ` 🌊 Batismo Mundial: +${Math.round(CONFIG.batismo.bonusPorBatismo * 100)}% Ataque, Vitalidade e Defesa ` +
+        `(total +${Math.round(P.batismosMundiais(estado) * CONFIG.batismo.bonusPorBatismo * 100)}%).`
+      : '';
+    mostrarMensagem(`⚡ ROMPIMENTO! ${evento.nome}. ${evento.reino.desbloqueio}${batismo}`);
   } else if (evento.marco) {
     mostrarMensagem(`✨ ${evento.nome}. ${evento.marco}`);
   } else {
@@ -151,12 +159,24 @@ function aoEventoCombate(evento) {
       mostrarMensagem(`💠 ${evento.nucleo.nome}! (+${evento.nucleo.pontos}% num atributo — aba Personagem)`);
       salvar(estado);
     }
+    // v0.21.0: pílula de cultivo
+    if (evento.pilula) {
+      registrarBatalha(`💊 ${evento.pilula.nome}! Use na aba Cultivo.`, 'vitoria');
+      mostrarMensagem(`💊 ${evento.pilula.nome}! (${CA.textoDaPilula(estado, evento.pilula)} — aba Cultivo)`);
+      salvar(estado);
+    }
 
     // Chefe de mapa vencido pela primeira vez
     if (evento.primeira && fase.numero === 12) {
       let texto = `🏆 Mapa concluído: ${MAPAS[fase.mapa].nome}!`;
       const requisito = P.requisitoDoRompimento(estado);
-      if (requisito && requisito.mapa === fase.mapa + 1) texto += ' Agora você pode romper o seu reino!';
+      // v0.21.0 (dono): dizia "Agora você pode romper" mesmo quando ainda faltava Cultivo
+      if (requisito && requisito.mapa === fase.mapa + 1) {
+        const falta = P.custoParaAvancar(estado) - estado.cultivo;
+        texto += falta > 0
+          ? ` Gargalo superado! Faltam ${formatarNumero(Math.ceil(falta))} de Cultivo para romper o reino.`
+          : ' Agora você pode romper o seu reino!';
+      }
       mostrarMensagem(texto);
       salvar(estado);
     }
@@ -335,7 +355,69 @@ montarInterface({
     estado.opcoes.bossAuto = ligado;
     salvar(estado);
   },
+  // ---- v0.21.0: melhorias do cultivo (sistemas/cultivoAvancado.js) ----
+  aoAlternarReclusao: () => {
+    if (!CA.reclusaoLiberada(estado) && !estado.reclusao.ativa) return;
+    const entrou = CA.alternarReclusao(estado);
+    mostrarMensagem(entrou
+      ? `🏔️ Você entrou em Reclusão: o combate parou e o Cultivo rende +${Math.round(CONFIG.reclusao.bonusInicial * 100)}% ` +
+        `(até +${Math.round(CONFIG.reclusao.bonusMaximo * 100)}% depois de ${CONFIG.reclusao.horasParaOMaximo} h).`
+      : '🏔️ Você saiu da Reclusão. O combate voltou.');
+    salvar(estado);
+    atualizarInterface(estado);
+  },
+  aoIluminacao: () => {
+    CA.receberIluminacao(estado);
+    mostrarMensagem(`✨ Iluminação! Você compreendeu um pouco do Dao: Cultivo ×${CONFIG.iluminacao.multiplicador} por ${Math.ceil(estado.efeitos.iluminacao)} s.`);
+    atualizarInterface(estado);
+  },
+  aoMelhorarArranjo: () => {
+    if (CA.melhorarArranjo(estado)) {
+      mostrarMensagem(`🔯 Arranjo de Reunião de Energia nível ${estado.arranjo}: Cultivo +${Math.round(P.bonusDoArranjo(estado) * 100)}%.`);
+      salvar(estado);
+    } else {
+      mostrarMensagem(`Faltam ${formatarNumero(Math.ceil(CA.custoDoArranjo(estado) - estado.pedras))} Pedras Espirituais para melhorar o Arranjo.`);
+    }
+    atualizarInterface(estado);
+  },
+  aoRefinarFonteEstelar: () => {
+    if (CA.refinarFonteEstelar(estado)) {
+      animarRompimento();
+      mostrarMensagem(`🌟 Você refinou a Fonte Estelar e se tornou um Mestre Estelar! Cultivo +${Math.round(CONFIG.mestreEstelar.bonusCultivo * 100)}% nesta vida.`);
+      salvar(estado);
+    } else if (!estado.mestreEstelar) {
+      mostrarMensagem(`Faltam ${formatarNumero(Math.ceil(CA.custoDaFonteEstelar(estado) - estado.cultivo))} de Cultivo para refinar a Fonte Estelar.`);
+    }
+    atualizarInterface(estado);
+  },
+  aoUsarPilula: (id) => {
+    const motivo = CA.motivoParaNaoUsarPilula(estado, id);
+    if (motivo) { mostrarMensagem(motivo); return; }
+    const r = CA.usarPilula(estado, id);
+    if (!r) return;
+    mostrarMensagem(r.ganho !== undefined
+      ? `💊 ${r.tipo.nome}: +${formatarNumero(r.ganho)} Cultivo!`
+      : `💊 ${r.tipo.nome}: ${CA.textoDaPilula(estado, r.tipo)}`);
+    salvar(estado);
+    atualizarInterface(estado);
+  },
+  // "Gargalo": abre o Mapa no chefe que falta (ou na próxima fase a vencer, se ele ainda está trancado)
+  aoIrAoChefe: () => {
+    const requisito = P.requisitoDoRompimento(estado);
+    if (!requisito || requisito.cumprido) return;
+    const chefe = requisito.mapa * CONFIG.combate.fasesPorMapa - 1;
+    if (chefe >= FASES.length) { mostrarMensagem(motivoParaNaoAvancar(estado)); return; }
+    const alvo = faseLiberada(estado, chefe) ? chefe : Math.min(estado.combate.fasesConcluidas + 1, FASES.length - 1);
+    focarMapaDaFase(alvo);
+    trocarAba('mapa');
+    atualizarInterface(estado);
+  },
   aoEscolherFase: (indice) => {
+    // v0.21.0: escolher uma fase para lutar tira o personagem da Reclusão
+    if (estado.reclusao.ativa && faseLiberada(estado, indice)) {
+      CA.alternarReclusao(estado);
+      mostrarMensagem('🏔️ Você saiu da Reclusão para lutar.');
+    }
     if (C.irParaFase(estado, indice)) {
       focarMapaDaFase(indice);
       trocarAba('combate');
