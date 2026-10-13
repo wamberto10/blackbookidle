@@ -66,18 +66,35 @@ function iniciar() {
       const p = particulas[i];
       p.vida -= dt;
       if (p.vida <= 0) { particulas.splice(i, 1); continue; }
+      if (p.voo) {                                    // projétil: vai de A até B em arco
+        p.voo.t = Math.min(1, p.voo.t + dt / p.voo.dur);
+        const k = p.voo.t;
+        p.x = p.voo.ax + (p.voo.bx - p.voo.ax) * k;
+        p.y = p.voo.ay + (p.voo.by - p.voo.ay) * k - Math.sin(k * Math.PI) * p.voo.arco;
+        if (k >= 1 && !p.voo.chegou) { p.voo.chegou = true; p.vida = 0.05; p.voo.aoChegar?.(); }
+      }
       if (p.alvo) {                                   // energia sendo sugada para um ponto
         p.vx += (p.alvo.x - p.x) * 18 * dt;
         p.vy += (p.alvo.y - p.y) * 18 * dt;
       }
-      p.vx *= Math.pow(p.atrito, dt * 60);
-      p.vy = p.vy * Math.pow(p.atrito, dt * 60) + p.grav * dt;
       const x0 = p.x, y0 = p.y;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
+      if (!p.voo) {                                   // projétil: posição já calculada acima
+        p.vx *= Math.pow(p.atrito, dt * 60);
+        p.vy = p.vy * Math.pow(p.atrito, dt * 60) + p.grav * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
       const t = p.vida / p.max;                       // 1 → 0
       ctx.globalAlpha = Math.min(1, t * 1.6);
-      if (p.tipo === 'anel') {
+      if (p.tipo === 'arco') {
+        const prog = 1 - t;                                   // o corte "varre" o arco
+        ctx.strokeStyle = p.cor;
+        ctx.lineWidth = p.tam * t + 1;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.raio, p.inicio, p.inicio + (p.fim - p.inicio) * Math.min(1, prog * 2.2), p.anti);
+        ctx.stroke();
+      } else if (p.tipo === 'anel') {
         const r = p.raio + (1 - t) * p.cresce;
         ctx.strokeStyle = p.cor;
         ctx.lineWidth = Math.max(1, p.tam * t);
@@ -199,4 +216,77 @@ export function desfazer(lado, cores) {
 
 export function coresDoAtacante(atacante, classe) {
   return atacante === 'jogador' ? (CORES_DA_CLASSE[classe?.id] ?? CORES_DA_CLASSE.arma) : COR_DO_INIMIGO;
+}
+
+// ---------------------------------------------------------------
+// v0.20.0: projéteis, cortes em arco e a técnica de cada classe
+// ---------------------------------------------------------------
+export function projetil(de, para, cor, { arco = 30, dur = 0.28, tam = 6, aoChegar } = {}) {
+  if (!preparar()) return;
+  const a = posicaoDe(de), b = posicaoDe(para);
+  adicionar({ x: a.x, y: a.y, vida: dur + 0.2, cor, tam, atrito: 1,
+    voo: { ax: a.x, ay: a.y, bx: b.x + (Math.random() - 0.5) * 16, by: b.y + (Math.random() - 0.5) * 20, t: 0, dur, arco, aoChegar } });
+  iniciar();
+}
+
+export function corteEmArco(lado, cores, { raio = 46, grosso = 9 } = {}) {
+  if (!preparar()) return;
+  const { x, y } = posicaoDe(lado);
+  adicionar({ tipo: 'arco', x, y, raio, inicio: -2.3, fim: 1.2, anti: false, vida: 0.32, cor: cores[0], tam: grosso, atrito: 1 });
+  adicionar({ tipo: 'arco', x, y, raio: raio - 3, inicio: -2.3, fim: 1.2, anti: false, vida: 0.26, cor: cores[1], tam: grosso / 2.5, atrito: 1 });
+  iniciar();
+}
+
+// Rachaduras no chão (Corpo): linhas que saem do pé do inimigo
+function rachaduras(lado, cor) {
+  const { x } = posicaoDe(lado);
+  const y = posicaoDe(lado, 0.04).y;
+  for (let i = 0; i < 7; i++) {
+    const ang = Math.PI + (i / 6) * Math.PI;              // meia-lua para cima
+    const len = 28 + Math.random() * 30;
+    adicionar({ tipo: 'rastro', x: 0, y: 0, x1: x, y1: y, x2: x + Math.cos(ang) * len * 1.6, y2: y + Math.sin(ang) * len * 0.35,
+      vida: 0.55, cor, tam: 3, atrito: 1 });
+  }
+}
+
+// Chamas subindo em volta do alvo (Alma e Alquimista)
+function chamas(lado, cores, qtd = 26) {
+  const { x, y } = posicaoDe(lado, 0.2);
+  for (let i = 0; i < qtd; i++) {
+    adicionar({ x: x + (Math.random() - 0.5) * 70, y: y - Math.random() * 20, vx: (Math.random() - 0.5) * 20, vy: -60 - Math.random() * 110,
+      grav: -40, atrito: 0.97, vida: 0.5 + Math.random() * 0.5, cor: cores[i % 2], tam: 3 + Math.random() * 3 });
+  }
+}
+
+// Técnica especial: cada classe com a sua coreografia (as imagens tec_*.png tocam junto, por cima)
+export function tecnicaDaClasse(id, cores) {
+  if (!preparar()) return;
+  if (id === 'corpo') {                                     // Punho do Sangue Dourado
+    explosaoDaTecnica('inimigo', cores);
+    rachaduras('inimigo', cores[0]);
+    setTimeout(() => onda('inimigo', cores[0], 0.55, 160), 90);
+  } else if (id === 'arma') {                               // Corte do Céu Partido
+    rastro('jogador', 'inimigo', cores);
+    corteEmArco('inimigo', cores, { raio: 58, grosso: 12 });
+    setTimeout(() => corteEmArco('inimigo', ['#ffffff', '#ffe8a0'], { raio: 40, grosso: 7 }), 80);
+    impacto('inimigo', cores, { forte: true });
+  } else if (id === 'elemental') {                          // Tempestade de Gelo Místico
+    for (let i = 0; i < 9; i++) {
+      setTimeout(() => projetil('jogador', 'inimigo', cores[i % 2], {
+        arco: 10 + Math.random() * 50, dur: 0.22 + Math.random() * 0.1, tam: 5,
+        aoChegar: i === 8 ? () => explosaoDaTecnica('inimigo', cores) : () => impacto('inimigo', cores) }), i * 25);
+    }
+  } else if (id === 'alma') {                               // Lança da Alma Devoradora
+    rastro('jogador', 'inimigo', cores);
+    explosaoDaTecnica('inimigo', cores);
+    chamas('inimigo', cores, 30);
+  } else if (id === 'alquimista') {                         // Fogo do Caldeirão Celestial
+    projetil('jogador', 'inimigo', cores[0], { arco: 70, dur: 0.3, tam: 12, aoChegar: () => {
+      explosaoDaTecnica('inimigo', cores);
+      chamas('inimigo', ['#7aef5a', '#ffd36b'], 34);
+    } });
+  } else {
+    rastro('jogador', 'inimigo', cores);
+    explosaoDaTecnica('inimigo', cores);
+  }
 }

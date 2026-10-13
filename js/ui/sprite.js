@@ -40,8 +40,55 @@ function desenharQuadro(canvas, img) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const forcado = quadrosForcados.get(canvas);
-  const quadro = forcado && Date.now() < forcado.ate ? forcado.quadro : quadroAtual;
+  const temForcado = forcado && Date.now() < forcado.ate;
+  // v0.20.0: sprites "vivos" (personagem e inimigos grandes) usam sempre o quadro parado e são
+  // deformados aos poucos — cabelo e barra da roupa balançam, o peito respira, os pés ficam no chão
+  if (vivos.has(canvas) && tamanho > 68) {
+    desenharVivo(ctx, img, temForcado ? forcado.quadro : 0, tamanho, performance.now() / 1000 + (fases.get(canvas) ?? 0));
+    return;
+  }
+  const quadro = temForcado ? forcado.quadro : quadroAtual;
   ctx.drawImage(img, quadro * tamanho, 0, tamanho, tamanho, 0, 0, tamanho, tamanho);
+}
+
+// ---- v0.20.0: animação por deformação (sem precisar de mais quadros desenhados) ----
+const vivos = new Set();      // canvas animados continuamente
+const fases = new Map();      // canvas → atraso do balanço (cada um num ritmo)
+const FAIXA = 2;              // altura de cada faixa redesenhada (px da arte)
+
+function desenharVivo(ctx, img, quadro, T, t) {
+  const respiro = (Math.sin(t * 2.3) + 1) / 2;              // 0 → 1 → 0
+  const x0 = quadro * T;
+  for (let y = 0; y < T; y += FAIXA) {
+    const v = y / T;                                         // 0 = topo, 1 = pés
+    // balanço: forte no cabelo (topo) e na barra da roupa, zero nos pés
+    const peso = 0.55 * Math.pow(1 - v, 2) + Math.max(0, Math.min(1, (v - 0.5) / 0.35)) * Math.max(0, Math.min(1, (0.97 - v) / 0.1));
+    const dx = Math.sin(t * 1.7 + v * 6) * 1.8 * peso + Math.sin(t * 3.1 + v * 11) * 0.5 * peso;
+    // respiração: a parte de cima sobe um pouco
+    const dy = -respiro * 2.2 * Math.max(0, (0.62 - v) / 0.62);
+    ctx.drawImage(img, x0, y, T, FAIXA, dx, y + dy, T, FAIXA + 1);
+  }
+}
+
+let ultimoVivo = 0;
+function laçoVivo(agora) {
+  if (agora - ultimoVivo > 33 && !document.hidden) {        // ~30 quadros por segundo
+    ultimoVivo = agora;
+    for (const canvas of vivos) {
+      if (!canvas.isConnected) { vivos.delete(canvas); continue; }
+      if (!canvas.offsetParent) continue;                    // escondido (outra aba)
+      const img = animados.get(canvas);
+      if (img?.complete && img.naturalWidth) desenharQuadro(canvas, img);
+    }
+  }
+  requestAnimationFrame(laçoVivo);
+}
+requestAnimationFrame(laçoVivo);
+
+// Liga/desliga a animação viva de um canvas
+export function animarVivo(canvas, ligado = true) {
+  if (ligado) { vivos.add(canvas); if (!fases.has(canvas)) fases.set(canvas, Math.random() * 10); }
+  else vivos.delete(canvas);
 }
 
 // Mostra um quadro específico da folha por alguns milissegundos.
@@ -65,6 +112,7 @@ function mostrar(canvas, caminho) {
 setInterval(() => {
   quadroAtual = 1 - quadroAtual;
   for (const [canvas, img] of animados) {
+    if (vivos.has(canvas)) continue;
     if (img.complete && img.naturalWidth) desenharQuadro(canvas, img);
   }
 }, TEMPO_DO_QUADRO);

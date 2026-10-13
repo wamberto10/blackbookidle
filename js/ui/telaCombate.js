@@ -18,7 +18,7 @@ import { FASES, MAPAS, faseLiberada } from '../sistemas/mundo.js';
 import { RARIDADE_POR_ID } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
 import { personagemDe } from '../sistemas/personagem.js';
-import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeDoMapa, iconeEquipamento } from './sprite.js';
+import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
 import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
 import { desenharFundo } from './fundo.js';
 import { previsaoDaFase, textoDoPoder } from './poder.js';
@@ -60,6 +60,8 @@ export function montarTelaCombate(acoes) {
   $('cb-proxima').addEventListener('click', () => acoes.aoMudarFase(+1));
   $('cb-auto').addEventListener('change', (e) => acoes.aoMudarAutoCombate(e.target.checked));
   $('aviso-boss-ver').addEventListener('click', abrirTelaBoss);
+  animarVivo($('cb-sprite-jogador'));
+  animarVivo($('cb-sprite-inimigo'));
   // v0.17.1: registro compacto (3 linhas); tocar no título abre as 8 mais recentes
   $('cb-registro-titulo').addEventListener('click', () => $('cb-registro-caixa').classList.toggle('aberto'));
 }
@@ -254,7 +256,7 @@ export function mostrarGolpe(evento) {
       animarClasse($('arena'), 'escurecendo', 600);
     }
     animarClasse($(`cb-corpo-${atacante}`), atacante === 'jogador' ? 'avancando-direita' : 'avancando-esquerda', 300);
-    if (atacante === 'jogador') mostrarQuadro($('cb-sprite-jogador'), 2, 280);
+    if (atacante === 'jogador') mostrarQuadro($('cb-sprite-jogador'), tecnicaDoGolpe ? 3 : 2, tecnicaDoGolpe ? 520 : 280);
 
     // 2) O golpe acerta
     setTimeout(() => {
@@ -293,12 +295,12 @@ export function mostrarGolpe(evento) {
       if (tecnica) mostrarTecnica(evento);
       tocarEfeito(alvo, efeito);
       if (tecnica) {
-        FX.rastro('jogador', 'inimigo', coresGolpe);
-        FX.explosaoDaTecnica('inimigo', coresGolpe);
+        FX.tecnicaDaClasse(lutaMostrada?.classe?.id, coresGolpe);
       } else {
         FX.impacto(alvo, coresGolpe, { forte, direcao: atacante === 'jogador' ? 1 : -1 });
       }
       animarClasse($(`cb-sprite-${alvo}`), 'atingido', 300);
+      if (alvo === 'jogador') mostrarQuadro($('cb-sprite-jogador'), 4, 340);
       // Cada aviso numa linha, com o dano embaixo (antes ficava tudo numa linha e saía da arena)
       // Na técnica especial o nome já aparece no letreiro do alto da arena: o número mostra só o dano
       const prefixo = tecnica ? '' : (evento.segundo ? 'GOLPE DUPLO!\n' : '') +
@@ -397,7 +399,8 @@ export function animarVitoria(evento) {
 export function animarDerrota() {
   if (!telaVisivel()) return;
   agendar(() => {
-    animarClasse($('cb-corpo-jogador'), 'caindo', 900);
+    mostrarQuadro($('cb-sprite-jogador'), 5, 1300);
+    animarClasse($('cb-corpo-jogador'), 'derrotado', 1300);
     animarClasse($('arena-clarao'), 'clarao-derrota', 600);
   });
 }

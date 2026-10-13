@@ -183,6 +183,7 @@ export function mostrarGolpeBoss(evento) {
           numero('boss-numeros-jogador', 'Esquivou!', 'esquiva');
         } else {
           animar($('boss-jogador'), 'boss-atingido');
+          mostrarQuadro($('boss-jogador'), 4, 340);
           numero('boss-numeros-jogador', '-' + formatarNumero(evento.dano), 'contra forte');
         }
       }, 300);

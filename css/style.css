@@ -2247,8 +2247,8 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .arena-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
 /* Respiração: o corpo sobe e desce de leve (o inimigo um pouco fora de ritmo) */
-#aba-combate .lutador canvas:not(.atingido) { animation: respirar-luta 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
-#aba-combate #cb-lado-inimigo canvas:not(.atingido) { animation-duration: 3.1s; animation-delay: -0.7s; }
+/* v0.20.0: respiração feita no desenho (sprite.js, animação viva) */
+
 @keyframes respirar-luta {
   0%, 100% { transform: scale(1, 1); }
   50%      { transform: scale(1.012, 1.025) translateY(-1px); }
@@ -2430,3 +2430,16 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .heroi-stats { gap: 8px; flex-wrap: nowrap; font-size: 0.8rem; }
 .heroi-stats .icone-px { width: 16px; height: 16px; }
 .botao-atributos { flex: none; width: 26px; height: 26px; font-size: 0.9rem; }
+
+/* v0.20.0: rastro de velocidade no bote (cópias apagadas do desenho para trás) */
+#aba-combate #cb-corpo-jogador.avancando-direita canvas { filter: drop-shadow(-14px 0 0 rgba(255, 255, 255, 0.22)) drop-shadow(-28px 0 0 rgba(255, 255, 255, 0.1)); }
+#aba-combate #cb-corpo-inimigo.avancando-esquerda canvas { filter: drop-shadow(14px 0 0 rgba(255, 120, 90, 0.22)) drop-shadow(28px 0 0 rgba(255, 120, 90, 0.1)); }
+/* Derrota: o herói fica na pose de derrotado, treme e escurece por um instante */
+.derrotado { animation: derrotado 1.3s ease-out; }
+@keyframes derrotado {
+  0%   { transform: translateX(0); filter: brightness(2); }
+  10%  { transform: translateX(-6px); }
+  20%  { transform: translateX(4px); filter: brightness(0.6) saturate(0.4); }
+  85%  { filter: brightness(0.6) saturate(0.4); }
+  100% { transform: translateX(0); filter: none; }
+}

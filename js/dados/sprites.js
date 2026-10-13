@@ -512,6 +512,11 @@ export const SPRITES = {
     "magia_azul",
     "magia_roxa",
     "mordida",
+    "tec_caldeirao_celestial",
+    "tec_ceu_partido",
+    "tec_lanca_alma",
+    "tec_sangue_dourado",
+    "tec_tempestade_gelo",
     "trovao",
     "trovao_critico"
   ],
@@ -535,6 +540,11 @@ export const SPRITES = {
     "lua_crescente",
     "magia_azul",
     "magia_roxa",
-    "mordida"
+    "mordida",
+    "tec_caldeirao_celestial",
+    "tec_ceu_partido",
+    "tec_lanca_alma",
+    "tec_sangue_dourado",
+    "tec_tempestade_gelo"
   ]
 };

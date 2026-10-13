@@ -12,7 +12,7 @@ import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atribut
 import { liberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
-import { desenharPersonagem, icone, iconeDoMapa, iconeEquipamento } from './sprite.js';
+import { desenharPersonagem, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
 import { SLOTS } from '../dados/equipamentos.js';
 import { grauDe } from '../sistemas/itens.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
@@ -80,6 +80,8 @@ export function montarInterface(acoes) {
     $(principal ? 'lista-atributos' : comTeto ? 'lista-atributos-teto' : 'lista-atributos-extra').appendChild(linha);
   }
   montarNucleos(acoes, linhas);
+  animarVivo($('sprite'));
+  animarVivo($('sprite-pers'));
   // v0.19.0: tela do herói — orbes de habilidade e pergaminho de atributos
   $('abrir-atributos').addEventListener('click', () => $('janela-atributos').classList.remove('escondido'));
   $('fechar-atributos').addEventListener('click', () => $('janela-atributos').classList.add('escondido'));
