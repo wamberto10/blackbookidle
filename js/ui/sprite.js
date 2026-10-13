@@ -106,7 +106,9 @@ export function icone(nome, classe = '') {
 
 // Ícone de cada mapa: mapa01.png ... mapa12.png
 export function iconeDoMapa(indiceMapa, classe = '') {
-  return icone(`mapa${String(indiceMapa + 1).padStart(2, '0')}`, classe);
+  // v0.18.0: mapa novo ainda sem ícone de IA → mostra o ícone da aba Mapa (em vez de imagem quebrada)
+  return `<img class="icone-px ${classe}" src="img/icones/mapa${String(indiceMapa + 1).padStart(2, '0')}.png" alt=""` +
+    ` onerror="this.onerror=null;this.src='img/icones/aba_mapa.png'">`;
 }
 
 // Caminho da folha de um efeito de combate (3 quadros de 32×32)

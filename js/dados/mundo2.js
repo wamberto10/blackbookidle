@@ -308,6 +308,6 @@ export const MUNDO_TONG_XUAN = {
       'Com a queda de Ke Luo, a Raça dos Ossos recua para o vazio, e as três raças de Tong Xuan ' +
       'baixam as armas lado a lado.\n\n' +
       '"Este continente também era pequeno. Além do céu, as estrelas esperam."\n\n' +
-      '✨ CÉU ESTRELADO — EM BREVE\n(o Mundo 3 está em desenvolvimento)',
+      '🌌 CAMPO ESTELAR HENG LUO — DESBLOQUEADO\n(o Mundo 3 começa no Mapa 25: Corredor do Vazio)',
   },
 };

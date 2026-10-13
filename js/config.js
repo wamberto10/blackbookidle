@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.17.5',
+  versao: '0.18.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,

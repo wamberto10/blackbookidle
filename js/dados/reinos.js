@@ -135,14 +135,16 @@ export const REINOS = [
   // 1 estágio, como o Grande Imperador tinha nesta posição: o balanceamento até o Mundo 2 não muda.
   {
     id: 'pseudo_grande_imperador', nome: 'Pseudo-Grande Imperador', regiao: 2,
-    estagios: ['Gargalo do Caminho Celestial'], corManto: '#7f6f3f',
+    // v0.18.0: 6 estágios (o Mundo 3 tem 6 mapas neste reino; com 1 estágio o cultivo não tinha onde ser gasto)
+    estagios: ['1ª Fissura do Gargalo', '2ª Fissura do Gargalo', '3ª Fissura do Gargalo', '4ª Fissura do Gargalo', '5ª Fissura do Gargalo', 'Gargalo Rompido'], corManto: '#7f6f3f',
     descricao: 'Além da 3ª Ordem de Imperador. O Caminho Celestial do seu mundo ainda não reconhece você: é o gargalo antes de se tornar Grande Imperador.',
     desbloqueio: 'Você se tornou um Pseudo-Grande Imperador. O Caminho Celestial ainda não o reconhece.',
     mapaParaRomper: 30,
   },
   {
     id: 'grande_imperador', nome: 'Grande Imperador', regiao: 2,
-    estagios: ['Reconhecimento do Mundo'], corManto: '#bf9f2f',
+    // v0.18.0: 6 estágios (6 mapas do Mundo 3 neste reino)
+    estagios: ['Reconhecimento do Mundo', 'Selo do Dao — 1ª Camada', 'Selo do Dao — 2ª Camada', 'Selo do Dao — 3ª Camada', 'Selo do Dao — 4ª Camada', 'Selo do Dao Completo'], corManto: '#bf9f2f',
     descricao: 'Reconhecido pela Vontade do Mundo, você condensa o Selo do Dao.',
     desbloqueio: 'O mundo reconhece sua existência. Você condensou o Selo do Dao.',
     mapaParaRomper: 36,

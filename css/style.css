@@ -2239,3 +2239,42 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .melhoria button, #bb-reencarnar { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
 .melhoria button { flex-wrap: nowrap; white-space: nowrap; }
 #mochila-conteudo .ferramentas-mochila .icone-px { width: 18px; height: 18px; vertical-align: -4px; }
+
+/* =============================================================
+   v0.18.0: ANIMAÇÃO DO COMBATE
+   ============================================================= */
+/* Camada de partículas (ui/efeitosArena.js) */
+.arena-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+
+/* Respiração: o corpo sobe e desce de leve (o inimigo um pouco fora de ritmo) */
+#aba-combate .lutador canvas:not(.atingido) { animation: respirar-luta 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+#aba-combate #cb-lado-inimigo canvas:not(.atingido) { animation-duration: 3.1s; animation-delay: -0.7s; }
+@keyframes respirar-luta {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(1.012, 1.025) translateY(-1px); }
+}
+
+/* Ataque com antecipação: recua, dá o bote, volta */
+@keyframes avancar-direita {
+  0%   { transform: translateX(0); }
+  18%  { transform: translateX(-10px) scaleX(0.97); }
+  45%  { transform: translateX(38px) scaleX(1.04); }
+  100% { transform: translateX(0); }
+}
+@keyframes avancar-esquerda {
+  0%   { transform: translateX(0); }
+  18%  { transform: translateX(10px) scaleX(0.97); }
+  45%  { transform: translateX(-38px) scaleX(1.04); }
+  100% { transform: translateX(0); }
+}
+
+/* Técnica especial: a arena escurece enquanto a energia se junta */
+.arena.escurecendo::after { animation: escurecer-tecnica 0.6s ease-out; }
+@keyframes escurecer-tecnica {
+  0%   { background: linear-gradient(rgba(5, 3, 10, 0.25), rgba(5, 3, 10, 0.25)); }
+  35%  { background: linear-gradient(rgba(5, 3, 10, 0.7), rgba(5, 3, 10, 0.7)); }
+  100% { background: linear-gradient(rgba(10, 8, 14, 0.62), rgba(10, 8, 14, 0) 30%, rgba(10, 8, 14, 0.05) 60%, rgba(10, 8, 14, 0.6)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #aba-combate .lutador canvas { animation: none !important; }
+}

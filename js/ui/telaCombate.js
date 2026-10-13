@@ -27,6 +27,7 @@ import { SPRITES } from '../dados/sprites.js';
 import { golpesPorTurno } from '../sistemas/atributos.js';
 import { lutaDoBoss } from '../sistemas/boss.js';
 import { abrirTelaBoss } from './telaBoss.js';
+import * as FX from './efeitosArena.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -245,7 +246,13 @@ export function mostrarGolpe(evento) {
   // inimigo) caberem no turno de 1 s. Antes a fila atrasava, juntava os golpes e parecia um só.
   const intervalo = evento.duplo && !evento.segundo ? INTERVALO_GOLPE_DUPLO : INTERVALO_ENTRE_GOLPES;
   agendar(() => {
-    // 1) Quem ataca avança
+    // 1) Quem ataca avança (v0.18.0: com antecipação — recua um pouco antes do bote)
+    const coresGolpe = FX.coresDoAtacante(atacante, lutaMostrada?.classe);
+    const tecnicaDoGolpe = atacante === 'jogador' ? evento.tecnica : null;
+    if (tecnicaDoGolpe) {
+      FX.carga('jogador', coresGolpe);
+      animarClasse($('arena'), 'escurecendo', 600);
+    }
     animarClasse($(`cb-corpo-${atacante}`), atacante === 'jogador' ? 'avancando-direita' : 'avancando-esquerda', 300);
     if (atacante === 'jogador') mostrarQuadro($('cb-sprite-jogador'), 2, 280);
 
@@ -285,6 +292,12 @@ export function mostrarGolpe(evento) {
           : efeitoDoInimigo(lutaMostrada?.fase.inimigo, forma);
       if (tecnica) mostrarTecnica(evento);
       tocarEfeito(alvo, efeito);
+      if (tecnica) {
+        FX.rastro('jogador', 'inimigo', coresGolpe);
+        FX.explosaoDaTecnica('inimigo', coresGolpe);
+      } else {
+        FX.impacto(alvo, coresGolpe, { forte, direcao: atacante === 'jogador' ? 1 : -1 });
+      }
       animarClasse($(`cb-sprite-${alvo}`), 'atingido', 300);
       // Cada aviso numa linha, com o dano embaixo (antes ficava tudo numa linha e saía da arena)
       // Na técnica especial o nome já aparece no letreiro do alto da arena: o número mostra só o dano
@@ -358,7 +371,8 @@ export function animarVitoria(evento) {
     // Supressão de Alma: o inimigo foge apavorado (some para a direita) em vez de cair
     if (evento.suprimido) numeroFlutuante('inimigo', 'SUPRESSÃO DE ALMA!\n💨 Fugiu!', 'critico');
     animarClasse(corpo, evento.suprimido ? 'fugindo' : 'morrendo');
-    explodirParticulas('inimigo', 14, ['#ffffff', '#d4a84a', '#b8c8e8']);
+    if (evento.suprimido) explodirParticulas('inimigo', 14, ['#ffffff', '#d4a84a', '#b8c8e8']);
+    else FX.desfazer('inimigo', ['#ffffff', '#ffd36b', '#b8c8e8', '#ff9a6a']);
 
     recompensaFlutuante(`+${formatarNumero(evento.cultivo)} ${icone('cultivo')}`, '', 150);
     recompensaFlutuante(`+${formatarNumero(evento.pedras)} ${icone('pedra')}`, 'segunda', 350);
