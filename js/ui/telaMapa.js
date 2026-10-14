@@ -9,7 +9,7 @@ import { MUNDOS } from '../dados/mundos.js';
 import { liberado as sistemaLiberado } from '../sistemas/desbloqueios.js';
 import { MAPAS, FASES, MUNDOS_JOGAVEIS, mapaLiberado, faseLiberada, fasesVencidasNoMapa,
   mapasDoMundo, primeiraFaseDoMundo } from '../sistemas/mundo.js';
-import { cultivoDaVitoria } from '../sistemas/combate.js';
+import { cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
 import { formatarNumero } from '../format.js';
 import { icone, desenharInimigo } from './sprite.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
@@ -192,8 +192,11 @@ function desenharDesafio(estado) {
   desenharInimigo($('md-fase-sprite'), fase);
   $('md-fase-previsao').className = 'md-previsao ' + previsao.classe;
   $('md-fase-previsao').textContent = `Poder ${textoDoPoder(previsao.poderInimigo)} · ${textoDaPrevisao(previsao)}`;
+  // v0.21.1: inimigo bem mais fraco que você rende menos Cultivo — avisa quanto
+  const fator = fatorDoInimigo(estado, fase);
   $('md-fase-recompensa').innerHTML =
-    `${icone('cultivo')} ${formatarNumero(cultivoDaVitoria(estado, fase))} · ${icone('pedra')} ${formatarNumero(fase.recompensa.pedras)}`;
+    `${icone('cultivo')} ${formatarNumero(cultivoDaVitoria(estado, fase))} · ${icone('pedra')} ${formatarNumero(fase.recompensa.pedras)}` +
+    (fator < 0.995 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '');
   const aqui = fase.indice === estado.combate.faseAtual && !estado.combate.autoAvancar;
   $('md-farmar').textContent = aqui ? '✔ Farmando aqui' : '⚔️ Farmar aqui';
   $('md-farmar').classList.toggle('ativo', aqui);

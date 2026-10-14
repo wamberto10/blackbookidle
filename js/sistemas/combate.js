@@ -15,7 +15,7 @@
 import { CONFIG } from '../config.js';
 import { FASES, MUNDOS_JOGAVEIS, faseLiberada, mundoJaZerado } from './mundo.js';
 import { calcularAtributos, dano, golpesPorTurno } from './atributos.js';
-import { ganharCultivo, producaoPorSegundo } from './progressao.js';
+import { ganharCultivo, producaoPorSegundo, producaoNoNivel, indiceNivel } from './progressao.js';
 import { liberado } from './desbloqueios.js';
 import { tentarDrop } from './equipamentos.js';
 import { tentarNucleo } from './nucleos.js';
@@ -32,7 +32,16 @@ let luta = null;
 // v0.9.5: antes usava a produção do nível da FASE — depois de reencarnar, uma vitória num mapa
 // avançado valia horas ou dias de cultivo e o combate subia os estágios sozinho.
 export function cultivoDaVitoria(estado, fase) {
-  return producaoPorSegundo(estado) * fase.tipo.cultivo;
+  return producaoPorSegundo(estado) * fase.tipo.cultivo * CB.multiplicadorCultivo * fatorDoInimigo(estado, fase);
+}
+
+// v0.21.1: inimigo bem mais fraco que você dá menos Cultivo (antes farmar o Mapa 1 rendia tanto quanto
+// o mapa atual — e mais rápido, porque os inimigos fogem na hora). Fases no seu nível ou acima: 100%.
+// Abaixo: a raiz da diferença de produção entre o nível da fase e o seu (1 reino abaixo ≈ 25%, 2 ≈ 5%).
+export function fatorDoInimigo(estado, fase) {
+  const daFase = producaoNoNivel(fase.nivel, fase.reino);
+  const doJogador = producaoNoNivel(indiceNivel(estado), estado.reino);
+  return Math.min(1, Math.pow(daFase / doJogador, CB.expoenteInimigoFraco));
 }
 
 export function combateLiberado(estado) {

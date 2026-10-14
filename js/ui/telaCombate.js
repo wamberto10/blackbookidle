@@ -13,7 +13,7 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as P from '../sistemas/progressao.js';
-import { combateLiberado, lutaAtual, cultivoDaVitoria } from '../sistemas/combate.js';
+import { combateLiberado, lutaAtual, cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
 import { FASES, MAPAS, faseLiberada } from '../sistemas/mundo.js';
 import { RARIDADE_POR_ID } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
@@ -139,9 +139,10 @@ export function atualizarTelaCombate(estado) {
     desenharPersonagem($('cb-sprite-jogador'), P.reinoAtual(estado).id, 'combate', personagemDe(estado));
     desenharInimigo($('cb-sprite-inimigo'), fase);
     const primeira = fase.indice > estado.combate.fasesConcluidas;
+    const fraco = fatorDoInimigo(estado, fase) < 0.995;   // v0.21.1: inimigo fraco rende menos Cultivo
     $('cb-recompensa').innerHTML =
       `+${formatarNumero(cultivoDaVitoria(estado, fase))} ${icone('cultivo')} +${formatarNumero(fase.recompensa.pedras)} ${icone('pedra')}` +
-      (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : '');
+      (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : fraco ? ' (inimigo fraco: menos Cultivo)' : '');
   }
 
   // Velocidade dos dois (atualiza sempre: muda na hora ao melhorar Velocidade no Black Book).

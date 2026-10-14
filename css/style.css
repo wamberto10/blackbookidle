@@ -2549,3 +2549,6 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 @keyframes iluminacao-colhe { to { opacity: 0; transform: translate(-50%, -50%) scale(2.2); } }
 @keyframes iluminacao-some { to { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } }
 @keyframes iluminacao-gira { to { transform: rotate(360deg); } }
+
+/* v0.21.1: aviso de inimigo fraco (rende menos Cultivo) na seleção de desafio do Mapa */
+.md-fraco { display: block; margin-top: 2px; font-size: 0.68rem; color: #ffb27a; text-transform: none; letter-spacing: 0; }

@@ -125,7 +125,11 @@ export function essenciaAoReencarnar(estado) {
   const fases = fasesVencidasNestaVida(estado);
   if (fases <= 0) return 0;
   const vip = estado.vip ? 1 + CONFIG.vip.bonusEssencia : 1;   // VIP: +100%
-  return Math.floor(BB.recompensa.base * fases * Math.pow(BB.recompensa.crescimento, fases) * vip);
+  // v0.21.1: depois de "faseDaVirada" (fim do Mundo 1) cada fase multiplica menos (ver config)
+  const R = BB.recompensa;
+  const antes = Math.min(fases, R.faseDaVirada);
+  const depois = Math.max(0, fases - R.faseDaVirada);
+  return Math.floor(R.base * fases * Math.pow(R.crescimento, antes) * Math.pow(R.crescimentoDepois, depois) * vip);
 }
 
 // Só pode reencarnar de novo chegando pelo menos onde reencarnou da última vez

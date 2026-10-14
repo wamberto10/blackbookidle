@@ -485,7 +485,7 @@ setInterval(() => {
     return;
   }
 
-  // VIP: Meditar automático (3 cliques por segundo), só com o jogo aberto na tela
+  // VIP: Meditar automático (CONFIG.vip.cliquesPorSegundo), só com o jogo aberto na tela
   if (estado.vip && estado.opcoes.meditarAuto && !document.hidden) {
     cliquesVip += segundos * CONFIG.vip.cliquesPorSegundo;
     while (cliquesVip >= 1) { P.meditar(estado); cliquesVip -= 1; }

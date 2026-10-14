@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.21.0',
+  versao: '0.21.1',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -119,6 +119,13 @@ export const CONFIG = {
     dificuldadePorMapa: 1.31,
     // v0.8.1: todo golpe tira pelo menos 10% do Ataque de quem bate, por maior que seja a Defesa
     danoMinimo: 0.1,
+    // v0.21.1: inimigo mais fraco que você dá menos Cultivo = (produção no nível da fase ÷ a sua)^expoente
+    // (0.5 → 1 reino abaixo ≈ 25%, 2 reinos ≈ 5%; fases no seu nível ou acima dão 100%)
+    expoenteInimigoFraco: 0.5,
+    // v0.21.1: Cultivo de cada vitória = segundos de produção do tipo da fase (comum 1,5 s ... chefe 15 s) × isto
+    // (era 1: as lutas davam 25% do Cultivo; com 2, ~45% — o ritmo total fica igual porque farmar mapa antigo
+    //  deixou de render, e a Essência cresce menos depois do Mundo 1)
+    multiplicadorCultivo: 2,
   },
 
   // ---- Equipamentos (os espaços e tiers ficam em dados/equipamentos.js) ----
@@ -155,7 +162,9 @@ export const CONFIG = {
   // Liga/desliga de graça na tela do VIP (botão 💎 no canto da tela inicial).
   // Fica ligado também ao reencarnar.
   vip: {
-    cliquesPorSegundo: 3,                 // Meditar automático (só com o jogo aberto na tela)
+    // v0.21.1: era 3 — com o Meditar +50% do Sentido Divino, a tela aberta rendia ~13× a produção e o VIP
+    // terminava o Mundo 3 ~45% antes. Com 1: VIP 18% (tela fechada) a ~40% (tela aberta 1/4 do tempo) mais rápido.
+    cliquesPorSegundo: 1,                 // Meditar automático (só com o jogo aberto na tela)
     pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
     bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
     atributos: { ataque: 0.25, defesa: 0.25, vitalidade: 0.25 },   // +25% no total (v0.9.15, dono: era +50%)
@@ -219,7 +228,10 @@ export const CONFIG = {
     // (F = número de fases vencidas nesta vida, de 0 a 144)
     // Ex.: 12 fases → 68 | 24 → 195 | 48 → 793 | 72 → 2.4 mil | 144 → ~40 mil
     // v0.8.0: base era 2 (reencarnar passou a ser necessário, então rende mais)
-    recompensa: { base: 4, crescimento: 1.03 },
+    // v0.21.1: depois da fase 144 (fim do Mundo 1) cada fase multiplica por crescimentoDepois. Com 1,03 em tudo
+    // a Essência explodia (fase 211 → 431 mil; fase 417 → 376 milhões) e na vida seguinte o Black Book sozinho
+    // passava 30+ mapas no Corpo Temperado: cultivo e reinos deixavam de importar.
+    recompensa: { base: 4, crescimento: 1.03, faseDaVirada: 144, crescimentoDepois: 1.02 },
 
     // Melhorias compradas com Essência da Alma. Nunca são perdidas.
     //   id         → atributo que melhora ('cultivo' = Cultivo por segundo)

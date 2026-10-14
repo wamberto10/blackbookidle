@@ -20,7 +20,7 @@ export function montarVip(acoes) {
   const tiers = RARIDADES.filter(r => !r.exclusivo).map((r, i) =>
     `<span style="color:${r.cor}">${r.nome} +${V.pesosExtras[i]}%</span>`).join(' · ');
   $('tela-vip-lista').innerHTML = `
-    <li>🧘 <b>Meditar automático</b>: ${V.cliquesPorSegundo} cliques por segundo com o jogo aberto — o botão Meditar passa a ligar/desligar</li>
+    <li>🧘 <b>Meditar automático</b>: ${V.cliquesPorSegundo} ${V.cliquesPorSegundo === 1 ? 'clique' : 'cliques'} por segundo com o jogo aberto — o botão Meditar passa a ligar/desligar</li>
     <li>⚡ <b>Rompimento automático</b>: rompe o reino sozinho assim que cumprir os requisitos</li>
     <li>${icone('recompensa')} <b>Mais itens raros</b>: ${tiers}</li>
     <li>${icone('essencia')} <b>+${Math.round(V.bonusEssencia * 100)}% de Essência da Alma</b> ao reencarnar</li>

@@ -56,6 +56,8 @@ MAPAS.forEach((mapa, indiceMapa) => {
       local: dados.local,
       chaveTipo,
       tipo,
+      nivel: nivelReferencia,   // v0.21.1: nível de cultivo da fase (inimigo fraco demais dá menos Cultivo)
+      reino: mapa.reino,
       referencia,   // atributos de um cultivador comum neste ponto (base dos itens que caem aqui)
       inimigo: {
         nome: dados.inimigo,
