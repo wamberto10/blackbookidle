@@ -196,7 +196,7 @@ function desenharDesafio(estado) {
   const fator = fatorDoInimigo(estado, fase);
   $('md-fase-recompensa').innerHTML =
     `${icone('cultivo')} ${formatarNumero(cultivoDaVitoria(estado, fase))} · ${icone('pedra')} ${formatarNumero(fase.recompensa.pedras)}` +
-    (fator < 0.995 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '');
+    (fator < 0.9 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '');
   const aqui = fase.indice === estado.combate.faseAtual && !estado.combate.autoAvancar;
   $('md-farmar').textContent = aqui ? '✔ Farmando aqui' : '⚔️ Farmar aqui';
   $('md-farmar').classList.toggle('ativo', aqui);

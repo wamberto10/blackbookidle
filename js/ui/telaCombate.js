@@ -139,7 +139,7 @@ export function atualizarTelaCombate(estado) {
     desenharPersonagem($('cb-sprite-jogador'), P.reinoAtual(estado).id, 'combate', personagemDe(estado));
     desenharInimigo($('cb-sprite-inimigo'), fase);
     const primeira = fase.indice > estado.combate.fasesConcluidas;
-    const fraco = fatorDoInimigo(estado, fase) < 0.995;   // v0.21.1: inimigo fraco rende menos Cultivo
+    const fraco = fatorDoInimigo(estado, fase) < 0.9;   // v0.21.1: inimigo fraco rende menos Cultivo
     $('cb-recompensa').innerHTML =
       `+${formatarNumero(cultivoDaVitoria(estado, fase))} ${icone('cultivo')} +${formatarNumero(fase.recompensa.pedras)} ${icone('pedra')}` +
       (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : fraco ? ' (inimigo fraco: menos Cultivo)' : '');
