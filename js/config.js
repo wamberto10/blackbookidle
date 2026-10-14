@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.22.0',
+  versao: '0.22.1',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -152,6 +152,11 @@ export const CONFIG = {
     // Atributos % (crítico, esquiva...) crescem um pouco a cada mapa
     crescimentoPorcentoPorMapa: 0.03,  // v0.7.1: era 0.1 (equipamento crescia demais no fim do mundo)
     variacao: 0,                       // v0.9.2: sem variação (atributos fixos; era ±20%)
+    // v0.22.1 (dono): o equipamento rende no máximo 3× a força do seu reino (Ataque, Vitalidade, Defesa e Velocidade).
+    // Os itens ficam ao reencarnar com a força do mapa onde caíram; sem limite, nas vidas seguintes eles carregavam o
+    // personagem e subir de estágio dava ~0% de Poder. Com 3×: todo estágio dá +25% e todo rompimento +150%, e o ritmo
+    // do robô não mudou (Mundo 4 em ~95 h). null = sem limite.
+    limiteDoReino: 3,
     bonusPorNivel: 0.05,               // cada nível de melhoria dá +5% em todos os atributos
     custoMelhoriaBase: 4,              // Pedras = base × valor do tier × 1,05^fase × 1,25^nível
     crescimentoCustoMelhoria: 1.25,

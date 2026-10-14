@@ -2552,3 +2552,8 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 
 /* v0.21.1: aviso de inimigo fraco (rende menos Cultivo) na seleção de desafio do Mapa */
 .md-fraco { display: block; margin-top: 2px; font-size: 0.68rem; color: #ffb27a; text-transform: none; letter-spacing: 0; }
+
+
+/* v0.22.1: aviso do limite do equipamento pelo reino (tela do herói) */
+.aviso-limite { display: flex; align-items: center; gap: 6px; max-width: 340px; margin: 2px auto 0; padding: 5px 8px; border: 1px solid rgba(255, 178, 122, 0.45); border-radius: 6px; background: rgba(40, 20, 10, 0.7); font-size: 0.72rem; line-height: 1.3; color: #ffcf9a; }
+.aviso-limite .icone-px { width: 18px; height: 18px; flex-shrink: 0; }

@@ -56,7 +56,9 @@ export function atributosBase(nivel, indiceReino) {
   };
 }
 
-export function calcularAtributos(estado) {
+// opcoes.semLimite: ignora o limite do equipamento pelo reino (usado para COMPARAR itens: o melhor item fica
+// vestido mesmo quando o reino ainda não libera toda a força dele)
+export function calcularAtributos(estado, opcoes = {}) {
   const nivel = indiceNivel(estado);
   const base = { ...atributosBase(nivel, estado.reino) };
   // Bônus EXTRA de reino só do jogador (os inimigos usam atributosBase puro).
@@ -68,7 +70,16 @@ export function calcularAtributos(estado) {
   // mult(...) = melhoria de "+X%" do Black Book | soma(...) = melhoria de "+X pontos"
   // classe(...) = bônus/penalidade da classe (dados/classes.js)
   // Valores fixos: (base + equipamentos) × Black Book × classe × Núcleos (+1% por ponto)
-  const eq = bonusEquipamentos(estado);
+  const eq = { ...bonusEquipamentos(estado) };
+  // v0.22.1: o equipamento rende no máximo K × a força do seu reino (CONFIG.equipamentos.limiteDoReino)
+  // — "um cultivador fraco não libera todo o poder de um tesouro forte"
+  const limite = opcoes.semLimite ? null : CONFIG.equipamentos.limiteDoReino;
+  let equipamentoLimitado = false;
+  if (limite) {
+    for (const atributo of ['ataque', 'vitalidade', 'defesa', 'velocidade']) {
+      if (eq[atributo] > base[atributo] * limite) { eq[atributo] = base[atributo] * limite; equipamentoLimitado = true; }
+    }
+  }
   const c = classeDe(estado);
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
@@ -91,6 +102,7 @@ export function calcularAtributos(estado) {
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
     tecnica: c.tecnica,
+    equipamentoLimitado,   // v0.22.1: true = algum item rende menos que o normal (limite do reino)
   };
 }
 

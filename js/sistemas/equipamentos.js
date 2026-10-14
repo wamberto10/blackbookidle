@@ -90,18 +90,22 @@ export function gerarItem(estado, fase, slotFixo = null, raridadeFixa = null, gr
 }
 
 // ---- Comparação ----
+// v0.22.1: as comparações usam a força CHEIA dos itens (sem o limite do reino) — senão dois itens fortes
+// pareceriam iguais num reino baixo e o mais fraco poderia ficar vestido
+const SEM_LIMITE = { semLimite: true };
+
 // Quanto o Poder Total muda se este item for vestido no lugar do atual
 export function ganhoDePoder(estado, item) {
-  const antes = poderTotal(calcularAtributos(estado));
+  const antes = poderTotal(calcularAtributos(estado, SEM_LIMITE));
   const comItem = { ...estado, equipados: { ...estado.equipados, [item.slot]: item } };
-  return poderTotal(calcularAtributos(comItem)) - antes;
+  return poderTotal(calcularAtributos(comItem, SEM_LIMITE)) - antes;
 }
 
 // Poder do item: quanto ele soma ao seu Poder Total sozinho (vestido vs. espaço vazio)
 export function poderDoItem(estado, item) {
   const vazio = { ...estado, equipados: { ...estado.equipados, [item.slot]: null } };
   const comItem = { ...estado, equipados: { ...estado.equipados, [item.slot]: item } };
-  return poderTotal(calcularAtributos(comItem)) - poderTotal(calcularAtributos(vazio));
+  return poderTotal(calcularAtributos(comItem, SEM_LIMITE)) - poderTotal(calcularAtributos(vazio, SEM_LIMITE));
 }
 
 // ---- Receber um item (drop) ----

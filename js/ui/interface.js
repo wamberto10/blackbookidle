@@ -225,9 +225,10 @@ function atualizarAvisos(estado) {
   const mochilaLiberada = liberado(estado, 'mochila');
   let melhor = false;
   if (mochilaLiberada && !estado.opcoes.autoEquipar && estado.mochila.length) {
-    const poderAtual = analisarPoder(calcularAtributos(estado)).poder;
+    // v0.22.1: compara a força cheia dos itens (sem o limite do reino), igual ao Auto-vestir
+    const poderAtual = analisarPoder(calcularAtributos(estado, { semLimite: true })).poder;
     melhor = estado.mochila.slice(0, 60).some(item =>
-      analisarPoder(calcularAtributos({ ...estado, equipados: { ...estado.equipados, [item.slot]: item } })).poder > poderAtual);
+      analisarPoder(calcularAtributos({ ...estado, equipados: { ...estado.equipados, [item.slot]: item } }, { semLimite: true })).poder > poderAtual);
   }
   marcar('[data-aba="mochila"]', melhor || (mochilaLiberada && EQ.temAlgoParaMesclar(estado)),
     melhor ? 'Item melhor na mochila' : 'Itens para mesclar');
@@ -416,6 +417,13 @@ function atualizarPersonagem(estado) {
   $('pers-poder-detalhe').innerHTML =
     `<span class="parte-poder" title="Dano médio por golpe (Ataque + Crítico)">${icone('ofensa')} Ofensa <b>${formatarNumero(analise.ofensa)}</b></span>` +
     `<span class="parte-poder" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">${icone('resistencia')} Resistência <b>${formatarNumero(analise.resistencia)}</b></span>`;
+  // v0.22.1: limite do equipamento pelo reino
+  const aviso = $('pers-limite');
+  aviso.classList.toggle('escondido', !atributos.equipamentoLimitado);
+  if (atributos.equipamentoLimitado && !aviso.innerHTML) {
+    aviso.innerHTML = `${icone('cadeado')} <span>Seus equipamentos são fortes demais para o seu reino: rendem no máximo ` +
+      `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.</span>`;
+  }
 }
 
 function atualizarNivel(estado) {
