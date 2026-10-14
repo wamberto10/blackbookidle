@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.22.2',
+  versao: '0.23.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -121,7 +121,9 @@ export const CONFIG = {
     // total não mudou (a reencarnação seguinte atravessa os mapas do mesmo jeito).
     // v0.22.0: Mundo 4 = 1,5. Com 1,31 ele passava em ~10 h (o que fica ao reencarnar — itens e Black Book —
     // leva a vida nova direto à fronteira); com 1,5 ~24 h (robô, Refinador); 1,7 = 66 h e 13 reencarnações.
-    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5],
+    // v0.23.0: Mundo 5 = 1,25. No Mundo 5 não há rompimento de reino (só a 4ª–6ª Ordem do Céu Aberto), então o cultivo
+    // fortalece menos: com 1,5 o robô levava ~133 h e ~30 reencarnações; 1,31 = 41 h; 1,25 = ~25 h (mapas até ~4 h).
+    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25],
     // v0.21.2: Velocidade dos inimigos × isto a cada mapa (decide quem ataca primeiro e o ataque duplo). Antes não
     // crescia: no Mundo 2 o jogador já tinha 1,4–3,8× a velocidade dos chefes e no Mundo 3 ~10× (ataque duplo sempre).
     // Com 1,03: Mundo 2 ≈ 1,5–1,9× (o ataque duplo precisa ser conquistado), Mundo 3 ≈ 2–4×. Ritmo igual no robô.

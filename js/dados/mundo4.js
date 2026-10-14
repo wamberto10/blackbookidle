@@ -313,6 +313,6 @@ export const MUNDO_LIMITE_ESTELAR = {
       'O guardião cai, e pela fenda do Portão aparece um céu que nenhum mapa do Limite Estelar mostra: ' +
       'os Três Mil Mundos, onde vivem os cultivadores do Céu Aberto.\n\n' +
       '"Abrir o céu é só o começo. Do outro lado, a Tinta Negra já está em guerra com todos."\n\n' +
-      '✨ MUNDO 5 — EM BREVE\n(os Mundos Superiores estão em desenvolvimento)',
+      '✨ MUNDO 5 LIBERADO: Mundos Superiores — Três Mil Mundos!\nAtravesse o Portão e chegue à 4ª Ordem do Céu Aberto.',
   },
 };
