@@ -301,6 +301,6 @@ export const MUNDO_MUNDOS_SUPERIORES = {
       'O Grande Senhor de Território cai, e o caminho para o Campo de Batalha da Tinta Negra se abre. ' +
       'Do outro lado, os exércitos dos Três Mil Mundos já lutam contra os Senhores Reais da Tinta.\n\n' +
       '"A 7ª Ordem não é um degrau. É uma linha de frente."\n\n' +
-      '✨ MUNDO 6 — EM BREVE\n(o Universo Exterior está em desenvolvimento)',
+      '✨ MUNDO 6 LIBERADO: Universo Exterior — Campo de Batalha da Tinta!\nA 7ª Ordem do Céu Aberto espera na linha de frente.',
   },
 };
