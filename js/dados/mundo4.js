@@ -292,7 +292,7 @@ export const MUNDO_LIMITE_ESTELAR = {
       fases: [
         f('Fronteira Final', 'Sentinela da Fronteira Final'),
         f('Ponte de Luz', 'Guardião da Ponte de Luz', 'guardiao'),
-        f('Mar Estelar', 'Baleia do Mar Estelar', 'fera'),
+        f('Mar Estelar', 'Leviatã do Mar Estelar', 'fera'),
         f('Acampamento de Guerra', 'Soldado Veterano da Fronteira'),
         f('Ruínas de Batalha', 'Eco de um Guerreiro Caído', 'guardiao'),
         f('Posto Avançado', 'Batedor da Tinta Negra'),

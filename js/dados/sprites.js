@@ -559,7 +559,7 @@ export const SPRITES = {
     "senhor_territorio_tinta",
     "sentinela_fronteira_final",
     "guardiao_ponte_luz",
-    "baleia_mar_estelar",
+    "leviata_mar_estelar",
     "soldado_veterano_fronteira",
     "eco_guerreiro_caido",
     "batedor_tinta_negra",

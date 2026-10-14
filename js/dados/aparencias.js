@@ -669,7 +669,7 @@ export const APARENCIAS = {
   // ---- Mapa 48: Portão dos Três Mil Mundos (Mundo 4) ----
   'Sentinela da Fronteira Final': 'sentinela_fronteira_final',
   'Guardião da Ponte de Luz': 'guardiao_ponte_luz',
-  'Baleia do Mar Estelar': 'baleia_mar_estelar',
+  'Leviatã do Mar Estelar': 'leviata_mar_estelar',
   'Soldado Veterano da Fronteira': 'soldado_veterano_fronteira',
   'Eco de um Guerreiro Caído': 'eco_guerreiro_caido',
   'Batedor da Tinta Negra': 'batedor_tinta_negra',
