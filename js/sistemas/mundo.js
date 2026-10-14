@@ -23,6 +23,14 @@ MUNDOS_JOGAVEIS.forEach((mundo, indiceMundo) => {
 });
 export const FASES = []; // lista com todas as fases de todos os mundos, em ordem
 
+// Dificuldade acumulada de cada mapa: cada mapa multiplica pela dificuldade do SEU mundo
+// (v0.21.2: CONFIG.combate.dificuldadePorMundo; antes era 1,31 por mapa em todos os mundos)
+const dificuldadeDoMapa = [];
+MAPAS.forEach((mapa, indiceMapa) => {
+  const porMapa = CONFIG.combate.dificuldadePorMundo?.[mapa.mundo] ?? CONFIG.combate.dificuldadePorMapa;
+  dificuldadeDoMapa.push(indiceMapa === 0 ? 1 : dificuldadeDoMapa[indiceMapa - 1] * porMapa);
+});
+
 MAPAS.forEach((mapa, indiceMapa) => {
   // Mapas do mesmo reino dividem os estágios entre si.
   // Ex.: Mapas 1 e 2 são do Elemento Inicial: o Mapa 1 cobre o começo, o Mapa 2 o final.
@@ -43,8 +51,8 @@ MAPAS.forEach((mapa, indiceMapa) => {
     const nivelReferencia = inicioDoReino(mapa.reino) + inicio +
       progresso * CONFIG.combate.fracaoDoReino * (estagiosDoReino - 1 - inicio);
     const referencia = atributosBase(nivelReferencia, mapa.reino);
-    // Cada mapa é um pouco mais difícil que o anterior (ver config: dificuldadePorMapa)
-    const dificuldade = Math.pow(CONFIG.combate.dificuldadePorMapa, indiceMapa);
+    // Cada mapa é um pouco mais difícil que o anterior (ver config: dificuldadePorMapa / dificuldadePorMundo)
+    const dificuldade = dificuldadeDoMapa[indiceMapa];
 
     FASES.push({
       indice,
@@ -65,7 +73,9 @@ MAPAS.forEach((mapa, indiceMapa) => {
         vida: referencia.ataque * tipo.vida * dificuldade,
         ataque: referencia.ataque * tipo.ataque * dificuldade,
         defesa: referencia.ataque * tipo.defesa * dificuldade,
-        velocidade: referencia.velocidade * tipo.velocidade,
+        // v0.21.2: a Velocidade também cresce um pouco por mapa (antes não crescia: no Mundo 3 o jogador
+        // ficava ~10× mais rápido que os chefes e o ataque duplo valia sempre)
+        velocidade: referencia.velocidade * tipo.velocidade * Math.pow(CONFIG.combate.velocidadePorMapa ?? 1, indiceMapa),
         sentidoDivino: referencia.sentidoDivino * dificuldade,   // para a Supressão de Alma
       },
       recompensa: {

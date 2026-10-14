@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.21.1',
+  versao: '0.21.2',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -117,6 +117,13 @@ export const CONFIG = {
     // Cria "muralhas" que só caem depois de reencarnar e comprar melhorias no Black Book.
     // v0.8.1: era 1.32 — compensa a Esquiva que saiu do Black Book (robô: 81–90 h, 3 reencarnações)
     dificuldadePorMapa: 1.31,
+    // v0.21.2: crescimento por mapa em cada mundo (Mundo 1, 2, 3...). O robô testou 1,36–1,45 no Mundo 3 e o tempo
+    // total não mudou (a reencarnação seguinte atravessa os mapas do mesmo jeito) — fica 1,31 em todos por enquanto.
+    dificuldadePorMundo: [1.31, 1.31, 1.31],
+    // v0.21.2: Velocidade dos inimigos × isto a cada mapa (decide quem ataca primeiro e o ataque duplo). Antes não
+    // crescia: no Mundo 2 o jogador já tinha 1,4–3,8× a velocidade dos chefes e no Mundo 3 ~10× (ataque duplo sempre).
+    // Com 1,03: Mundo 2 ≈ 1,5–1,9× (o ataque duplo precisa ser conquistado), Mundo 3 ≈ 2–4×. Ritmo igual no robô.
+    velocidadePorMapa: 1.03,
     // v0.8.1: todo golpe tira pelo menos 10% do Ataque de quem bate, por maior que seja a Defesa
     danoMinimo: 0.1,
     // v0.21.1: inimigo mais fraco que você dá menos Cultivo = (produção no nível da fase ÷ a sua)^expoente
