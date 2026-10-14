@@ -334,9 +334,12 @@ function atualizarCultivo(estado, producao) {
     const chefe = chefeDoMapa(requisito.mapa - 1);
     temChefe = Boolean(chefe);
     const pronto = estado.cultivo >= P.custoParaAvancar(estado);
-    textoRequisito = !chefe ? '🔒 O próximo reino será liberado no próximo mundo (em breve).'
-      : pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas o reino só se rompe depois de derrotar ${chefe.inimigo.nome} (Mapa ${requisito.mapa}).`
-      : `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
+    // v0.22.0: o requisito pode ser de estágio (Céu Aberto: a 4ª Ordem só depois do Mapa 48)
+    const alvo = requisito.rompimento ? 'o reino só se rompe' : `a ${P.nomeDoProximoNivel(estado).split(' — ')[1]} só abre`;
+    const acao = requisito.rompimento ? 'romper o reino' : `chegar à ${P.nomeDoProximoNivel(estado).split(' — ')[1]}`;
+    textoRequisito = !chefe ? `🔒 ${requisito.rompimento ? 'O próximo reino' : 'O próximo estágio'} será liberado no próximo mundo (em breve).`
+      : pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas ${alvo} depois de derrotar ${chefe.inimigo.nome} (Mapa ${requisito.mapa}).`
+      : `🔒 Para ${acao}, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
   }
   trocarTexto($('cult-requisito'), textoRequisito);
   trocarTexto($('inicio-requisito'), textoRequisito + (temChefe ? ' ›' : ''));
@@ -358,7 +361,7 @@ function atualizarCultivo(estado, producao) {
     largura = Math.min(1, estado.cultivo / custo) * 100 + '%';
     progressoTexto = `${formatarNumero(Math.floor(estado.cultivo))} / ${formatarNumero(custo)}`;
     tempo = falta > 0 ? `≈ ${formatarTempo(falta / producao)}` : 'Pronto!';
-    if (requisito && !requisito.cumprido) textoBotao = '🔒 Romper Reino';
+    if (requisito && !requisito.cumprido) textoBotao = rompimento ? '🔒 Romper Reino' : '🔒 Avançar Estágio';
     else textoBotao = rompimento ? '⚡ Romper Reino' : '⬆️ Avançar Estágio';
   }
 
@@ -501,9 +504,10 @@ export function motivoParaNaoAvancar(estado) {
   const requisito = P.requisitoDoRompimento(estado);
   if (requisito && !requisito.cumprido) {
     const chefe = chefeDoMapa(requisito.mapa - 1);
+    const acao = requisito.rompimento ? 'romper o reino' : `chegar à ${P.nomeDoProximoNivel(estado).split(' — ')[1]}`;
     return chefe
-      ? `🔒 Para romper o reino, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
-      : '🔒 O próximo reino será liberado no próximo mundo (em breve).';
+      ? `🔒 Para ${acao}, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
+      : `🔒 ${requisito.rompimento ? 'O próximo reino' : 'O próximo estágio'} será liberado no próximo mundo (em breve).`;
   }
   const falta = P.custoParaAvancar(estado) - estado.cultivo;
   const producao = P.producaoPorSegundo(estado);

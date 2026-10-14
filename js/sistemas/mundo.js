@@ -34,12 +34,16 @@ MAPAS.forEach((mapa, indiceMapa) => {
 MAPAS.forEach((mapa, indiceMapa) => {
   // Mapas do mesmo reino dividem os estágios entre si.
   // Ex.: Mapas 1 e 2 são do Elemento Inicial: o Mapa 1 cobre o começo, o Mapa 2 o final.
-  const mapasDoMesmoReino = MAPAS.filter(outro => outro.reino === mapa.reino);
+  // v0.22.0: um reino que atravessa mundos é dividido em faixas (inicioNoReino/fimNoReino no mapa):
+  // os Mapas 43–48 cobrem só a 1ª–3ª Ordem do Céu Aberto, e os mapas futuros as outras.
+  const mesmaFaixa = (outro) => outro.reino === mapa.reino && (outro.fimNoReino ?? null) === (mapa.fimNoReino ?? null);
+  const mapasDoMesmoReino = MAPAS.filter(mesmaFaixa);
   const posicaoDoMapa = mapasDoMesmoReino.indexOf(mapa);
   const totalDeFasesNoReino = mapasDoMesmoReino.length * FASES_POR_MAPA;
   const estagiosDoReino = REINOS[mapa.reino].estagios.length;
   // Alguns mapas começam no meio do reino (ex.: Mapa 1 começa no 5º estágio do Corpo Temperado)
   const inicio = mapa.inicioNoReino ?? 0;
+  const fim = mapa.fimNoReino ?? estagiosDoReino - 1;
 
   mapa.fases.forEach((dados, indiceNoMapa) => {
     const chaveTipo = ESTRUTURA_DO_MAPA[indiceNoMapa];
@@ -49,7 +53,7 @@ MAPAS.forEach((mapa, indiceMapa) => {
     // Em que "nível" de cultivo esta fase foi pensada para ser jogada
     const progresso = (posicaoDoMapa * FASES_POR_MAPA + indiceNoMapa) / (totalDeFasesNoReino - 1);
     const nivelReferencia = inicioDoReino(mapa.reino) + inicio +
-      progresso * CONFIG.combate.fracaoDoReino * (estagiosDoReino - 1 - inicio);
+      progresso * CONFIG.combate.fracaoDoReino * (fim - inicio);
     const referencia = atributosBase(nivelReferencia, mapa.reino);
     // Cada mapa é um pouco mais difícil que o anterior (ver config: dificuldadePorMapa / dificuldadePorMundo)
     const dificuldade = dificuldadeDoMapa[indiceMapa];

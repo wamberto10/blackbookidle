@@ -296,6 +296,6 @@ export const MUNDO_HENG_LUO = {
       'Wu Heng cai, e as estrelas da Grande Desolação se curvam. Os dois Campos Estelares ' +
       'passam a responder a um único nome.\n\n' +
       '"Até um Campo Estelar inteiro é só um grão de areia diante dos Mundos Superiores."\n\n' +
-      '✨ MUNDO 4 — EM BREVE\n(o próximo mundo está em desenvolvimento)',
+      '✨ MUNDO 4 LIBERADO: Estrela Sombria — Limite Estelar!\nA Fonte Estelar de Heng Luo aponta para uma estrela esquecida, muito além dos Campos Estelares.',
   },
 };

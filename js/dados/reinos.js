@@ -168,6 +168,9 @@ export const REINOS = [
     corManto: '#f0e0a0',
     descricao: 'Os sete elementos condensados no Selo do Dao criam um Pequeno Universo interno que gera Força do Mundo.',
     desbloqueio: 'Seu Pequeno Universo nasceu!',
+    // v0.22.0: o Céu Aberto atravessa três mundos (Baixo, Médio e Alto Rank). Cada faixa só abre depois do
+    // chefe do último mapa da anterior: 4ª Ordem → Mapa 48 (fim do Mundo 4); 7ª Ordem → Mapa 60 (Mundo 5).
+    mapaParaEstagio: { 3: 48, 6: 60 },
     marcos: {
       3: 'Seu Pequeno Universo ganhou estabilidade física.',
       6: 'Seu Pequeno Universo se materializou e pode abrigar seres vivos.',

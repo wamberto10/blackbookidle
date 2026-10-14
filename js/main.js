@@ -173,9 +173,10 @@ function aoEventoCombate(evento) {
       // v0.21.0 (dono): dizia "Agora você pode romper" mesmo quando ainda faltava Cultivo
       if (requisito && requisito.mapa === fase.mapa + 1) {
         const falta = P.custoParaAvancar(estado) - estado.cultivo;
+        const acao = requisito.rompimento ? 'romper o reino' : 'avançar de estágio';   // v0.22.0: trava de estágio
         texto += falta > 0
-          ? ` Gargalo superado! Faltam ${formatarNumero(Math.ceil(falta))} de Cultivo para romper o reino.`
-          : ' Agora você pode romper o seu reino!';
+          ? ` Gargalo superado! Faltam ${formatarNumero(Math.ceil(falta))} de Cultivo para ${acao}.`
+          : ` Agora você pode ${acao}!`;
       }
       mostrarMensagem(texto);
       salvar(estado);

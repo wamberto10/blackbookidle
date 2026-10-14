@@ -66,14 +66,17 @@ export function nomeDoProximoNivel(estado) {
   return `${reinoAtual(estado).nome} — ${reinoAtual(estado).estagios[estado.estagio + 1]}`;
 }
 
-// Requisito de combate para romper o reino atual.
-// Devolve null se não houver requisito, ou { mapa, cumprido }.
+// Requisito de combate para o PRÓXIMO avanço: romper o reino (mapaParaRomper) ou, v0.22.0, subir para um
+// estágio travado (mapaParaEstagio — o Céu Aberto atravessa vários mundos: 4ª Ordem só depois do Mapa 48).
+// Devolve null se não houver requisito, ou { mapa, cumprido, rompimento }.
 export function requisitoDoRompimento(estado) {
-  if (!proximoEhRompimento(estado)) return null;
-  const mapa = reinoAtual(estado).mapaParaRomper;
+  if (noNivelMaximo(estado)) return null;
+  const rompimento = proximoEhRompimento(estado);
+  const reino = reinoAtual(estado);
+  const mapa = rompimento ? reino.mapaParaRomper : reino.mapaParaEstagio?.[estado.estagio + 1];
   if (!mapa) return null;
   const ultimaFaseDoMapa = mapa * CONFIG.combate.fasesPorMapa - 1;
-  return { mapa, cumprido: estado.combate.fasesConcluidas >= ultimaFaseDoMapa };
+  return { mapa, cumprido: estado.combate.fasesConcluidas >= ultimaFaseDoMapa, rompimento };
 }
 
 // ---- Fórmulas ----
