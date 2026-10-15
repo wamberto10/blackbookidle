@@ -109,12 +109,16 @@ export function atualizarTelaMochila(estado) {
     vestidoAberto ? EQ.podeMelhorar(estado, vestidoAberto) : '',
     FASES[estado.combate.faseAtual].mapa,
     filtroTipo,
+    `${estado.opcoes.mesclaAuto}${estado.opcoes.desmancheAuto}`,   // v0.26.1: mostra/esconde os botões manuais
   ].join('|');
   if (chave === chaveDesenhada) return;
   chaveDesenhada = chave;
 
   $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
+  // v0.26.1: com o automático ligado o botão manual sobra (a mochila já se organiza a cada item que cai)
+  $('mesclar-tudo').classList.toggle('escondido', estado.opcoes.mesclaAuto);
+  $('desmanchar-obsoletos').classList.toggle('escondido', estado.opcoes.desmancheAuto);
   const quantosObsoletos = EQ.obsoletos(estado).itens.length;
   const textoObs = `${icone('desmanchar')} Obsoletos (${quantosObsoletos})`;
   if ($('desmanchar-obsoletos').dataset.html !== textoObs) { $('desmanchar-obsoletos').dataset.html = textoObs; $('desmanchar-obsoletos').innerHTML = textoObs; }

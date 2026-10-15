@@ -339,12 +339,19 @@
 
         <!-- v0.14.1: mochila reorganizada — ações numa barra compacta, filtros numa linha,
              ajuda e chances de drop recolhíveis -->
+        <!-- v0.26.1: título e ações manuais na mesma linha (Mesclar/Obsoletos só aparecem com o automático desligado) -->
         <div class="mochila-cabecalho">
           <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
+          <div class="ferramentas-mochila">
+            <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais"><img class="icone-px" src="img/icones/mesclar.png" alt=""> Mesclar</button>
+            <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Obsoletos</button>
+            <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Comuns</button>
+            <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> +Incomuns</button>
+          </div>
         </div>
         <!-- v0.26.0: a Mochila se organiza sozinha a cada item que cai -->
         <div class="automaticos-mochila">
-          <span class="pequeno">Automático:</span>
+          <span class="pequeno">Auto:</span>
           <label class="chave-auto" title="Vestir automaticamente os itens que aumentam o Poder Total">
             <input type="checkbox" id="opcao-auto-equipar"><span class="chave"></span> Vestir
           </label>
@@ -352,14 +359,8 @@
             <input type="checkbox" id="opcao-mescla-auto"><span class="chave"></span> Mesclar
           </label>
           <label class="chave-auto" title="Desmanchar sozinho os itens obsoletos: os que nem mesclados até ★5 e melhorados ao máximo ganhariam do item vestido">
-            <input type="checkbox" id="opcao-desmanche-auto"><span class="chave"></span> Desmanchar obsoletos
+            <input type="checkbox" id="opcao-desmanche-auto"><span class="chave"></span> Desmanchar
           </label>
-        </div>
-        <div class="ferramentas-mochila">
-          <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais"><img class="icone-px" src="img/icones/mesclar.png" alt=""> Mesclar</button>
-          <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Obsoletos</button>
-          <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Comuns</button>
-          <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> +Incomuns</button>
         </div>
         <!-- Abas por tipo de item (uma linha, rola para o lado se não couber) -->
         <div class="filtros" id="filtros-itens"></div>
