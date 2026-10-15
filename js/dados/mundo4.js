@@ -1,10 +1,13 @@
 // =============================================================
-// dados/mundo4.js — MUNDO 4: ESTRELA SOMBRIA — LIMITE ESTELAR (12 mapas × 12 fases)
+// dados/mundo4.js — MUNDO 4: LIMITE ESTELAR (12 mapas × 12 fases)
 //
 // Mesmo formato dos outros mundos. No jogo, estes são os Mapas 37 a 48
 // (fundos img/fundos/mapa37.jpg … mapa48.jpg). Libera ao vencer o chefe do
 // Mapa 36 (Wu Heng, fim do Campo Estelar Heng Luo).
-// Lore: arco do Limite Estelar de Martial Peak — a Estrela Sombria e a fundação do Palácio Ling Xiao,
+// Lore: arco do Limite Estelar de Martial Peak — a partida da Estrela Sombria (Campo Estelar, onde nasceu a
+// Seita Ling Xiao), a fundação do Palácio Ling Xiao no Domínio Norte do Limite Estelar,
+// v0.24.2: corrigido — antes o Palácio Ling Xiao aparecia na Estrela Sombria (são dois lugares diferentes).
+//
 // as grandes forças dos Grandes Imperadores, o Clã do Dragão e o Clã da Fênix, o Jardim do Imperador,
 // o Reino Demoníaco, os Espíritos Sagrados, a Terra do Vazio e as primeiras sombras da Tinta Negra.
 //
@@ -20,11 +23,12 @@ const BAIXO_RANK = { reino: 16, inicioNoReino: 0, fimNoReino: 2 };
 
 export const MUNDO_LIMITE_ESTELAR = {
   id: 'estrela_sombria',
-  nome: 'Estrela Sombria — Limite Estelar',
+  nome: 'Limite Estelar — Domínio dos Grandes Imperadores',
   lema: '"No Limite Estelar, até um Grande Imperador olha para cima."',
   descricao:
     'Além dos Campos Estelares fica o Limite Estelar: a terra dos Grandes Imperadores, do Clã do Dragão, ' +
-    'do Clã da Fênix e dos Espíritos Sagrados. Numa estrela esquecida, a Estrela Sombria, nasce o Palácio Ling Xiao.',
+    'do Clã da Fênix e dos Espíritos Sagrados. Yang Kai parte da Estrela Sombria, onde fundou a Seita Ling Xiao, ' +
+    'e ergue o Palácio Ling Xiao no Domínio Norte.',
   imagemFundo: null,
 
   mapas: [
@@ -33,13 +37,13 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Estrela Sombria', icone: '🌑', cor: '#1a1424', reino: 15,
       cena: { ceu: ['#05030a', '#2a1a3a'], astro: '#8a7aaa', astroX: 80, estrelas: true, montanhas: ['#3a2a4a', '#22182e', '#100a18'], estruturas: 'ruinas', nevoa: 'rgba(140,110,200,0.16)' },
       descricao:
-        'Uma estrela escura e esquecida no Limite Estelar, sem dono e quase sem luz. Feras das sombras e fugitivos ' +
-        'de todas as estrelas vivem aqui — é nela que Yang Kai decide fincar raízes.',
+        'Uma estrela escura e esquecida do Campo Estelar, quase sem luz. Foi nela que Yang Kai fundou a Seita Ling Xiao — ' +
+        'e é dela que ele parte para o Limite Estelar, abrindo caminho entre feras das sombras e fugitivos.',
       sistema: null,
       fases: [
         f('Planície Sem Luz', 'Lobo da Noite Eterna', 'fera'),
         f('Cânion Escuro', 'Morcego da Estrela Sombria', 'fera'),
-        f('Acampamento de Fugitivos', 'Fugitivo do Limite Estelar'),
+        f('Acampamento de Fugitivos', 'Fugitivo do Campo Estelar'),
         f('Ruínas de uma Seita', 'Fantasma da Seita Caída', 'guardiao'),
         f('Floresta de Cristal Negro', 'Golem de Cristal Negro', 'guardiao'),
         f('Pântano Sombrio', 'Serpente da Noite Eterna', 'fera'),
@@ -56,8 +60,8 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Palácio Ling Xiao', icone: '🏯', cor: '#2a1a14', reino: 15,
       cena: { ceu: ['#0a0612', '#4a2a3a'], astro: '#ffd36b', astroX: 230, estrelas: true, montanhas: ['#5a3a3a', '#3a2228', '#1a1014'], estruturas: 'palacio', nevoa: 'rgba(255,210,120,0.14)' },
       descricao:
-        'Na Estrela Sombria, Yang Kai ergue o Palácio Ling Xiao, herdeiro do antigo High Heaven Pavilion. ' +
-        'Um palácio novo atrai olhares — e inimigos de outras estrelas vêm testar suas muralhas.',
+        'No Domínio Norte do Limite Estelar, Yang Kai ergue o Palácio Ling Xiao, herdeiro da Seita Ling Xiao e do antigo ' +
+        'High Heaven Pavilion. Um palácio novo atrai olhares — e as seitas rivais vêm testar suas muralhas.',
       sistema: null,
       fases: [
         f('Canteiro de Obras', 'Espião de Seita Rival'),

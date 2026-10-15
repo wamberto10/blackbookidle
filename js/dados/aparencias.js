@@ -515,7 +515,7 @@ export const APARENCIAS = {
   // ---- Mapa 37: Estrela Sombria (Mundo 4) ----
   'Lobo da Noite Eterna': 'lobo_noite_eterna',
   'Morcego da Estrela Sombria': 'morcego_estrela_sombria',
-  'Fugitivo do Limite Estelar': 'fugitivo_limite',
+  'Fugitivo do Campo Estelar': 'fugitivo_limite',
   'Fantasma da Seita Caída': 'fantasma_seita_caida',
   'Golem de Cristal Negro': 'golem_cristal_negro',
   'Serpente da Noite Eterna': 'serpente_noite_eterna',
