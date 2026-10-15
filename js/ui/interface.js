@@ -12,7 +12,7 @@ import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atribut
 import { liberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
-import { desenharPersonagem, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
+import { desenharPersonagem, icone, iconeEquipamento, animarVivo } from './sprite.js';
 import { TEXTO_DO_SELO } from './poder.js';
 import { SLOTS } from '../dados/equipamentos.js';
 import { grauDe } from '../sistemas/itens.js';
@@ -59,6 +59,8 @@ export function montarInterface(acoes) {
     });
   });
   document.querySelectorAll('[data-fechar]').forEach((botao) => botao.addEventListener('click', fecharPainel));
+  // v0.27.0: o "+" de cada recurso no topo abre a aba dele
+  document.querySelectorAll('[data-ir]').forEach((botao) => botao.addEventListener('click', () => abrirPainel(botao.dataset.ir)));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharPainel(); });
 
   // ---- Botões de cultivo (existem na tela inicial e no painel Cultivo) ----
@@ -256,9 +258,11 @@ function atualizarFundo(estado) {
   if (fundoDesenhado === chave) return;
   fundoDesenhado = chave;
   // v0.17.4: antes "Mundo Inicial — Starting World · O Segredo do Mundo" quebrava em 3 linhas
+  // v0.27.0 (layout novo): nome do mapa, mundo e "mapa-fase" em 3 linhas (a fase é atualizada a cada passo)
   $('inicio-local').innerHTML = reclusao
-    ? `<b>${icone('reclusao')} Em Reclusão</b><small>${mapa.nome} · Mapa ${indiceMapa + 1}</small>`
-    : `<b>${iconeDoMapa(indiceMapa)} ${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))} · Mapa ${indiceMapa + 1}</small>`;
+    ? `<b>Em Reclusão</b><small>${mapa.nome}</small><small>Mapa ${indiceMapa + 1}</small>`
+    : `<b>${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))}</small><small id="inicio-local-fase"></small>`;
+  ajustarFonte($('inicio-local').querySelector('b'), $('inicio-local').querySelector('b').textContent, 30, 20);
 
   if (reclusao && FUNDO_DA_RECLUSAO.complete && FUNDO_DA_RECLUSAO.naturalWidth) {
     $('fundo-imagem').style.backgroundImage = `url("${FUNDO_DA_RECLUSAO.src}")`;
@@ -303,6 +307,13 @@ export function nomeCurtoDoMundo(mundo) {
   return mundo.nome.split(' — ')[0];
 }
 
+// v0.27.0: nomes longos ("Meio-Passo do Céu Aberto") encolhem a letra para caber na moldura do layout novo.
+// tamanho = em u (px do mockup) para até `cabe` letras; acima disso diminui na mesma proporção (mínimo 60%)
+function ajustarFonte(el, texto, tamanho, cabe) {
+  const u = Math.max(tamanho * 0.6, Math.min(tamanho, tamanho * cabe / Math.max(1, texto.length)));
+  el.style.fontSize = `max(calc(var(--u) * ${u.toFixed(1)}), 10px)`;
+}
+
 // v0.20.2: só troca o texto quando ele muda de verdade (trocar 10×/s, no meio de um toque,
 // atrapalhava o clique dos botões Meditar e Avançar/Romper em alguns celulares)
 function trocarTexto(el, texto) {
@@ -317,13 +328,14 @@ function atualizarCultivo(estado, producao) {
     ? `🧘 Meditar automático: ${auto ? 'LIGADO' : 'DESLIGADO'}`
     : `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
   for (const id of ['botao-meditar', 'inicio-meditar']) {
-    trocarTexto($(id), textoMeditar.replace('🧘 ', ''));
+    if (id === 'botao-meditar') trocarTexto($(id), textoMeditar.replace('🧘 ', ''));   // o da tela inicial tem texto próprio (abaixo)
     $(id).classList.toggle('meditar-auto', auto);
     // Só o "auto DESLIGADO" do VIP fica apagado (sem VIP o botão medita por toque: fica colorido)
     $(id).classList.toggle('auto-desligado', estado.vip && !auto);
   }
-  // v0.16.3: na tela inicial o painel ficou mais baixo — texto curto para caber numa linha
-  trocarTexto($('inicio-meditar'), estado.vip ? `Auto: ${auto ? 'LIGADO' : 'DESLIGADO'}` : textoMeditar.replace('🧘 ', ''));
+  // v0.27.0: botão redondo da tela inicial — nome em cima, ganho (ou o estado do automático) embaixo
+  // (o ganho e o estado do automático ficam na dica ao segurar o dedo; o automático do VIP aparece pelo brilho)
+  trocarTexto($('inicio-meditar'), 'Meditar');
   $('inicio-meditar').title = textoMeditar;
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
@@ -344,8 +356,17 @@ function atualizarCultivo(estado, producao) {
       : `🔒 Para ${acao}, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
   }
   trocarTexto($('cult-requisito'), textoRequisito);
-  trocarTexto($('inicio-requisito'), textoRequisito + (temChefe ? ' ›' : ''));
+  // v0.27.0: na tela inicial o motivo vai na linha de dica e o botão "Ir ao chefe" só aparece quando há chefe
+  trocarTexto($('inicio-requisito'), temChefe ? 'Ir ao chefe' : '');
+  $('inicio-requisito').title = textoRequisito;
   $('inicio-requisito').classList.toggle('clicavel', temChefe);
+  trocarTexto($('inicio-dica'), textoRequisito.replace(/^\S+\s/, '') ||
+    `Seu cultivo cresce sozinho: +${formatarNumero(P.producaoPorSegundo(estado))}/s, também offline.`);
+  const localFase = $('inicio-local-fase');
+  if (localFase && estado.combate) {
+    const faseAgora = FASES[estado.combate.faseAtual];
+    trocarTexto(localFase, `${faseAgora.mapa + 1}-${faseAgora.numero}`);
+  }
   $('cult-ir-chefe').classList.toggle('escondido', !temChefe);
 
   let proximo, largura, progressoTexto, tempo, textoBotao, rompimento = false;
@@ -368,7 +389,13 @@ function atualizarCultivo(estado, producao) {
   }
 
   trocarTexto($('cult-proximo'), proximo);
-  trocarTexto($('inicio-proximo'), proximo);
+  // v0.27.0: tela inicial — "Estágio 2/3 · Próximo: 3º Estágio" (ou "Romper: <reino>"), progresso com % e nível no topo
+  const reinoAgora = P.reinoAtual(estado);
+  const [proximoReino, proximoEstagio] = proximo.split(' — ');
+  trocarTexto($('inicio-proximo'), P.noNivelMaximo(estado) ? proximo
+    : `Estágio ${estado.estagio + 1}/${reinoAgora.estagios.length} · ${rompimento ? `Romper: ${proximoReino}` : `Próximo: ${proximoEstagio ?? proximo}`}`);
+  trocarTexto($('inicio-progresso'), progressoTexto ? `${progressoTexto} (${Math.floor(parseFloat(largura))}%)` : '');
+  $('topo-nivel-barra').style.width = largura;
   $('cult-barra').style.width = largura;
   $('inicio-barra').style.width = largura;
   trocarTexto($('cult-progresso'), progressoTexto);
@@ -439,6 +466,7 @@ function atualizarNivel(estado) {
   const classe = classeDe(estado);
   desenharPersonagem($('sprite'), reino.id, 'meditando', personagem);
   desenharPersonagem($('sprite-pers'), reino.id, 'combate', personagem);
+  $('topo-retrato-img').src = `img/ui/retrato_${personagem.sexo}_${classe.id}.png`;   // v0.27.0: retrato no topo
   $('inicio-nome').textContent = personagem.nome;
   $('pers-nome').textContent = personagem.nome;
   $('pers-classe').innerHTML = `${classe.nome} <span class="pers-classe-sexo">· ${personagem.sexo === 'feminino' ? '♀' : '♂'}</span>`;
@@ -458,6 +486,9 @@ function atualizarNivel(estado) {
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
   $('moldura-sprite-pers').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;
+  $('inicio-faixa-reino').textContent = reino.nome;   // v0.27.0: faixa da tela inicial
+  ajustarFonte($('inicio-faixa-reino'), reino.nome, 33, 14);
+  $('topo-nivel').textContent = `Nv. ${P.indiceNivel(estado) + 1}`;
   $('inicio-estagio').textContent = P.nomeDoEstagio(estado);
   $('pers-regiao').textContent = regiao.nome;
   $('pers-reino').textContent = reino.nome;

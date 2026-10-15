@@ -22,25 +22,32 @@
   <!-- ===== Barra do topo: recursos ===== -->
   <header class="barra-topo">
     <!-- Nome do personagem, reino e estágio (no lugar do logo) -->
+    <!-- v0.27.0 (layout novo): retrato com moldura, nome, reino e nível com barrinha -->
     <div class="topo-personagem">
-      <div><span class="inicio-nome" id="inicio-nome"></span> <small id="inicio-estagio"></small></div>
-      <div class="topo-reino" id="inicio-reino"></div>
+      <div class="topo-retrato"><img id="topo-retrato-img" src="img/ui/retrato_masculino_arma.png" alt=""></div>
+      <div class="topo-info">
+        <div><span class="inicio-nome" id="inicio-nome"></span> <small id="inicio-estagio"></small></div>
+        <div class="topo-reino" id="inicio-reino"></div>
+        <div class="topo-nivel"><span id="topo-nivel"></span><div class="topo-nivel-barra"><div id="topo-nivel-barra"></div></div></div>
+      </div>
     </div>
+    <!-- v0.27.0: cada recurso numa "pílula" com nome (só no PC) e um + que abre a aba dele (data-ir, não data-aba:
+         os avisos vermelhos das abas procuram o primeiro [data-aba]) -->
     <div class="recursos">
-      <span title="Cultivo"><img class="icone-px" src="img/icones/cultivo.png" alt=""> <b id="topo-cultivo">0</b> <small>+<span id="topo-ps">0</span>/s</small></span>
-      <span title="Pedras Espirituais"><img class="icone-px" src="img/icones/pedra.png" alt=""> <b id="topo-pedras">0</b></span>
-      <span title="Essência da Alma" id="topo-essencia-caixa" class="escondido"><img class="icone-px" src="img/icones/essencia.png" alt=""> <b id="topo-essencia">0</b></span>
+      <div class="recurso" title="Cultivo"><img class="recurso-icone" src="img/ui/icone_cultivo.png" alt=""><div><small class="recurso-nome">Cultivo</small><b id="topo-cultivo">0</b><small class="recurso-ps">+<span id="topo-ps">0</span>/s</small></div><button class="botao-icone recurso-mais" data-ir="cultivo" title="Abrir Cultivo"></button></div>
+      <div class="recurso" title="Pedras Espirituais"><img class="recurso-icone" src="img/ui/icone_pedras.png" alt=""><div><small class="recurso-nome">Pedras Espirituais</small><b id="topo-pedras">0</b></div><button class="botao-icone recurso-mais" data-ir="mochila" title="Abrir Mochila"></button></div>
+      <div class="recurso escondido" title="Essência da Alma" id="topo-essencia-caixa"><img class="recurso-icone" src="img/ui/icone_essencia.png" alt=""><div><small class="recurso-nome">Essência da Alma</small><b id="topo-essencia">0</b></div><button class="botao-icone recurso-mais" data-ir="blackbook" title="Abrir Black Book"></button></div>
     </div>
-    <button class="botao-icone" data-aba="opcoes" title="Opções"><img class="icone-px" src="img/icones/aba_opcoes.png" alt="Opções"></button>
+    <button class="botao-icone botao-opcoes" data-aba="opcoes" title="Opções"><img src="img/ui/icone_engrenagem.png" alt="Opções"></button>
   </header>
 
   <!-- ===== Tela inicial: o personagem no mundo ===== -->
   <main class="inicio">
     <!-- Botão do VIP (canto superior esquerdo) — abre a tela do VIP (ui/vip.js) -->
-    <button class="botao-vip" id="botao-vip" title="VIP"><img class="icone-px" src="img/icones/vip.png" alt=""><span>VIP</span></button>
+    <button class="botao-icone botao-vip" id="botao-vip" title="VIP"><img src="img/ui/inicio_vip.png" alt="VIP"><span id="botao-vip-estado">OFF</span></button>
     <!-- Botão do Evento de Boss (canto superior direito) — abre a tela do boss (ui/telaBoss.js) -->
-    <button class="botao-boss escondido" id="botao-boss" title="Evento de Boss: Mestre do Salão Ying Yue">
-      <img class="icone-px" src="img/icones/boss.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'), {className: 'boss-emoji', textContent: '🌙'}))">
+    <button class="botao-icone botao-boss escondido" id="botao-boss" title="Evento de Boss: Mestre do Salão Ying Yue">
+      <img src="img/ui/inicio_boss.png" alt="BOSS">
       <span id="botao-boss-texto">BOSS</span>
     </button>
     <div class="inicio-local" id="inicio-local"></div>
@@ -56,28 +63,29 @@
       <canvas id="sprite" width="32" height="32"></canvas>
     </div>
 
-    <!-- v0.16.3: painel simplificado — barra com o texto dentro + 2 botões baixos -->
+    <!-- v0.27.0 (layout novo): faixa com o reino, barra grande e os botões redondos Meditar e Avançar nas laterais -->
     <div class="inicio-cultivo">
-      <div class="barra barra-inicio">
-        <div class="barra-preenchida" id="inicio-barra"></div>
-        <div class="barra-texto"><span><b id="inicio-proximo"></b></span><span id="inicio-tempo"></span></div>
+      <button id="inicio-meditar" class="botao-imagem botao-redondo">Meditar</button>
+      <div class="inicio-centro">
+        <div class="inicio-faixa"><span id="inicio-faixa-reino"></span></div>
+        <div class="inicio-etapa" id="inicio-proximo"></div>
+        <div class="barra barra-inicio"><div class="barra-preenchida" id="inicio-barra"></div></div>
+        <div class="inicio-barra-info"><span id="inicio-progresso"></span><span id="inicio-tempo"></span></div>
+        <div class="inicio-dica" id="inicio-dica"></div>
       </div>
+      <button id="inicio-avancar" class="botao-imagem botao-redondo">Avançar</button>
       <div class="requisito" id="inicio-requisito"></div>
-      <div class="botoes">
-        <button id="inicio-meditar" class="botao-imagem">Meditar</button>
-        <button id="inicio-avancar" class="botao-imagem">Avançar</button>
-      </div>
     </div>
   </main>
 
   <!-- ===== Barra de abas (embaixo) ===== -->
   <nav class="barra-abas" id="abas">
-    <button data-aba="personagem"><img class="icone-px icone-aba" src="img/icones/aba_personagem.png" alt="">Personagem</button>
-    <button data-aba="cultivo"><img class="icone-px icone-aba" src="img/icones/aba_cultivo.png" alt="">Cultivo</button>
-    <button data-aba="combate"><img class="icone-px icone-aba" src="img/icones/aba_combate.png" alt="">Combate</button>
-    <button data-aba="mochila"><img class="icone-px icone-aba" src="img/icones/aba_mochila.png" alt="">Mochila</button>
-    <button data-aba="mapa"><img class="icone-px icone-aba" src="img/icones/aba_mapa.png" alt="">Mapa</button>
-    <button data-aba="blackbook"><img class="icone-px icone-aba" src="img/icones/livro.png" alt="">Black Book</button>
+    <button data-aba="personagem"><img class="icone-aba" src="img/ui/aba_icone_personagem.png" alt="">Personagem</button>
+    <button data-aba="cultivo"><img class="icone-aba" src="img/ui/aba_icone_cultivo.png" alt="">Cultivo</button>
+    <button data-aba="combate"><img class="icone-aba" src="img/ui/aba_icone_combate.png" alt="">Combate</button>
+    <button data-aba="mochila"><img class="icone-aba" src="img/ui/aba_icone_mochila.png" alt="">Mochila</button>
+    <button data-aba="mapa"><img class="icone-aba" src="img/ui/aba_icone_mapa.png" alt="">Mapa</button>
+    <button data-aba="blackbook"><img class="icone-aba" src="img/ui/aba_icone_blackbook.png" alt="">Black Book</button>
   </nav>
 
   <!-- =========================================================

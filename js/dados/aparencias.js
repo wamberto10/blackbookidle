@@ -8,7 +8,7 @@
 export const APARENCIAS = {
   // ---- Mapa 1: Pavilhão Ling Xiao ----
   'Servo Arrogante': 'servo',
-  'Discípulo em Teste': 'discipulo_externo',
+  'Discípulo em Teste': 'discipulo_em_teste',
   'Macaco Ladrão': 'macaco',
   'Valentão dos Alojamentos': 'valentao',          // revisão: é da seita → desenho de discípulo
   'Discípulo Externo': 'discipulo_externo',
@@ -40,33 +40,33 @@ export const APARENCIAS = {
   'Batedor de Carteiras': 'assassino',
   'Segurança do Leilão': 'soldado',
   'Cultivador Independente': 'cultivador',
-  'Mercenário Bêbado': 'mercenario',
-  'Lutador do Bando da Batalha Sangrenta': 'campeao',   // Bando da Batalha Sangrenta (família Hu, Martial Peak)
+  'Mercenário Bêbado': 'mercenario_bebado',
+  'Lutador do Bando da Batalha Sangrenta': 'lutador_do_bando_da_batalha_sangrenta',   // Bando da Batalha Sangrenta (família Hu, Martial Peak)
   'Chefe da Guarda Familiar': 'capitao',
   'Especialista Local': 'patriarca',
   'Servo Leal da Família': 'servo',
-  'Ancião da Família': 'anciao',
+  'Ancião da Família': 'anciao_da_familia',
   'Jovem Mestre da Família': 'jovem_mestre',
 
   // ---- Mapa 4: Caminho para a Capital Central ----
-  'Saqueador de Caravanas': 'bandido',
+  'Saqueador de Caravanas': 'saqueador_de_caravanas',
   'Cobrador Imperial': 'soldado',
-  'Escolta Mercenária': 'mercenario',
-  'Líder dos Saqueadores': 'bandido',
+  'Escolta Mercenária': 'escolta_mercenaria',
+  'Líder dos Saqueadores': 'lider_dos_saqueadores',
   'Discípulo de Família Menor': 'discipulo_externo',
   'Grupo de Cultivadores': 'cultivador',
-  'Soldado da Dinastia': 'soldado',
-  'Capitão da Fortaleza': 'capitao',
+  'Soldado da Dinastia': 'soldado_da_dinastia',
+  'Capitão da Fortaleza': 'capitao_da_fortaleza',
   'Emissário de Grande Família': 'jovem_nobre',
   'Assassino Contratado': 'assassino',
   'Guardião do Portão': 'guarda',
   'Especialista das Grandes Famílias': 'patriarca',
 
   // ---- Mapa 5: Capital Central ----
-  'Arruaceiro da Capital': 'bandido',
+  'Arruaceiro da Capital': 'arruaceiro_da_capital',
   'Comerciante Trapaceiro': 'mercenario',
-  'Examinador da Associação': 'anciao',
-  'Campeão da Arena': 'campeao',
+  'Examinador da Associação': 'examinador_da_associacao',
+  'Campeão da Arena': 'campeao_da_arena',
   'Licitante Rival': 'jovem_nobre',
   'Guarda de Família Nobre': 'guarda',
   'Guarda do Palácio': 'soldado',
@@ -77,12 +77,12 @@ export const APARENCIAS = {
   'Jovem Especialista das Oito Famílias': 'jovem_nobre',
 
   // ---- Mapa 6: Vale do Rei da Medicina ----
-  'Discípulo Porteiro': 'discipulo_externo',
+  'Discípulo Porteiro': 'discipulo_porteiro',
   'Fera Guardiã das Ervas': 'fera_ervas',
   'Ladrão de Ervas': 'assassino',
   'Planta Devoradora': 'planta',
   'Verme de Raiz Espiritual': 'verme',
-  'Alquimista Aprendiz': 'alquimista',
+  'Alquimista Aprendiz': 'alquimista_aprendiz',
   'Golem de Fornalha': 'golem_fornalha',
   'Serpente do Lago Medicinal': 'serpente_lago',
   'Mestre Alquimista': 'alquimista',
@@ -94,7 +94,7 @@ export const APARENCIAS = {
   'Aranha Gigante': 'aranha',
   'Crocodilo de Escamas de Ferro': 'crocodilo',
   'Bando de Hienas Espirituais': 'hiena',
-  'Saqueador de Tumbas': 'bandido',
+  'Saqueador de Tumbas': 'saqueador_de_tumbas',
   'Sapo Venenoso Gigante': 'sapo',
   'Lobo Lunar': 'lobo_lunar',
   'Escorpião de Cristal': 'escorpiao',
@@ -126,10 +126,10 @@ export const APARENCIAS = {
   'Cultivador de Guerra': 'maligno',
   'Emboscador Maligno': 'assassino_sombra',
   'Esquadrão de Assalto': 'soldado_maligno',
-  'Capitão de Tian Lang': 'capitao',
+  'Capitão de Tian Lang': 'capitao_de_tian_lang',
   'Especialista de Guerra': 'maligno_sangue',
   'Feiticeiro de Batalha': 'sacerdote',
-  'Senhor da Guerra de Tian Lang': 'capitao',      // mini-chefe: capitão da dinastia inimiga…
+  'Senhor da Guerra de Tian Lang': 'senhor_da_guerra_de_tian_lang',      // mini-chefe: capitão da dinastia inimiga…
   'General da Dinastia Tian Lang': 'general_maligno', // …e o chefe com o desenho do general (v0.9.18: lore de Martial Peak)
 
   // ---- Mapa 10: Misteriosos Pequenos Mundos ----
@@ -163,12 +163,12 @@ export const APARENCIAS = {
   // ---- Mapa 12: Portal para o Reino Tong Xuan ----
   'Especialista Errante': 'cultivador',
   'Mestre de Seita Rival': 'patriarca',
-  'Patriarca de Família': 'anciao',
+  'Patriarca de Família': 'patriarca_de_familia',
   'Ancião Supremo do Pavilhão': 'anciao_supremo',
   'Rei Maligno Remanescente': 'rei_maligno',
   'Grande Ancião do Vale': 'anciao_vale',
   'Monarca das Feras': 'monarca_feras',
-  'Protetor da Dinastia Han': 'capitao',
+  'Protetor da Dinastia Han': 'protetor_da_dinastia_han',
   'Formação Guardiã Desperta': 'golem_pedra',
   'Distorção Espacial': 'cristal_roxo',
   'Guardião do Corredor Espacial': 'guardiao_espacial', // revisão: cor própria (era igual ao chefe do Mapa 10)

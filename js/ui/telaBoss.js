@@ -63,7 +63,8 @@ export function atualizarTelaBoss(estado) {
   const botao = $('botao-boss');
   botao.classList.toggle('escondido', !liberado);
   botao.classList.toggle('ativo', presente);
-  $('botao-boss-texto').textContent = presente ? 'BOSS' : formatarRelogio(BOSS.segundosParaVoltar(estado, agora));
+  // v0.27.0: o emblema novo já tem "BOSS" escrito — o texto embaixo só mostra quanto falta para ele voltar
+  $('botao-boss-texto').textContent = presente ? '' : formatarRelogio(BOSS.segundosParaVoltar(estado, agora));
   if (!aberta) return;
 
   // ---- Tela: antes da luta (o boss sozinho) ou lutando (a arena) ----

@@ -32,6 +32,7 @@ export function atualizarVip(estado) {
   if (estado.vip === ultimoVip) return;
   ultimoVip = estado.vip;
   $('botao-vip').classList.toggle('ativo', estado.vip);
+  $('botao-vip-estado').textContent = estado.vip ? 'ON' : 'OFF';   // v0.27.0: plaquinha do emblema
   $('tela-vip-estado').textContent = estado.vip ? '✔ VIP ATIVO' : 'VIP desativado';
   $('tela-vip-estado').classList.toggle('destaque', estado.vip);
   $('tela-vip-ativar').textContent = estado.vip ? 'Desativar VIP' : '💎 Ativar VIP';

@@ -2596,3 +2596,200 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 /* v0.22.1: aviso do limite do equipamento pelo reino (tela do herói) */
 .aviso-limite { display: flex; align-items: center; gap: 6px; max-width: 340px; margin: 2px auto 0; padding: 5px 8px; border: 1px solid rgba(255, 178, 122, 0.45); border-radius: 6px; background: rgba(40, 20, 10, 0.7); font-size: 0.72rem; line-height: 1.3; color: #ffcf9a; }
 .aviso-limite .icone-px { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* =============================================================
+   v0.27.0: LAYOUT NOVO — fase 1: barra de cima, tela inicial e barra de abas
+   Referência exata: docs/layout/layout_inicio.png (941×1672). Tudo é medido em "u" = 1 px do mockup
+   (a moldura do jogo tem 941 u de largura), então a tela fica igual ao mockup em qualquer celular.
+   Peças em img/ui/ (ferramentas/converter-ui.py). Molduras que esticam vêm em pedaços:
+   _e (canto esquerdo), _c (enfeite do centro), _d (canto direito) e _m (meio liso, repetido).
+   ============================================================= */
+.jogo {
+  --u: calc(100cqw / 941);
+  --altura-topo: calc(var(--u) * 130);
+  --altura-abas: calc(var(--u) * 150);
+  --ui-ouro: #d9ad57;
+  --ui-marfim: #f1e7d0;
+}
+
+/* ---- Barra de cima ---- */
+.jogo .barra-topo {
+  height: var(--altura-topo);
+  gap: calc(var(--u) * 10);
+  padding: 0 calc(var(--u) * 14);
+  backdrop-filter: none;
+  border: none;
+  background:
+    url('../img/ui/topo_fundo_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/topo_fundo_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/topo_fundo_c.png') center center / auto 100% no-repeat,
+    url('../img/ui/topo_fundo_m.png') left center / auto 100% repeat-x;
+}
+.jogo .barra-topo::after { display: none; }
+.jogo .topo-personagem { display: flex; align-items: center; gap: calc(var(--u) * 12); flex: 1 1 auto; min-width: 0; overflow: visible; }
+.topo-retrato { position: relative; flex: none; width: calc(var(--u) * 118); height: calc(var(--u) * 118); }
+.topo-retrato img { position: absolute; inset: 9%; width: 82%; height: 82%; object-fit: cover; }
+.topo-retrato::after { content: ''; position: absolute; inset: 0; background: url('../img/ui/topo_retrato_moldura.png') center / 100% 100% no-repeat; }
+.topo-info { min-width: 0; line-height: 1.2; font-family: Georgia, serif; }
+.topo-info > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jogo .topo-info .inicio-nome { font-size: max(calc(var(--u) * 30), 12px); color: var(--ui-marfim); text-shadow: 0 1px 2px #000; }
+.jogo #inicio-estagio { display: none; }
+.jogo .topo-reino { font-size: max(calc(var(--u) * 22), 10px); font-weight: normal; color: var(--ui-ouro); }
+.topo-nivel { display: flex; align-items: center; gap: calc(var(--u) * 10); font-size: max(calc(var(--u) * 20), 9.5px); color: var(--ui-marfim); }
+.topo-nivel-barra {
+  flex: none; width: calc(var(--u) * 100); height: calc(var(--u) * 14); padding: calc(var(--u) * 4) calc(var(--u) * 8);
+  background:
+    url('../img/ui/topo_barra_nivel_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/topo_barra_nivel_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/topo_barra_nivel_m.png') left center / auto 100% repeat-x;
+}
+.topo-nivel-barra > div { height: 100%; max-width: 100%; border-radius: 2px; background: linear-gradient(#ffe7a0, #d9a440); }
+
+.jogo .recursos { flex: none; display: flex; gap: calc(var(--u) * 12); justify-content: flex-end; font-size: inherit; }
+.recurso {
+  position: relative; flex: none; width: calc(var(--u) * 170); height: calc(var(--u) * 84);
+  display: flex; align-items: center; gap: calc(var(--u) * 4); padding: 0 calc(var(--u) * 8);
+  font-family: Georgia, serif; color: var(--ui-marfim);
+  background:
+    url('../img/ui/topo_pilula_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/topo_pilula_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/topo_pilula_m.png') left center / auto 100% repeat-x;
+}
+.recurso-icone { flex: none; width: calc(var(--u) * 46); height: calc(var(--u) * 46); object-fit: contain; }
+.recurso > div { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; line-height: 1; padding-right: calc(var(--u) * 26); }
+/* o mockup usa uma letra estreita: a Georgia é "apertada" na horizontal para os nomes caberem */
+.jogo .recurso .recurso-nome { display: block; align-self: stretch; width: 166%; max-width: none; margin-left: -33%; margin-right: calc(var(--u) * -26); font-size: max(calc(var(--u) * 16), 7.5px); color: var(--ui-marfim); white-space: nowrap; overflow: hidden; text-align: center; transform: scaleX(0.62); }
+.jogo .recurso b { font-size: max(calc(var(--u) * 21), 9.5px); font-weight: normal; color: var(--ui-marfim); }
+.jogo .recurso .recurso-ps { display: none; }
+.jogo .recurso .recurso-mais {
+  position: absolute; right: calc(var(--u) * 6); bottom: calc(var(--u) * 7);
+  width: calc(var(--u) * 30); height: calc(var(--u) * 30); padding: 0;
+  background: url('../img/ui/topo_botao_mais.png') center / contain no-repeat;
+}
+.jogo .botao-opcoes { flex: none; padding: 0; width: calc(var(--u) * 54); height: calc(var(--u) * 54); }
+.jogo .botao-opcoes img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ---- Tela inicial ---- */
+.jogo .inicio-local {
+  position: absolute; z-index: 3; top: calc(var(--altura-topo) + var(--u) * 35); left: 50%; transform: translateX(-50%);
+  width: calc(var(--u) * 470); max-width: none; height: calc(var(--u) * 110); margin: 0; padding: 0 calc(var(--u) * 70);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  border: none; border-radius: 0; font-family: Georgia, serif; line-height: 1.15; text-align: center;
+  background:
+    url('../img/ui/inicio_local_moldura_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/inicio_local_moldura_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/inicio_local_moldura_m.png') left center / auto 100% repeat-x;
+}
+.jogo .inicio-local b { font-size: max(calc(var(--u) * 30), 12px); font-weight: normal; color: var(--ui-marfim); max-width: 100%; }
+.jogo .inicio-local small { font-size: max(calc(var(--u) * 20), 9px); color: var(--ui-marfim); }
+.jogo .inicio-local .icone-px { display: none; }
+
+.jogo .botao-vip, .jogo .botao-boss {
+  position: absolute; z-index: 3; top: calc(var(--altura-topo) + var(--u) * 30);
+  width: calc(var(--u) * 132); height: calc(var(--u) * 232); padding: 0; margin: 0;
+  display: block; border: none; border-image: none; border-radius: 0; background: none; box-shadow: none; opacity: 1;
+  animation: none;
+}
+.jogo .botao-vip { left: calc(var(--u) * 26); }
+.jogo .botao-boss { right: calc(var(--u) * 22); }
+.jogo .botao-vip img, .jogo .botao-boss img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)); }
+.jogo .botao-boss:not(.ativo) img { filter: grayscale(0.6) brightness(0.75); }
+.jogo .botao-vip.ativo img { filter: drop-shadow(0 0 8px rgba(255, 216, 74, 0.8)); }
+#botao-vip-estado {
+  position: absolute; left: 0; right: 0; top: 51.5%; height: 13%; display: flex; align-items: center; justify-content: center;
+  font: bold max(calc(var(--u) * 24), 9px) Georgia, serif; color: #ffe8b0; text-shadow: 0 1px 2px #000;
+}
+.jogo #botao-boss-texto {
+  position: absolute; left: -20%; right: -20%; top: 100%; text-align: center;
+  font: max(calc(var(--u) * 18), 9px) Georgia, serif; color: var(--ui-marfim); text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+.jogo #botao-boss.tem-aviso::after { top: 4%; right: 2%; }
+
+/* painel de baixo: 337 u de altura, colado na barra de abas, de ponta a ponta */
+.jogo .inicio-cultivo {
+  position: relative; z-index: 2; display: block; flex: none;
+  /* +48 u escondidos atrás da barra de abas: a borda de baixo da peça não aparece (no mockup o painel encosta nas abas) */
+  width: 100cqw; height: calc(var(--u) * 385); margin: 0 -16px calc(-16px - var(--u) * 48); padding: 0;
+  border: none; border-radius: 0; box-shadow: none;
+  font-family: Georgia, serif; color: var(--ui-marfim);
+  background:
+    url('../img/ui/inicio_painel_baixo_e.png') left top / auto calc(var(--u) * 43) no-repeat,
+    url('../img/ui/inicio_painel_baixo_d.png') right top / auto calc(var(--u) * 43) no-repeat,
+    url('../img/ui/inicio_painel_baixo_c.png') center top / auto calc(var(--u) * 43) no-repeat,
+    url('../img/ui/inicio_painel_baixo_m.png') left top / auto calc(var(--u) * 43) repeat-x,
+    linear-gradient(#15101c, #0c0911 60%, #0a0810);
+}
+.jogo .inicio-cultivo button.botao-redondo {
+  position: absolute; z-index: 1; top: calc(var(--u) * 20); width: calc(var(--u) * 248); height: calc(var(--u) * 240);
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  padding: 0 0 calc(var(--u) * 52); margin: 0; border: none; border-radius: 50%; box-shadow: none;
+  background: url('../img/ui/inicio_botao_meditar.png') center / contain no-repeat;
+  font: bold max(calc(var(--u) * 34), 12px) Georgia, serif; line-height: 1.05; color: var(--ui-marfim);
+  white-space: pre-line; text-align: center; text-shadow: 0 2px 3px #000, 0 0 6px #000;
+}
+.jogo .inicio-cultivo button.botao-redondo::before { display: none; }
+.jogo .inicio-cultivo #inicio-meditar { left: calc(var(--u) * 8); }
+.jogo .inicio-cultivo #inicio-avancar { right: calc(var(--u) * 6); background-image: url('../img/ui/inicio_botao_avancar.png'); }
+.jogo .inicio-cultivo #inicio-avancar.rompimento { background-image: url('../img/ui/inicio_botao_romper.png'); }
+.jogo .inicio-cultivo #inicio-meditar.meditar-auto { color: #c8f8d0 !important; filter: drop-shadow(0 0 8px rgba(110, 240, 140, 0.6)); }
+.jogo .inicio-cultivo #inicio-meditar.auto-desligado { filter: grayscale(0.7) brightness(0.75); }
+.jogo .inicio-cultivo #inicio-avancar.indisponivel { opacity: 1; filter: grayscale(0.55) brightness(0.8); }
+.jogo .inicio-cultivo .botao-imagem.trancado::after { top: 6%; left: auto; right: 14%; font-size: max(calc(var(--u) * 30), 12px); }
+
+.inicio-centro {
+  position: absolute; top: 0; left: calc(var(--u) * 262); right: calc(var(--u) * 262);
+  display: flex; flex-direction: column; align-items: stretch; text-align: center;
+}
+.inicio-faixa {
+  align-self: center; width: calc(var(--u) * 360); height: calc(var(--u) * 58); margin-top: calc(var(--u) * 2);
+  display: flex; align-items: center; justify-content: center; padding: 0 calc(var(--u) * 50);
+  background:
+    url('../img/ui/inicio_faixa_reino_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/inicio_faixa_reino_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/inicio_faixa_reino_c.png') center center / auto 100% no-repeat,
+    url('../img/ui/inicio_faixa_reino_m.png') left center / auto 100% repeat-x;
+}
+#inicio-faixa-reino { font-size: max(calc(var(--u) * 33), 12px); color: #ffe08a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 2px #000; }
+.jogo .inicio-etapa { margin-top: calc(var(--u) * 12); font-size: max(calc(var(--u) * 22), 9px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jogo .inicio-cultivo .barra.barra-inicio {
+  position: relative; grid-area: auto; height: calc(var(--u) * 32); margin: calc(var(--u) * 12) 0 0; padding: calc(var(--u) * 8) calc(var(--u) * 20);
+  border: none; border-image: none; border-radius: 0; box-shadow: none; overflow: visible;
+  background:
+    url('../img/ui/inicio_barra_moldura_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/inicio_barra_moldura_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/inicio_barra_moldura_m.png') left center / auto 100% repeat-x;
+}
+.jogo .barra-inicio .barra-preenchida { height: 100%; max-width: 100%; border-radius: 0; background: url('../img/ui/inicio_barra_cheia.png') left center / 100% 100% no-repeat; box-shadow: none; }
+.inicio-barra-info { display: flex; justify-content: space-between; gap: calc(var(--u) * 10); margin-top: calc(var(--u) * 8); padding: 0 calc(var(--u) * 12); font-size: max(calc(var(--u) * 19), 8.5px); white-space: nowrap; }
+.inicio-dica { margin-top: calc(var(--u) * 14); font-size: max(calc(var(--u) * 19), 8.5px); line-height: 1.25; color: #d8cce8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.jogo .inicio-cultivo .requisito {
+  position: absolute; z-index: 1; top: calc(var(--u) * 242); left: calc(var(--u) * 305); width: calc(var(--u) * 332); height: calc(var(--u) * 70);
+  margin: 0; padding: 0 calc(var(--u) * 30) 0 calc(var(--u) * 92); display: flex; align-items: center; justify-content: center;
+  font-size: max(calc(var(--u) * 26), 10px); color: var(--ui-marfim); text-shadow: 0 1px 2px #000; cursor: pointer;
+  background:
+    url('../img/ui/inicio_botao_chefe_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/inicio_botao_chefe_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/inicio_botao_chefe_m.png') left center / auto 100% repeat-x;
+}
+.jogo .inicio-cultivo .requisito:empty { display: none; }
+
+/* ---- Barra de abas ---- */
+.jogo .barra-abas {
+  height: var(--altura-abas); gap: calc(var(--u) * 4); padding: calc(var(--u) * 14) calc(var(--u) * 12) calc(var(--u) * 12);
+  border: none;
+  background:
+    url('../img/ui/abas_fundo_e.png') left center / auto 100% no-repeat,
+    url('../img/ui/abas_fundo_d.png') right center / auto 100% no-repeat,
+    url('../img/ui/abas_fundo_c.png') center center / auto 100% no-repeat,
+    url('../img/ui/abas_fundo_m.png') left center / auto 100% repeat-x;
+}
+.jogo .barra-abas::before { display: none; }
+.jogo .barra-abas button {
+  gap: calc(var(--u) * 4); padding: calc(var(--u) * 10) 0 calc(var(--u) * 6);
+  border: none; border-radius: 0; box-shadow: none;
+  background: url('../img/ui/aba_botao.png') center / 100% 100% no-repeat;
+  font: max(calc(var(--u) * 22), 9px) Georgia, serif; color: var(--ui-marfim);
+}
+.jogo .barra-abas button.ativa { background-image: url('../img/ui/aba_botao_ativa.png'); color: #2a1808; font-weight: bold; box-shadow: none; }
+.jogo .barra-abas .icone-aba { width: auto; height: calc(var(--u) * 50); max-width: 80%; object-fit: contain; }
+.jogo .barra-abas button.ativa .icone-aba { filter: brightness(0.32) sepia(0.6); }
