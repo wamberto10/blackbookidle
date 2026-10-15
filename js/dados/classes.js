@@ -70,55 +70,14 @@ export const CLASSES = [
     tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 4, multiplicador: 3, congela: 1, efeito: 'tec_tempestade_gelo',
       texto: 'A cada 4 ataques, uma tempestade de 300% de dano que congela o inimigo (ele perde o próximo ataque).' },
   },
-  // v0.13.0 (dono): duas classes novas da lore de Martial Peak.
-  // A arte própria ainda não existe: usam a do Elemental / da Espada (ferramentas/sprites/importar_ia.py).
-  {
-    id: 'alma',
-    nome: 'Cultivador de Alma',
-    titulo: 'Guerreiro do Mar do Conhecimento',
-    descricao:
-      'Fortalece o Mar do Conhecimento acima de tudo. Seus golpes atingem direto a alma do inimigo, ' +
-      'atravessando armaduras e corpos, e a pressão da sua alma esmaga a mente dos mais fracos.',
-    multiplicar: { ataque: -0.25, vitalidade: -0.10, sentidoDivino: 1.0 },
-    somar: {},
-    // penetracao 1 = ignora toda a Defesa | supressao = inimigo foge com Sentido Divino 3× (os outros: 5×)
-    especial: { penetracao: 1.0, supressao: 3, sentidoDesdeOInicio: true },
-    nomeEspecial: 'Ataque de Alma',
-    textoEspecial: 'Os golpes ignoram toda a Defesa do inimigo. Nasce com o Sentido Divino aberto (×2) ' +
-      'e os inimigos fogem dele com só 3× o Sentido Divino deles (Supressão de Alma).',
-    efeito: 'alma',
-    efeitoCritico: 'alma_critico',
-    tecnica: { nome: 'Lança da Alma Devoradora', aCada: 4, multiplicador: 3, enfraquece: 0.10, efeito: 'tec_lanca_alma',
-      texto: 'A cada 4 ataques, uma lança de 300% de dano que devora a alma do inimigo: o Ataque dele cai 10% até o fim da luta (até −50%).' },
-  },
-  {
-    id: 'alquimista',
-    nome: 'Alquimista',
-    titulo: 'Mestre de Pílulas',
-    descricao:
-      'Refina pílulas com o fogo do Dao, como os mestres da Associação dos Mestres de Pílulas. ' +
-      'Luta pior que os guerreiros, mas suas pílulas aceleram o cultivo e o salvam no meio da batalha.',
-    multiplicar: { cultivo: 0.50 },   // balanceado pelo robô (v0.13.0): com ataque -10% e cultivo +40% levava 39 h (as outras ~31–35 h)
-    somar: {},
-    // pilula: uma vez por luta, com menos de "limiar" da vida, cura "cura" da Vitalidade
-    especial: { pilula: { limiar: 0.35, cura: 0.5 } },
-    nomeEspecial: 'Pílulas Espirituais',
-    textoEspecial: '+50% de Cultivo por segundo. Uma vez por luta, com menos de 35% de vida, ' +
-      'toma uma Pílula de Cura que recupera 50% da Vitalidade.',
-    efeito: 'chama_alquimica',
-    efeitoCritico: 'chama_alquimica_critica',
-    tecnica: { nome: 'Fogo do Caldeirão Celestial', aCada: 4, multiplicador: 3, recarregaPilula: true, efeito: 'tec_caldeirao_celestial',
-      texto: 'A cada 4 ataques, uma explosão de fogo alquímico de 300% de dano que recarrega a Pílula de Cura (1 vez por luta).' },
-  },
+  // v0.27.2 (dono): o Cultivador de Alma e o Alquimista (v0.13.0) foram APAGADOS do jogo — ficam só estas 3 classes.
+  // Quem jogava com uma delas escolhe uma classe nova ao abrir o jogo (o resto do progresso continua).
 ];
 
-// Efeitos das classes novas que ainda não têm imagem: usam estes até ela chegar (docs/PROMPTS_CLASSES_NOVAS.md)
+// Efeitos que ainda não têm imagem usam estes até ela chegar.
+// Técnicas especiais (v0.15.0): efeito exclusivo de cada uma; até a imagem chegar, o crítico da classe
 export const EFEITO_PROVISORIO = {
-  alma: 'magia_roxa', alma_critico: 'magia_roxa',
-  chama_alquimica: 'magia_azul', chama_alquimica_critica: 'magia_azul',
-  // Técnicas especiais (v0.15.0): efeito exclusivo de cada uma; até a imagem chegar, o crítico da classe
   tec_sangue_dourado: 'impacto_critico', tec_ceu_partido: 'corte_critico', tec_tempestade_gelo: 'gelo_critico',
-  tec_lanca_alma: 'alma_critico', tec_caldeirao_celestial: 'chama_alquimica_critica',
 };
 
 export const CLASSE_POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));

@@ -3,9 +3,11 @@
 // =============================================================
 import { CLASSE_POR_ID, PERSONAGEM_PADRAO, TAMANHO_DO_NOME, SEXOS } from '../dados/classes.js';
 
-// Saves antigos (ou antes da tela de criação) usam o personagem padrão
+// Saves antigos (ou antes da tela de criação) usam o personagem padrão.
+// v0.27.2: classe apagada (Cultivador de Alma, Alquimista) → usa a padrão até o jogador escolher outra
 export function personagemDe(estado) {
-  return estado.personagem ?? PERSONAGEM_PADRAO;
+  const personagem = estado.personagem ?? PERSONAGEM_PADRAO;
+  return CLASSE_POR_ID[personagem.classe] ? personagem : { ...personagem, classe: PERSONAGEM_PADRAO.classe };
 }
 
 export function classeDe(estado) {
@@ -14,6 +16,11 @@ export function classeDe(estado) {
 
 export function precisaCriarPersonagem(estado) {
   return !estado.personagem;
+}
+
+// v0.27.2: o personagem existe, mas a classe dele saiu do jogo — escolhe outra (nome, sexo e progresso ficam)
+export function precisaTrocarClasse(estado) {
+  return Boolean(estado.personagem) && !CLASSE_POR_ID[estado.personagem.classe];
 }
 
 // Devolve uma mensagem de erro, ou null se o nome estiver bom

@@ -11,6 +11,7 @@ const $ = (id) => document.getElementById(id);
 
 // O que o jogador escolheu até agora
 const escolha = { sexo: 'masculino', nome: '', classe: null };
+let soClasse = false;      // v0.27.2: só trocar a classe (a antiga saiu do jogo); nome e sexo ficam
 let aoConfirmarGuardado = null;
 let demonstracao = null;   // timer que mostra a pose de ataque nas cartas de classe
 
@@ -62,15 +63,20 @@ export function montarTelaCriacao(aoConfirmar) {
   });
 }
 
-export function abrirCriacao() {
-  escolha.sexo = 'masculino';
-  escolha.nome = '';
+// atual = personagem que já existe, quando só a classe precisa ser trocada (v0.27.2)
+export function abrirCriacao(atual = null) {
+  soClasse = Boolean(atual);
+  escolha.sexo = atual?.sexo ?? 'masculino';
+  escolha.nome = atual?.nome ?? '';
   escolha.classe = null;
-  $('criacao-nome').value = '';
+  $('criacao-nome').value = escolha.nome;
   $('criacao-erro').textContent = '';
+  $('criacao-voltar').classList.toggle('escondido', soClasse);
+  $('criacao-aviso-classe').classList.toggle('escondido', !soClasse);
+  $('criacao-titulo-classe').textContent = soClasse ? 'Escolha um novo caminho marcial' : 'Escolha seu caminho marcial';
   $('criacao').classList.remove('escondido');
-  mostrarEtapa(1);
-  setTimeout(() => $('criacao-nome').focus(), 50);
+  mostrarEtapa(soClasse ? 2 : 1);
+  if (!soClasse) setTimeout(() => $('criacao-nome').focus(), 50);
 }
 
 function fecharCriacao() {
@@ -117,7 +123,7 @@ function atualizarEtapa2() {
   });
   $('criacao-confirmar').disabled = !escolha.classe;
   $('criacao-confirmar').textContent = escolha.classe
-    ? 'Iniciar jornada ▶'
+    ? (soClasse ? 'Seguir jornada ▶' : 'Iniciar jornada ▶')
     : 'Escolha uma classe';
 
   clearInterval(demonstracao);

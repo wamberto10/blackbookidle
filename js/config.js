@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.27.1',
+  versao: '0.27.2',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -46,7 +46,7 @@ export const CONFIG = {
   arranjo: { bonusPorNivel: 0.02, custoBase: 40, crescimentoCusto: 2 },
   // Batismo Mundial: cada rompimento a partir da Transformação do Qi = +3% Ataque, Vitalidade e Defesa
   batismo: { primeiroReino: 'transformacao_qi', bonusPorBatismo: 0.03 },
-  // Com Sentido Divino (Ascensão Imortal, Cultivador de Alma ou "a alma se lembra"), o Meditar rende +50%
+  // Com Sentido Divino (Ascensão Imortal ou "a alma se lembra"), o Meditar rende +50%
   meditacaoComSentido: 0.5,
   // Mestre Estelar: no Rei da Origem, refinar a Fonte Estelar (custa 1 estágio de Cultivo) = +15% Cultivo nesta vida
   mestreEstelar: { reino: 'rei_origem', bonusCultivo: 0.15 },
@@ -60,11 +60,9 @@ export const CONFIG = {
   // Pílulas de cultivo: caem dos inimigos a partir do Mapa 2 (chance = base × "pedras" do tipo da fase:
   // comum 0,07%, chefe 1%) e sempre na 1ª vitória contra um chefe de mapa. Ficam ao reencarnar.
   // Robô (Refinador, 6 rodadas): com tudo isto o Mundo 1 vai de 35 h para 28 h e o Mundo 3 de 107 h para 90 h.
-  // Alquimista: pílulas 25% mais fortes (com 50% o Alquimista ficava ~20% mais rápido que as outras classes no robô).
   pilulas: {
     mapaMinimo: 2,
     chanceBase: 0.0007,
-    forcaAlquimista: 1.25,
     tipos: [
       { id: 'acumulo',    nome: 'Pílula de Acúmulo de Qi',      icone: 'pilula_acumulo',    peso: 55, segundosDeCultivo: 300,
         texto: 'Ganha na hora 5 min de Cultivo.' },

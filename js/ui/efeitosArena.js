@@ -11,8 +11,6 @@ export const CORES_DA_CLASSE = {
   corpo:      ['#ffc94a', '#fff2c0'],   // sangue dourado
   arma:       ['#cfe6ff', '#ffffff'],   // intenção da espada
   elemental:  ['#6fd8ff', '#e8fbff'],   // gelo místico
-  alma:       ['#b070ff', '#f0d8ff'],   // fogo da alma
-  alquimista: ['#7aef5a', '#ffd36b'],   // chama alquímica
 };
 const COR_DO_INIMIGO = ['#ff6a4a', '#ffd0b0'];
 
@@ -253,15 +251,6 @@ function rachaduras(lado, cor) {
   }
 }
 
-// Chamas subindo em volta do alvo (Alma e Alquimista)
-function chamas(lado, cores, qtd = 26) {
-  const { x, y } = posicaoDe(lado, 0.2);
-  for (let i = 0; i < qtd; i++) {
-    adicionar({ x: x + (Math.random() - 0.5) * 70, y: y - Math.random() * 20, vx: (Math.random() - 0.5) * 20, vy: -60 - Math.random() * 110,
-      grav: -40, atrito: 0.97, vida: 0.5 + Math.random() * 0.5, cor: cores[i % 2], tam: 3 + Math.random() * 3 });
-  }
-}
-
 // Técnica especial: cada classe com a sua coreografia (as imagens tec_*.png tocam junto, por cima)
 export function tecnicaDaClasse(id, cores) {
   if (!preparar()) return;
@@ -280,15 +269,6 @@ export function tecnicaDaClasse(id, cores) {
         arco: 10 + Math.random() * 50, dur: 0.22 + Math.random() * 0.1, tam: 5,
         aoChegar: i === 8 ? () => explosaoDaTecnica('inimigo', cores) : () => impacto('inimigo', cores) }), i * 25);
     }
-  } else if (id === 'alma') {                               // Lança da Alma Devoradora
-    rastro('jogador', 'inimigo', cores);
-    explosaoDaTecnica('inimigo', cores);
-    chamas('inimigo', cores, 30);
-  } else if (id === 'alquimista') {                         // Fogo do Caldeirão Celestial
-    projetil('jogador', 'inimigo', cores[0], { arco: 70, dur: 0.3, tam: 12, aoChegar: () => {
-      explosaoDaTecnica('inimigo', cores);
-      chamas('inimigo', ['#7aef5a', '#ffd36b'], 34);
-    } });
   } else {
     rastro('jogador', 'inimigo', cores);
     explosaoDaTecnica('inimigo', cores);

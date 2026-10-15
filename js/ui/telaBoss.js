@@ -146,8 +146,6 @@ export function mostrarGolpeBoss(evento) {
           const e = evento.efeitos ?? {};
           if (e.cura) numero('boss-numeros-jogador', '+' + formatarNumero(e.cura), 'cura');
           if (e.congelou) numero('boss-numeros-boss', '❄️ Congelado!', 'esquiva');
-          if (e.enfraqueceu) numero('boss-numeros-boss', '👁️ Alma enfraquecida!', 'esquiva');
-          if (e.pilula) numero('boss-numeros-jogador', '💊 Pílula recarregada!', 'cura');
         }
         if (forte) {
           mostrarQuadro($('boss-sprite'), POSE.dano, 380);          // crítico: o boss recua
@@ -206,7 +204,7 @@ export function mostrarGolpeBoss(evento) {
       }, 130);
     });
   } else if (evento.tipo === 'cura') {
-    numero('boss-numeros-jogador', (evento.pilula ? 'PÍLULA DE CURA!\n' : '') + '+' + formatarNumero(evento.valor), 'cura');
+    numero('boss-numeros-jogador', '+' + formatarNumero(evento.valor), 'cura');
   }
 }
 

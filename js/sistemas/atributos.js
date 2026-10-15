@@ -113,8 +113,7 @@ export function calcularAtributos(estado, opcoes = {}) {
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado (selado, não vale)
-    // Cultivador de Alma: Sentido Divino aberto desde o 1º estágio e ×2 (classe)
-    sentidoDivino: Math.max(reino >= REINO_SENTIDO_DIVINO || c.especial.sentidoDesdeOInicio ? base.sentidoDivino * classe('sentidoDivino') : 0,
+    sentidoDivino: Math.max(reino >= REINO_SENTIDO_DIVINO ? base.sentidoDivino * classe('sentidoDivino') : 0,
       selado ? 0 : estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
@@ -198,8 +197,7 @@ export function preverLuta(jogador, fase, turnosMaximos) {
   const cura = jogador.vitalidade * (esp.regeneracao ?? 0);
   // Se eu ataco primeiro, no último turno ele nem chega a atacar
   const golpesQueLevo = jogador.velocidade >= i.velocidade ? turnosParaVencer - 1 : turnosParaVencer;
-  const pilula = esp.pilula ? jogador.vitalidade * esp.pilula.cura : 0;   // Alquimista: 1 Pílula de Cura por luta
-  const vidaQueSobra = jogador.vitalidade - golpesQueLevo * recebido + Math.max(0, golpesQueLevo - 1) * cura + pilula;
+  const vidaQueSobra = jogador.vitalidade - golpesQueLevo * recebido + Math.max(0, golpesQueLevo - 1) * cura;
   const sobra = Math.min(1, vidaQueSobra / jogador.vitalidade);
 
   let resultado;

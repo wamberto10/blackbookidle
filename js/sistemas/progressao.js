@@ -87,7 +87,7 @@ export function producaoNoNivel(nivel, indiceReino) {
 
 export function producaoPorSegundo(estado) {
   const bonusDosItens = 1 + bonusEquipamentos(estado).cultivo / 100;   // ex.: Berloque +5% Cultivo
-  const bonusDaClasse = 1 + (classeDe(estado).multiplicar.cultivo ?? 0);   // Alquimista: +50%
+  const bonusDaClasse = 1 + (classeDe(estado).multiplicar.cultivo ?? 0);   // (nenhuma classe usa hoje)
   return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens * bonusDaClasse *
     bonusDoCaminho(estado);
 }
@@ -127,10 +127,9 @@ export function batismosMundiais(estado) {
   return Math.max(0, estado.reino - REINO_DO_1O_BATISMO + 1);
 }
 
-// Tem Sentido Divino? (Ascensão Imortal, Cultivador de Alma desde o início, ou "a alma se lembra")
+// Tem Sentido Divino? (Ascensão Imortal, ou "a alma se lembra")
 export function temSentidoDivino(estado) {
-  return estado.reino >= REINO_DO_SENTIDO_DIVINO || Boolean(classeDe(estado).especial?.sentidoDesdeOInicio) ||
-    (estado.reencarnacao?.sentidoDivinoMaximo ?? 0) > 0;
+  return estado.reino >= REINO_DO_SENTIDO_DIVINO || (estado.reencarnacao?.sentidoDivinoMaximo ?? 0) > 0;
 }
 
 export function custoParaAvancar(estado) {

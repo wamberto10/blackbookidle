@@ -11,9 +11,7 @@ export const SPRITES = {
     "classes": [
       "corpo",
       "arma",
-      "elemental",
-      "alma",
-      "alquimista"
+      "elemental"
     ],
     "reinos": [
       "corpo_temperado",
@@ -36,20 +34,12 @@ export const SPRITES = {
       "criacao"
     ],
     "arteIA": [
-      "feminino_alma",
-      "feminino_alma_meditando",
-      "feminino_alquimista",
-      "feminino_alquimista_meditando",
       "feminino_arma",
       "feminino_arma_meditando",
       "feminino_corpo",
       "feminino_corpo_meditando",
       "feminino_elemental",
       "feminino_elemental_meditando",
-      "masculino_alma",
-      "masculino_alma_meditando",
-      "masculino_alquimista",
-      "masculino_alquimista_meditando",
       "masculino_arma",
       "masculino_arma_meditando",
       "masculino_corpo",
@@ -1230,13 +1220,9 @@ export const SPRITES = {
     ]
   },
   "efeitos": [
-    "alma",
-    "alma_critico",
     "aura_cultivo",
     "aura_lunar",
     "chama",
-    "chama_alquimica",
-    "chama_alquimica_critica",
     "chama_critica",
     "corte",
     "corte_critico",
@@ -1252,22 +1238,16 @@ export const SPRITES = {
     "magia_azul",
     "magia_roxa",
     "mordida",
-    "tec_caldeirao_celestial",
     "tec_ceu_partido",
-    "tec_lanca_alma",
     "tec_sangue_dourado",
     "tec_tempestade_gelo",
     "trovao",
     "trovao_critico"
   ],
   "efeitosIA": [
-    "alma",
-    "alma_critico",
     "aura_cultivo",
     "aura_lunar",
     "chama",
-    "chama_alquimica",
-    "chama_alquimica_critica",
     "chama_critica",
     "corte",
     "corte_critico",
@@ -1283,9 +1263,7 @@ export const SPRITES = {
     "magia_azul",
     "magia_roxa",
     "mordida",
-    "tec_caldeirao_celestial",
     "tec_ceu_partido",
-    "tec_lanca_alma",
     "tec_sangue_dourado",
     "tec_tempestade_gelo",
     "trovao",

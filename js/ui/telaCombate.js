@@ -328,7 +328,7 @@ export function mostrarCura(evento) {
   agendar(() => {
     vidaMostrada.jogador = { vida: evento.vida, maxima: evento.vidaMaxima };
     desenharBarras();
-    numeroFlutuante('jogador', `${evento.pilula ? 'PÍLULA DE CURA!\n' : ''}+${formatarNumero(evento.valor)}`, 'cura');
+    numeroFlutuante('jogador', `+${formatarNumero(evento.valor)}`, 'cura');
     animarClasse($('cb-sprite-jogador'), 'curando', 800);   // aura verde contornando o personagem
     // Efeito visual da Regeneração: desligado (o dono não gostou da 1ª versão, verde com folhas).
     // Para ligar de novo depois de gerar um novo cura.png: troque false por true.
@@ -421,8 +421,6 @@ function mostrarTecnica(evento) {
     animarClasse($('cb-sprite-jogador'), 'curando', 800);
   }
   if (efeitos.congelou) setTimeout(() => numeroFlutuante('inimigo', '❄️ Congelado!', 'elemental'), 250);
-  if (efeitos.enfraqueceu) setTimeout(() => numeroFlutuante('inimigo', '👁️ Alma enfraquecida!', 'elemental'), 250);
-  if (efeitos.pilula) setTimeout(() => numeroFlutuante('jogador', '💊 Pílula recarregada!', 'cura'), 250);
 }
 
 // Aviso de chefe no começo da luta

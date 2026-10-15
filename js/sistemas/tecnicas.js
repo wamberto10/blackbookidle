@@ -7,8 +7,6 @@
 //   cura          → recupera essa fração da Vitalidade (Refinador Corporal)
 //   penetracao    → ignora essa fração da Defesa (Mestre da Espada)
 //   congela       → o inimigo perde esse número de ataques (Cultivador Elemental)
-//   enfraquece    → o Ataque do inimigo cai essa fração, até o fim da luta (Cultivador de Alma)
-//   recarregaPilula → a Pílula de Cura volta a ficar disponível, 1 vez por luta (Alquimista)
 // =============================================================
 
 // v0.15.1 (dono): a técnica sai a cada "aCada" ATAQUES do herói (todo golpe conta, inclusive o 2º
@@ -36,14 +34,6 @@ export function efeitosDaTecnica(luta, tecnica) {
     if (cura > 0) { luta.vidaJogador += cura; efeitos.cura = cura; }
   }
   if (tecnica.congela) { luta.inimigoCongelado = tecnica.congela; efeitos.congelou = true; }
-  if (tecnica.enfraquece) {
-    luta.fraquezaDoInimigo = Math.max(0.5, (luta.fraquezaDoInimigo ?? 1) * (1 - tecnica.enfraquece));
-    efeitos.enfraqueceu = true;
-  }
-  // Alquimista: recarrega a Pílula de Cura só 1 vez por luta
-  if (tecnica.recarregaPilula && luta.pilulaUsada && !luta.pilulaRecarregada) {
-    luta.pilulaUsada = false; luta.pilulaRecarregada = true; efeitos.pilula = true;
-  }
   return efeitos;
 }
 
@@ -54,7 +44,3 @@ export function inimigoCongelado(luta) {
   return true;
 }
 
-// Multiplicador do ataque do inimigo (Lança da Alma Devoradora o enfraquece)
-export function forcaDoInimigo(luta) {
-  return luta.fraquezaDoInimigo ?? 1;
-}

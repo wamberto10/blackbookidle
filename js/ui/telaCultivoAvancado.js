@@ -117,8 +117,7 @@ function atualizarReclusao(estado) {
 
 // ---- Pílulas ----
 function atualizarPilulas(estado) {
-  texto($('pilulas-info'), `Caem dos inimigos a partir do Mapa ${CONFIG.pilulas.mapaMinimo}` +
-    (CA.forcaDasPilulas(estado) > 1 ? ` · Alquimista: +${porcento(CA.forcaDasPilulas(estado) - 1)} de efeito` : ''));
+  texto($('pilulas-info'), `Caem dos inimigos a partir do Mapa ${CONFIG.pilulas.mapaMinimo}`);
   for (const celula of $('pilulas-grade').children) {
     const tipo = CA.PILULA_POR_ID[celula.dataset.id];
     const qtd = estado.pilulas[tipo.id] ?? 0;

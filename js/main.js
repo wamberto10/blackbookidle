@@ -13,7 +13,7 @@ import * as BOSS from './sistemas/boss.js';
 import * as CA from './sistemas/cultivoAvancado.js';
 import { mostrarGolpeBoss, animarDerrotaDoBoss } from './ui/telaBoss.js';
 import { acabouDeLiberar } from './sistemas/desbloqueios.js';
-import { criarPersonagem, precisaCriarPersonagem } from './sistemas/personagem.js';
+import { criarPersonagem, precisaCriarPersonagem, precisaTrocarClasse } from './sistemas/personagem.js';
 import { CLASSE_POR_ID } from './dados/classes.js';
 import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
@@ -475,17 +475,20 @@ montarInterface({
 
 // 3.5) Criação de personagem: aparece em jogos novos e em saves antigos sem personagem
 montarTelaCriacao((escolha) => {
+  const trocandoClasse = precisaTrocarClasse(estado);
   if (!criarPersonagem(estado, escolha)) return;
   C.reiniciarLuta();       // a próxima luta já usa a classe escolhida
   salvar(estado);
   atualizarInterface(estado);
   const classe = CLASSE_POR_ID[estado.personagem.classe];
-  mostrarModal(`Bem-vindo, ${estado.personagem.nome}!`,
+  mostrarModal(trocandoClasse ? `Um novo caminho, ${estado.personagem.nome}!` : `Bem-vindo, ${estado.personagem.nome}!`,
     `Você trilha o caminho do ${classe.nome}.\n\n${classe.descricao}\n\n` +
     `${classe.nomeEspecial}: ${classe.textoEspecial}\n\n` +
-    'Sua jornada começa como um servo insignificante. Cultive, fique mais forte e descubra o que existe além do horizonte.');
+    (trocandoClasse ? 'Seu progresso continua de onde parou.'
+      : 'Sua jornada começa como um servo insignificante. Cultive, fique mais forte e descubra o que existe além do horizonte.'));
 });
 if (precisaCriarPersonagem(estado)) abrirCriacao();
+else if (precisaTrocarClasse(estado)) abrirCriacao(estado.personagem);   // v0.27.2: a classe dele saiu do jogo
 
 // 4) Loop do jogo: roda 10 vezes por segundo, usando o tempo REAL que passou
 let ultimoTick = Date.now();

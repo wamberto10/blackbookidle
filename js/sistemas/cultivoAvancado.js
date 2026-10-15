@@ -12,7 +12,6 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as P from './progressao.js';
-import { classeDe } from './personagem.js';
 
 // ---- Reclusão ----
 export function reclusaoLiberada(estado) {
@@ -78,23 +77,17 @@ const PI = CONFIG.pilulas;
 export const TIPOS_DE_PILULA = PI.tipos;
 export const PILULA_POR_ID = Object.fromEntries(PI.tipos.map(t => [t.id, t]));
 
-// Alquimista: pílulas mais fortes (CONFIG.pilulas.forcaAlquimista)
-export function forcaDasPilulas(estado) {
-  return classeDe(estado).id === 'alquimista' ? PI.forcaAlquimista : 1;
-}
-
-// Desconto da Quebra-Gargalo para este personagem (Alquimista: mais; nunca passa de 50%)
+// Desconto da Quebra-Gargalo (nunca passa de 50%)
 export function descontoDaQuebraGargalo(estado) {
   const t = PILULA_POR_ID.rompimento;
-  return Math.min(t.descontoMaximo, t.desconto * forcaDasPilulas(estado));
+  return Math.min(t.descontoMaximo, t.desconto);
 }
 
-// Texto do efeito já com a força do personagem (ex.: Alquimista "6 min 15 s")
+// Texto do efeito da pílula (ex.: "Ganha na hora 5 min de Cultivo.")
 export function textoDaPilula(estado, tipo) {
-  const f = forcaDasPilulas(estado);
   const minutos = (s) => { const m = Math.floor(s / 60), r = Math.round(s % 60); return r ? `${m} min ${r} s` : `${m} min`; };
-  if (tipo.id === 'acumulo') return `Ganha na hora ${minutos(tipo.segundosDeCultivo * f)} de Cultivo.`;
-  if (tipo.id === 'fluxo') return `Cultivo ×${tipo.multiplicador} por ${minutos(tipo.segundos * f)}.`;
+  if (tipo.id === 'acumulo') return `Ganha na hora ${minutos(tipo.segundosDeCultivo)} de Cultivo.`;
+  if (tipo.id === 'fluxo') return `Cultivo ×${tipo.multiplicador} por ${minutos(tipo.segundos)}.`;
   return `O próximo rompimento de reino custa ${Math.round(descontoDaQuebraGargalo(estado) * 100)}% menos.`;
 }
 
@@ -130,15 +123,14 @@ export function motivoParaNaoUsarPilula(estado, id) {
 export function usarPilula(estado, id) {
   if (motivoParaNaoUsarPilula(estado, id)) return null;
   const tipo = PILULA_POR_ID[id];
-  const f = forcaDasPilulas(estado);
   estado.pilulas[id] -= 1;
   if (id === 'acumulo') {
-    const ganho = P.producaoPorSegundo(estado) * tipo.segundosDeCultivo * f;
+    const ganho = P.producaoPorSegundo(estado) * tipo.segundosDeCultivo;
     P.ganharCultivo(estado, ganho);
     return { tipo, ganho };
   }
   if (id === 'fluxo') {
-    estado.efeitos.fluxo = (estado.efeitos.fluxo ?? 0) + tipo.segundos * f;   // tomar outra soma o tempo
+    estado.efeitos.fluxo = (estado.efeitos.fluxo ?? 0) + tipo.segundos;   // tomar outra soma o tempo
     return { tipo };
   }
   estado.efeitos.rompimento = descontoDaQuebraGargalo(estado);
