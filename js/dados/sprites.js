@@ -1246,8 +1246,10 @@ export const SPRITES = {
     "alma_critico",
     "aura_cultivo",
     "aura_lunar",
+    "chama",
     "chama_alquimica",
     "chama_alquimica_critica",
+    "chama_critica",
     "corte",
     "corte_critico",
     "corte_inimigo",
@@ -1266,6 +1268,8 @@ export const SPRITES = {
     "tec_ceu_partido",
     "tec_lanca_alma",
     "tec_sangue_dourado",
-    "tec_tempestade_gelo"
+    "tec_tempestade_gelo",
+    "trovao",
+    "trovao_critico"
   ]
 };
