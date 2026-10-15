@@ -10,7 +10,7 @@
 export const CORES_DA_CLASSE = {
   corpo:      ['#ffc94a', '#fff2c0'],   // sangue dourado
   arma:       ['#cfe6ff', '#ffffff'],   // intenção da espada
-  elemental:  ['#6fd8ff', '#e8fbff'],   // gelo místico
+  elemental:  ['#ff8a2a', '#ffe08a'],   // fogo verdadeiro
 };
 const COR_DO_INIMIGO = ['#ff6a4a', '#ffd0b0'];
 
@@ -251,6 +251,15 @@ function rachaduras(lado, cor) {
   }
 }
 
+// Chamas subindo em volta do alvo (Cultivador Elemental — Fogo)
+function chamas(lado, cores, qtd = 26) {
+  const { x, y } = posicaoDe(lado, 0.2);
+  for (let i = 0; i < qtd; i++) {
+    adicionar({ x: x + (Math.random() - 0.5) * 70, y: y - Math.random() * 20, vx: (Math.random() - 0.5) * 20, vy: -60 - Math.random() * 110,
+      grav: -40, atrito: 0.97, vida: 0.5 + Math.random() * 0.5, cor: cores[i % 2], tam: 3 + Math.random() * 3 });
+  }
+}
+
 // Técnica especial: cada classe com a sua coreografia (as imagens tec_*.png tocam junto, por cima)
 export function tecnicaDaClasse(id, cores) {
   if (!preparar()) return;
@@ -263,11 +272,11 @@ export function tecnicaDaClasse(id, cores) {
     corteEmArco('inimigo', cores, { raio: 58, grosso: 12 });
     setTimeout(() => corteEmArco('inimigo', ['#ffffff', '#ffe8a0'], { raio: 40, grosso: 7 }), 80);
     impacto('inimigo', cores, { forte: true });
-  } else if (id === 'elemental') {                          // Tempestade de Gelo Místico
+  } else if (id === 'elemental') {                          // Corvo Dourado Forja o Sol
     for (let i = 0; i < 9; i++) {
       setTimeout(() => projetil('jogador', 'inimigo', cores[i % 2], {
         arco: 10 + Math.random() * 50, dur: 0.22 + Math.random() * 0.1, tam: 5,
-        aoChegar: i === 8 ? () => explosaoDaTecnica('inimigo', cores) : () => impacto('inimigo', cores) }), i * 25);
+        aoChegar: i === 8 ? () => { explosaoDaTecnica('inimigo', cores); chamas('inimigo', cores, 30); } : () => impacto('inimigo', cores) }), i * 25);
     }
   } else {
     rastro('jogador', 'inimigo', cores);

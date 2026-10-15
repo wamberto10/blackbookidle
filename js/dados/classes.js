@@ -51,24 +51,26 @@ export const CLASSES = [
     nome: 'Cultivador Elemental',
     titulo: 'Guerreiro de Atributo Elemental',
     descricao:
-      'Molda o Qi com as energias da natureza. Domina o Gelo Místico, que congela e estilhaça os inimigos ' +
+      'Molda o Qi com as energias da natureza. Domina o Fogo Verdadeiro, que queima e atordoa os inimigos ' +
       '(outros elementos chegam em atualizações futuras).',
     multiplicar: { ataque: 0.25, velocidade: 0.10, vitalidade: -0.15, defesa: -0.10 },
     somar: {},
     especial: { explosaoACada: 3, bonusExplosao: 1.0 },
     nomeEspecial: 'Explosão Elemental',
-    textoEspecial: 'A cada 3 golpes, uma Explosão de Gelo com +100% de dano.',
+    textoEspecial: 'A cada 3 golpes, uma Explosão de Fogo com +100% de dano.',
     // Elementos que a classe usa (cada golpe usa o próximo da lista).
-    // Decisão do dono (2026-10-07): por enquanto só o Gelo. Fogo e Trovão voltam numa atualização futura:
-    //   { nome: 'Fogo',   efeito: 'chama',  efeitoCritico: 'chama_critica',  cor: '#ff9a3a' },
+    // Decisão do dono (2026-10-07): só um elemento por enquanto. 2026-10-15 (dono): o Gelo virou FOGO, como na
+    // arte nova do herói (as regras não mudaram). Gelo e Trovão podem voltar numa atualização futura:
+    //   { nome: 'Gelo',   efeito: 'gelo',   efeitoCritico: 'gelo_critico',   cor: '#8ad8ff' },
     //   { nome: 'Trovão', efeito: 'trovao', efeitoCritico: 'trovao_critico', cor: '#c8a0ff' },
     elementos: [
-      { nome: 'Gelo', efeito: 'gelo', efeitoCritico: 'gelo_critico', cor: '#8ad8ff' },
+      { nome: 'Fogo', efeito: 'chama', efeitoCritico: 'chama_critica', cor: '#ff9a3a' },
     ],
-    efeito: 'gelo',
-    efeitoCritico: 'gelo_critico',
-    tecnica: { nome: 'Tempestade de Gelo Místico', aCada: 4, multiplicador: 3, congela: 1, efeito: 'tec_tempestade_gelo',
-      texto: 'A cada 4 ataques, uma tempestade de 300% de dano que congela o inimigo (ele perde o próximo ataque).' },
+    efeito: 'chama',
+    efeitoCritico: 'chama_critica',
+    // "congela" = o inimigo perde o próximo ataque (aqui, atordoado pelas chamas)
+    tecnica: { nome: 'Corvo Dourado Forja o Sol', aCada: 4, multiplicador: 3, congela: 1, efeito: 'tec_corvo_dourado',
+      texto: 'A cada 4 ataques, um sol de fogo de 300% de dano que atordoa o inimigo (ele perde o próximo ataque).' },
   },
   // v0.27.2 (dono): o Cultivador de Alma e o Alquimista (v0.13.0) foram APAGADOS do jogo — ficam só estas 3 classes.
   // Quem jogava com uma delas escolhe uma classe nova ao abrir o jogo (o resto do progresso continua).
@@ -77,7 +79,7 @@ export const CLASSES = [
 // Efeitos que ainda não têm imagem usam estes até ela chegar.
 // Técnicas especiais (v0.15.0): efeito exclusivo de cada uma; até a imagem chegar, o crítico da classe
 export const EFEITO_PROVISORIO = {
-  tec_sangue_dourado: 'impacto_critico', tec_ceu_partido: 'corte_critico', tec_tempestade_gelo: 'gelo_critico',
+  tec_sangue_dourado: 'impacto_critico', tec_ceu_partido: 'corte_critico', tec_corvo_dourado: 'chama_critica',
 };
 
 export const CLASSE_POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));

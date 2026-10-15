@@ -195,7 +195,7 @@ function regenerar(aoEvento) {
 
 function golpeDoInimigo(aoEvento) {
   const vidaMaxima = luta.jogador.vitalidade;
-  // Tempestade de Gelo Místico: congelado, o inimigo perde o ataque
+  // Corvo Dourado Forja o Sol (Elemental): atordoado, o inimigo perde o ataque
   if (inimigoCongelado(luta)) {
     if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', congelado: true, vida: luta.vidaJogador, vidaMaxima });
     return;

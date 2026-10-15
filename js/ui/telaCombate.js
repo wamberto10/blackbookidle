@@ -237,10 +237,10 @@ export function mostrarGolpe(evento) {
     return;
   }
 
-  // Tempestade de Gelo Místico: o inimigo congelado perde o ataque
+  // Corvo Dourado Forja o Sol (Elemental): o inimigo atordoado perde o ataque
   if (evento.congelado) {
     agendar(() => {
-      numeroFlutuante('inimigo', '❄️ CONGELADO!', 'critico');
+      numeroFlutuante('inimigo', '🔥 ATORDOADO!', 'critico');
       animarClasse($('cb-sprite-inimigo'), 'atingido', 300);
     });
     return;
@@ -275,7 +275,7 @@ export function mostrarGolpe(evento) {
       const classe = lutaMostrada?.classe;
       const forte = evento.critico || evento.elemental;
       // Efeito do jogador depende da classe (soco, corte ou elemento).
-      // O Cultivador Elemental alterna os elementos da lista dele a cada golpe (hoje só o Gelo).
+      // O Cultivador Elemental alterna os elementos da lista dele a cada golpe (hoje só o Fogo).
       // Golpes normais e Explosões alternam cada um na sua própria sequência
       // (senão a Explosão, que vem a cada 3 golpes, seria sempre o mesmo elemento)
       let elemento = null;
@@ -420,7 +420,7 @@ function mostrarTecnica(evento) {
     numeroFlutuante('jogador', `+${formatarNumero(efeitos.cura)}`, 'cura');
     animarClasse($('cb-sprite-jogador'), 'curando', 800);
   }
-  if (efeitos.congelou) setTimeout(() => numeroFlutuante('inimigo', '❄️ Congelado!', 'elemental'), 250);
+  if (efeitos.congelou) setTimeout(() => numeroFlutuante('inimigo', '🔥 Atordoado!', 'elemental'), 250);
 }
 
 // Aviso de chefe no começo da luta

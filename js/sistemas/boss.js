@@ -199,7 +199,7 @@ function golpeDoBoss(aoEvento) {
     return;
   }
   const especial = posicao === 0;                   // solta a Lâmina da Lua Crescente
-  if (inimigoCongelado(luta)) {                     // Tempestade de Gelo Místico
+  if (inimigoCongelado(luta)) {                     // Corvo Dourado Forja o Sol (atordoado)
     if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', congelado: true });
     return;
   }

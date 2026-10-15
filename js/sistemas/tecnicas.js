@@ -6,7 +6,7 @@
 // efeito próprio. Usado pelo combate das fases e pela luta do boss.
 //   cura          → recupera essa fração da Vitalidade (Refinador Corporal)
 //   penetracao    → ignora essa fração da Defesa (Mestre da Espada)
-//   congela       → o inimigo perde esse número de ataques (Cultivador Elemental)
+//   congela       → o inimigo perde esse número de ataques (Cultivador Elemental: atordoado pelo fogo)
 // =============================================================
 
 // v0.15.1 (dono): a técnica sai a cada "aCada" ATAQUES do herói (todo golpe conta, inclusive o 2º

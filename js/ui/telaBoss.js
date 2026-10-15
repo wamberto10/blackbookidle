@@ -134,7 +134,7 @@ export function mostrarGolpeBoss(evento) {
   const classe = BOSS.lutaDoBoss()?.classe;
 
   if (evento.tipo === 'golpe' && evento.alvo === 'inimigo') {
-    // O herói ataca: avança, golpe da classe (corte, soco, gelo) no boss
+    // O herói ataca: avança, golpe da classe (corte, soco, fogo) no boss
     agendar(() => {
       mostrarQuadro($('boss-jogador'), 2, 280);
       animar($('boss-corpo-jogador'), 'boss-avanca-direita');
@@ -145,7 +145,7 @@ export function mostrarGolpeBoss(evento) {
           aviso(`✦ ${evento.tecnica.nome} ✦`, 'tecnica');
           const e = evento.efeitos ?? {};
           if (e.cura) numero('boss-numeros-jogador', '+' + formatarNumero(e.cura), 'cura');
-          if (e.congelou) numero('boss-numeros-boss', '❄️ Congelado!', 'esquiva');
+          if (e.congelou) numero('boss-numeros-boss', '🔥 Atordoado!', 'esquiva');
         }
         if (forte) {
           mostrarQuadro($('boss-sprite'), POSE.dano, 380);          // crítico: o boss recua
@@ -165,7 +165,7 @@ export function mostrarGolpeBoss(evento) {
       aviso('🌙 O Mestre concentra a luz da lua...', 'carregando');
     });
   } else if (evento.tipo === 'golpe' && evento.alvo === 'jogador' && evento.congelado) {
-    agendar(() => numero('boss-numeros-boss', '❄️ CONGELADO!', 'esquiva'));
+    agendar(() => numero('boss-numeros-boss', '🔥 ATORDOADO!', 'esquiva'));
   } else if (evento.tipo === 'golpe' && evento.alvo === 'jogador' && evento.especial) {
     // Lâmina da Lua Crescente: tela escurece, nome da técnica, a lua explode no herói
     agendar(() => {
