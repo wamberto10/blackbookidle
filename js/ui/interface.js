@@ -297,7 +297,7 @@ function posicionarNoChao() {
   moldura.style.setProperty('--chao-y', `${Math.round(y)}px`);
 }
 
-// "Mundo Inicial — Starting World" → "Mundo Inicial" (o nome em inglês fica só na aba Mapa)
+// "Limite Estelar — Domínio dos Grandes Imperadores" → "Limite Estelar" (o nome completo fica só na aba Mapa)
 export function nomeCurtoDoMundo(mundo) {
   return mundo.nome.split(' — ')[0];
 }

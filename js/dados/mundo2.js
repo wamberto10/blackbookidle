@@ -97,7 +97,7 @@ export const MUNDO_TONG_XUAN = {
       nome: 'Seita do Céu Firmamento', icone: '🦋', cor: '#2a3a5a', reino: 8,
       cena: { ceu: ['#2a3a6a', '#8a9ad0'], astro: '#ffffff', astroX: 250, montanhas: ['#6a7aa0', '#3a4a6a', '#1a2440'], estruturas: 'pagodas', nevoa: 'rgba(200,180,255,0.2)' },
       descricao:
-        'A seita fundada por quem um dia criou o High Heaven Pavilion. ' +
+        'A seita fundada por quem um dia criou o Pavilhão Ling Xiao. ' +
         'Em suas cavernas profundas vivem os temidos Insetos Devoradores de Alma.',
       sistema: null,
       fases: [

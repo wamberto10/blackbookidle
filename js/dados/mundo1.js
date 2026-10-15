@@ -22,7 +22,7 @@ const f = (local, inimigo, forma = 'humano') => ({ local, inimigo, forma });
 
 export const MUNDO_INICIAL = {
   id: 'mundo_inicial',
-  nome: 'Mundo Inicial — Starting World',
+  nome: 'Mundo Inicial',
   lema: '"Do servo insignificante ao ápice do Mundo Inicial."',
   descricao:
     'Um mundo de baixa Energia Mundial, dominado por seitas, famílias aristocráticas e territórios perigosos. ' +
@@ -37,11 +37,11 @@ export const MUNDO_INICIAL = {
   mapas: [
     // ---------------------------------------------------------- MAPA 1
     {
-      nome: 'High Heaven Pavilion', icone: '🏯', cor: '#2f4a33', reino: 0, inicioNoReino: 4,
+      nome: 'Pavilhão Ling Xiao', icone: '🏯', cor: '#2f4a33', reino: 0, inicioNoReino: 4,
       cena: { ceu: ['#3a5f9f', '#f2c27a'], astro: '#fff3c4', astroX: 240, montanhas: ['#7a8fb0', '#41604f', '#22362a'], estruturas: 'pagodas', nevoa: 'rgba(255,255,255,0.18)' },
       descricao:
         'O início absoluto. Você é um servo insignificante de uma grande seita, sem talento aparente. ' +
-        'Contam que um jovem chamado Yang Kai varreu estes mesmos pátios antes de se tornar uma lenda.',
+        'Você varre estes pátios todos os dias — e ninguém imagina que este servo um dia vai virar lenda.',
       sistema: null,
       fases: [
         f('Pátio dos Servos', 'Servo Arrogante'),
@@ -60,7 +60,7 @@ export const MUNDO_INICIAL = {
     },
     // ---------------------------------------------------------- MAPA 2
     {
-      nome: 'Montanhas do High Heaven Pavilion', icone: '⛰️', cor: '#27402f', reino: 1,
+      nome: 'Montanhas do Pavilhão Ling Xiao', icone: '⛰️', cor: '#27402f', reino: 1,
       cena: { ceu: ['#6f9fbf', '#d8e6dc'], astro: '#ffffff', astroX: 70, montanhas: ['#8aa5a5', '#3f6a4a', '#1f3a26'], estruturas: 'pinheiros', nevoa: 'rgba(255,255,255,0.3)' },
       descricao:
         'As montanhas ao redor da seita escondem cavernas, ervas e feras espirituais. ' +

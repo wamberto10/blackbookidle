@@ -27,7 +27,7 @@ export const MUNDO_LIMITE_ESTELAR = {
   lema: '"No Limite Estelar, até um Grande Imperador olha para cima."',
   descricao:
     'Além dos Campos Estelares fica o Limite Estelar: a terra dos Grandes Imperadores, do Clã do Dragão, ' +
-    'do Clã da Fênix e dos Espíritos Sagrados. Yang Kai parte da Estrela Sombria, onde fundou a Seita Ling Xiao, ' +
+    'do Clã da Fênix e dos Espíritos Sagrados. Você parte da Estrela Sombria, onde fundou a Seita Ling Xiao, ' +
     'e ergue o Palácio Ling Xiao no Domínio Norte.',
   imagemFundo: null,
 
@@ -37,8 +37,9 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Estrela Sombria', icone: '🌑', cor: '#1a1424', reino: 15,
       cena: { ceu: ['#05030a', '#2a1a3a'], astro: '#8a7aaa', astroX: 80, estrelas: true, montanhas: ['#3a2a4a', '#22182e', '#100a18'], estruturas: 'ruinas', nevoa: 'rgba(140,110,200,0.16)' },
       descricao:
-        'Uma estrela escura e esquecida do Campo Estelar, quase sem luz. Foi nela que Yang Kai fundou a Seita Ling Xiao — ' +
-        'e é dela que ele parte para o Limite Estelar, abrindo caminho entre feras das sombras e fugitivos.',
+        'Uma estrela escura e esquecida do Campo Estelar, quase sem luz. Foi nela que você fundou a Seita Ling Xiao, com o ' +
+        'nome do pavilhão onde um dia foi servo — e é dela que você parte para o Limite Estelar, abrindo caminho entre ' +
+        'feras das sombras e fugitivos.',
       sistema: null,
       fases: [
         f('Planície Sem Luz', 'Lobo da Noite Eterna', 'fera'),
@@ -60,8 +61,8 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Palácio Ling Xiao', icone: '🏯', cor: '#2a1a14', reino: 15,
       cena: { ceu: ['#0a0612', '#4a2a3a'], astro: '#ffd36b', astroX: 230, estrelas: true, montanhas: ['#5a3a3a', '#3a2228', '#1a1014'], estruturas: 'palacio', nevoa: 'rgba(255,210,120,0.14)' },
       descricao:
-        'No Domínio Norte do Limite Estelar, Yang Kai ergue o Palácio Ling Xiao, herdeiro da Seita Ling Xiao e do antigo ' +
-        'High Heaven Pavilion. Um palácio novo atrai olhares — e as seitas rivais vêm testar suas muralhas.',
+        'No Domínio Norte do Limite Estelar, você ergue o Palácio Ling Xiao, herdeiro da Seita Ling Xiao e do antigo ' +
+        'Pavilhão Ling Xiao. Um palácio novo atrai olhares — e as seitas rivais vêm testar suas muralhas.',
       sistema: null,
       fases: [
         f('Canteiro de Obras', 'Espião de Seita Rival'),
@@ -106,8 +107,8 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Ilha do Dragão', icone: '🐉', cor: '#1a2a1a', reino: 15,
       cena: { ceu: ['#06100a', '#2a5a3a'], astro: '#ffe08a', astroX: 120, estrelas: false, montanhas: ['#3a6a4a', '#22402c', '#0e1c12'], estruturas: 'pagodas', nevoa: 'rgba(180,255,180,0.13)' },
       descricao:
-        'O lar do Clã do Dragão no Limite Estelar. O sangue de dragão nas veias de Yang Kai chama — ' +
-        'e os dragões respondem com provas que poucos humanos já enfrentaram.',
+        'O lar do Clã do Dragão no Limite Estelar. Os dragões não confiam em humanos — e recebem quem chega ' +
+        'com provas que poucos já enfrentaram.',
       sistema: null,
       fases: [
         f('Costa Escamosa', 'Lagarto Dracônico', 'fera'),
@@ -221,7 +222,7 @@ export const MUNDO_LIMITE_ESTELAR = {
       nome: 'Terra do Vazio', icone: '🌀', cor: '#141428', ...BAIXO_RANK,
       cena: { ceu: ['#04040c', '#2a2a5a'], astro: null, estrelas: true, montanhas: ['#3a3a6a', '#22224a', '#0e0e24'], estruturas: 'portal', nevoa: 'rgba(150,150,255,0.17)' },
       descricao:
-        'Um território esquecido entre o Limite Estelar e o desconhecido. Yang Kai o reivindica — ' +
+        'Um território esquecido entre o Limite Estelar e o desconhecido. Você o reivindica — ' +
         'mas o caos que vive ali não quer dono.',
       sistema: null,
       fases: [

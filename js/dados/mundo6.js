@@ -301,6 +301,6 @@ export const MUNDO_UNIVERSO_EXTERIOR = {
       'Pela primeira vez desde antes dos mundos, a origem da Tinta recua. Os Três Mil Mundos respiram — e o seu ' +
       'nome é dito em todas as fortalezas-passo.\n\n' +
       '"Na 9ª Ordem, o caminho parece acabar. É só porque ninguém ainda viu o que vem depois."\n\n' +
-      '✨ FIM DO CONTEÚDO — POR ENQUANTO\n(o que vem depois da 9ª Ordem está em desenvolvimento)',
+      '✨ MUNDO 7 LIBERADO: O Forno do Universo!\nRompa a 9ª Ordem e alcance o Reino da Criação.',
   },
 };

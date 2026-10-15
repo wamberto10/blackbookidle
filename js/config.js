@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.24.2',
+  versao: '0.25.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -124,7 +124,8 @@ export const CONFIG = {
     // v0.23.0: Mundo 5 = 1,25. No Mundo 5 não há rompimento de reino (só a 4ª–6ª Ordem do Céu Aberto), então o cultivo
     // fortalece menos: com 1,5 o robô levava ~133 h e ~30 reencarnações; 1,31 = 41 h; 1,25 = ~25 h (mapas até ~4 h).
     // v0.24.0: Mundo 6 = 1,25 também (de novo só Ordens, sem rompimento de reino)
-    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25],
+    // v0.25.0: Mundo 7 = 1,25 (robô: ~31 h, igual ao Mundo 6; 1,35 = 73 h; 1,45 = 146 h)
+    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25, 1.25],
     // v0.21.2: Velocidade dos inimigos × isto a cada mapa (decide quem ataca primeiro e o ataque duplo). Antes não
     // crescia: no Mundo 2 o jogador já tinha 1,4–3,8× a velocidade dos chefes e no Mundo 3 ~10× (ataque duplo sempre).
     // Com 1,03: Mundo 2 ≈ 1,5–1,9× (o ataque duplo precisa ser conquistado), Mundo 3 ≈ 2–4×. Ritmo igual no robô.

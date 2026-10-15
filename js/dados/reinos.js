@@ -10,11 +10,14 @@ const estagios = (qtd) => Array.from({ length: qtd }, (_, i) => `${i + 1}º Est�
 const INICIAL_INTER_PICO = ['Inicial', 'Intermediário', 'Pico'];
 
 // ---- Regiões (cada uma tem uma cor de aura) ----
+// v0.25.0 (dono): nomes de degraus do cultivo. Antes eram lugares (Campo Estelar, Limite Estelar...),
+// que não batiam com o mundo onde o jogador cultiva cada reino.
 export const REGIOES = [
-  { nome: 'Mundo Inicial — Reino Tong Xuan', corAura: '#6fcf8a' },
-  { nome: 'Campo Estelar',                   corAura: '#6f9fff' },
-  { nome: 'Limite Estelar',                  corAura: '#b77bff' },
-  { nome: 'Universo Exterior',               corAura: '#ffd36b' },
+  { nome: 'Caminho Marcial',         corAura: '#6fcf8a' },
+  { nome: 'Caminho dos Santos',      corAura: '#6f9fff' },
+  { nome: 'Caminho dos Imperadores', corAura: '#b77bff' },
+  { nome: 'Céu Aberto',              corAura: '#ffd36b' },
+  { nome: 'Criação',                 corAura: '#fff6e0' },   // v0.25.0: Reino da Criação
 ];
 
 // ---- Reinos, em ordem de progressão ----
@@ -65,8 +68,8 @@ export const REINOS = [
   {
     id: 'elemento_verdadeiro', nome: 'Elemento Verdadeiro', regiao: 0,
     estagios: estagios(9), corManto: '#2f5f9f',
-    descricao: 'Purificação do Yuan Qi em True Qi. Técnicas complexas e voo.',
-    desbloqueio: 'Seu Qi foi purificado em True Qi. Agora você pode voar!',
+    descricao: 'Purificação do Yuan Qi em Qi Verdadeiro. Técnicas complexas e voo.',
+    desbloqueio: 'Seu Qi foi purificado em Qi Verdadeiro. Agora você pode voar!',
     mapaParaRomper: 8,
   },
   {
@@ -86,8 +89,8 @@ export const REINOS = [
   {
     id: 'santo', nome: 'Santo', regiao: 0,
     estagios: INICIAL_INTER_PICO, corManto: '#d0d0d0',
-    descricao: 'Saint Qi e resistência para sobreviver no Campo Estelar.',
-    desbloqueio: 'Seu Qi se tornou Saint Qi. O Campo Estelar aguarda.',
+    descricao: 'Qi Santo e um corpo capaz de sobreviver no vazio entre os mundos.',
+    desbloqueio: 'Seu Qi se tornou Qi Santo. Um mundo muito maior aguarda do outro lado do portal.',
     mapaParaRomper: 14,
   },
 
@@ -96,7 +99,7 @@ export const REINOS = [
     id: 'rei_santo', nome: 'Rei Santo', regiao: 1,
     estagios: estagios(3), corManto: '#3f5fbf',
     descricao: 'Compreensão das leis naturais.',
-    desbloqueio: 'Você chegou ao Campo Estelar e começa a compreender as leis naturais.',
+    desbloqueio: 'Seu Qi Santo se aprofunda: você começa a compreender as leis naturais.',
     mapaParaRomper: 16,
   },
   {
@@ -109,7 +112,7 @@ export const REINOS = [
   {
     id: 'rei_origem', nome: 'Rei da Origem', regiao: 1,
     estagios: estagios(3), corManto: '#1f4f8f',
-    descricao: 'Domínio dos princípios espaciais. Possibilidade de se tornar Mestre Estelar ao refinar um planeta.',
+    descricao: 'Domínio dos princípios espaciais. Possibilidade de se tornar Mestre Estelar ao refinar a Fonte de uma Estrela de Cultivo.',
     desbloqueio: 'Os princípios espaciais se curvam a você.',
     mapaParaRomper: 20,
   },
@@ -118,15 +121,15 @@ export const REINOS = [
   {
     id: 'origem_dao', nome: 'Origem do Dao', regiao: 2,
     estagios: estagios(3), corManto: '#6f3f9f',
-    descricao: 'Conversão de Saint Qi em Source Qi e uso dos Princípios do Mundo.',
-    desbloqueio: 'Seu Saint Qi se converteu em Source Qi.',
+    descricao: 'Conversão do Qi Santo em Qi da Origem e uso dos Princípios do Mundo.',
+    desbloqueio: 'Seu Qi Santo se converteu em Qi da Origem.',
     mapaParaRomper: 22,
   },
   {
     id: 'imperador', nome: 'Imperador', regiao: 2,
     estagios: ['1ª Ordem', '2ª Ordem', '3ª Ordem', 'Pico'], corManto: '#8f2f2f',
-    descricao: 'Emperor Qi.',
-    desbloqueio: 'Você se tornou um Imperador. Seu Qi agora é Emperor Qi.',
+    descricao: 'O Qi da Origem se condensa em Qi Imperial. Na maioria dos mundos, um Imperador já está no topo.',
+    desbloqueio: 'Você se tornou um Imperador. Seu Qi agora é Qi Imperial.',
     mapaParaRomper: 24,
   },
   // v0.17.0 (dono, conferido com a lore): Imperador → Pseudo-Grande Imperador → Grande Imperador →
@@ -152,8 +155,8 @@ export const REINOS = [
   {
     id: 'meio_ceu_aberto', nome: 'Meio-Passo do Céu Aberto', regiao: 2,
     estagios: ['1 Elemento', '2 Elementos', '3 Elementos', '4 Elementos', '5 Elementos'], corManto: '#5f5f5f',
-    descricao: 'Ainda dentro do reino Imperador: condensação de 1 a 5 dos elementos fundamentais (Yin, Yang, Ouro, Madeira, Água, Fogo, Terra) no Selo do Dao.',
-    desbloqueio: 'Você começa a condensar os elementos fundamentais no Selo do Dao.',
+    descricao: 'Ainda um Grande Imperador: você condensa no Selo do Dao, um a um, os Cinco Elementos (Ouro, Madeira, Água, Fogo e Terra). Quando o Yin e o Yang se unirem a eles, o céu se abre.',
+    desbloqueio: 'Você começa a condensar os Cinco Elementos no Selo do Dao.',
     mapaParaRomper: 42,
   },
 
@@ -167,13 +170,33 @@ export const REINOS = [
     ],
     corManto: '#f0e0a0',
     descricao: 'Os sete elementos condensados no Selo do Dao criam um Pequeno Universo interno que gera Força do Mundo.',
-    desbloqueio: 'Seu Pequeno Universo nasceu!',
+    desbloqueio: 'O Yin e o Yang se uniram aos Cinco Elementos: seu Pequeno Universo nasceu!',
     // v0.22.0: o Céu Aberto atravessa três mundos (Baixo, Médio e Alto Rank). Cada faixa só abre depois do
     // chefe do último mapa da anterior: 4ª Ordem → Mapa 48 (fim do Mundo 4); 7ª Ordem → Mapa 60 (Mundo 5).
     mapaParaEstagio: { 3: 48, 6: 60 },
+    // v0.25.0: o rompimento para o Reino da Criação exige vencer A Tinta Primordial (Mapa 72, fim do Mundo 6)
+    mapaParaRomper: 72,
     marcos: {
       3: 'Seu Pequeno Universo ganhou estabilidade física.',
       6: 'Seu Pequeno Universo se materializou e pode abrigar seres vivos.',
+    },
+  },
+
+  // ===================== REGIÃO 5 =====================
+  // v0.25.0 (dono, conferido com a lore): o 造化境 de Martial Peak, o último reino do livro — só a origem da
+  // Tinta (Mo) e, no final, o Yang Kai chegam a ele. O livro não o divide; os 6 estágios crescem como a
+  // Árvore do Mundo (decisão do dono): Semente, Raiz e Tronco no Mundo 7; Copa, Flor e Fruto no Mundo 8.
+  {
+    id: 'criacao', nome: 'Reino da Criação', regiao: 4,
+    estagios: ['Semente do Universo', 'Raiz do Universo', 'Tronco do Universo', 'Copa do Universo', 'Flor do Universo', 'Fruto do Universo'],
+    corManto: '#fff6e0',
+    descricao: 'Além da 9ª Ordem: o poder de criar — e de restaurar — mundos inteiros. Antes de você, só a origem da Tinta chegou aqui.',
+    desbloqueio: 'Você rompeu a 9ª Ordem: o Reino da Criação começa com uma semente dentro do seu Pequeno Universo.',
+    // Copa do Universo (4º estágio) só abre com o chefe do Mapa 84 (fim do Mundo 7)
+    mapaParaEstagio: { 3: 84 },
+    marcos: {
+      2: 'Seu Pequeno Universo ganhou um tronco: ele já sustenta outros mundos.',
+      5: 'O Fruto do Universo amadureceu. Você alcançou o ápice da Criação.',
     },
   },
 ];
