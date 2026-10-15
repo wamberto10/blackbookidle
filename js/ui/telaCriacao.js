@@ -108,7 +108,7 @@ function atualizarEtapa1() {
   document.querySelectorAll('#escolha-sexo .carta-escolha').forEach((carta) => {
     carta.classList.toggle('selecionada', carta.dataset.sexo === escolha.sexo);
     desenharPersonagem(carta.querySelector('canvas'), 'corpo_temperado', 'meditando',
-      { sexo: carta.dataset.sexo, classe: 'elemental' });   // classe ainda não escolhida: túnica de cultivador
+      { sexo: carta.dataset.sexo, classe: 'arma' });   // classe ainda não escolhida: túnica branca de cultivador (v0.28.0)
   });
   $('criacao-nome').setAttribute('maxlength', TAMANHO_DO_NOME.maximo);
 }
