@@ -2378,6 +2378,30 @@ button:hover:not(:disabled):not(.botao-icone):not([data-aba]) { filter: brightne
 .md-dica { margin: 0; text-align: center; font-size: 0.7rem; }
 
 #aba-mapa .painel-corpo { container-type: inline-size; }
+/* v0.26.3: Mapa compacto (celular e telas estreitas). Antes, ao tocar numa fase da trilha, o cartão dela e o
+   Farmar aqui ficavam ~700 px abaixo, fora da tela. Agora a ordem é: zonas → cartão da fase → Farmar → trilha,
+   tudo numa tela só; as dificuldades (ainda "em breve") viram uma linha depois da trilha. */
+@container (max-width: 899px) {
+  .mapa-novo { gap: 8px; }
+  .md-esquerda { gap: 6px; }
+  .md-direita { display: contents; }   /* os filhos dela entram na coluna principal e podem ser reordenados */
+  .md-esquerda { order: 1; }
+  .md-card-fase { order: 2; padding: 6px 8px; gap: 2px; }
+  #md-farmar { order: 3; }
+  .md-centro { order: 4; }
+  .md-direita > .md-cabecalho { order: 5; }
+  .md-dificuldades { order: 6; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  .md-dica { order: 7; }
+  .md-titulo { display: none; }   /* o nome do mapa já aparece no cartão da zona selecionada */
+  .md-trilha { height: clamp(280px, 35vh, 440px); }
+  .md-mundo { height: 28px; padding: 0 10px; }
+  .md-zona small { -webkit-line-clamp: 1; }
+  .md-fase-miniatura { width: 52px; height: 52px; }
+  .md-fase-miniatura canvas { width: 48px; height: 48px; }
+  .md-fase-miniatura canvas.sprite-chefe { width: 52px; height: 52px; }
+  .dificuldade { flex: none; padding: 4px 8px; gap: 4px; font-size: 0.72rem; }
+  .dificuldade small { display: none; }
+}
 @container (min-width: 900px) {
   .mapa-novo { display: grid; grid-template-columns: 260px 1fr 280px; align-items: start; }
   .md-zonas { flex-direction: column; overflow-x: visible; overflow-y: auto; max-height: 62vh; scroll-snap-type: none; }
