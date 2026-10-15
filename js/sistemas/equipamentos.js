@@ -132,11 +132,45 @@ function guardarOuDesmanchar(estado, item) {
 }
 
 // Chamado pelo combate a cada vitória. Devolve o resultado ou null se nada caiu.
+// v0.26.0: depois do drop a Mochila se organiza sozinha (opções desmancheAuto/mesclaAuto). Destinos possíveis:
+// 'equipado', 'mochila', 'obsoleto' (desmanchado na hora) ou 'mesclado'; resultado.auto = o que foi feito na Mochila.
 export function tentarDrop(estado, fase, primeiraVitoria) {
   let chance = EQ.chanceDeDrop[fase.chaveTipo] ?? 0;
   if (primeiraVitoria) chance = Math.min(1, chance * EQ.multiplicadorPrimeiraVitoria);
   if (Math.random() >= chance) return null;
-  return receberItem(estado, gerarItem(estado, fase));
+  const resultado = receberItem(estado, gerarItem(estado, fase));
+  const item = resultado.item;
+  const pedrasDoItem = pedrasAoDesmanchar(item);
+  const auto = organizarMochila(estado);   // também limpa o item que o Auto-vestir acabou de tirar
+  if (resultado.destino !== 'mochila' || estado.mochila.some(i => i.id === item.id)) return { ...resultado, auto };
+  if (estaEquipado(estado, item)) return { ...resultado, destino: 'equipado', auto };
+  if (auto.ids.has(item.id)) return { ...resultado, destino: 'obsoleto', pedras: pedrasDoItem, auto };
+  return { ...resultado, destino: 'mesclado', auto };
+}
+
+// v0.26.0: Desmanche e Mescla automáticos. Desmancha os obsoletos primeiro (mesclar obsoletos só daria outro
+// obsoleto); depois mescla; e desmancha de novo, porque uma mescla pode trocar o item vestido (Auto-vestir).
+// Devolve { desmanchados, mesclas, pedras, ids: Set dos itens desmanchados }.
+export function organizarMochila(estado) {
+  const auto = { desmanchados: 0, mesclas: 0, pedras: 0, ids: new Set() };
+  const desmancharAgora = () => {
+    if (!estado.opcoes.desmancheAuto) return;
+    const { itens, pedras } = obsoletos(estado);
+    if (!itens.length) return;
+    for (const i of itens) auto.ids.add(i.id);
+    estado.mochila = estado.mochila.filter(i => !auto.ids.has(i.id));
+    estado.pedras += pedras;
+    auto.desmanchados += itens.length;
+    auto.pedras += pedras;
+  };
+  desmancharAgora();
+  if (estado.opcoes.mesclaAuto && temAlgoParaMesclar(estado)) {
+    const r = mesclarTudo(estado);
+    auto.mesclas += r.mesclas;
+    auto.pedras += r.pedras;
+    desmancharAgora();
+  }
+  return auto;
 }
 
 // ---- Ações do jogador ----

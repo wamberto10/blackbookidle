@@ -13,6 +13,7 @@ import { liberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
 import { desenharPersonagem, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
+import { TEXTO_DO_SELO } from './poder.js';
 import { SLOTS } from '../dados/equipamentos.js';
 import { grauDe } from '../sistemas/itens.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
@@ -417,12 +418,15 @@ function atualizarPersonagem(estado) {
   $('pers-poder-detalhe').innerHTML =
     `<span class="parte-poder" title="Dano médio por golpe (Ataque + Crítico)">${icone('ofensa')} Ofensa <b>${formatarNumero(analise.ofensa)}</b></span>` +
     `<span class="parte-poder" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">${icone('resistencia')} Resistência <b>${formatarNumero(analise.resistencia)}</b></span>`;
-  // v0.22.1: limite do equipamento pelo reino
+  // v0.22.1: limite do equipamento pelo reino | v0.26.0: Selo do Mundo Primordial (tem prioridade)
   const aviso = $('pers-limite');
-  aviso.classList.toggle('escondido', !atributos.equipamentoLimitado);
-  if (atributos.equipamentoLimitado && !aviso.innerHTML) {
-    aviso.innerHTML = `${icone('cadeado')} <span>Seus equipamentos são fortes demais para o seu reino: rendem no máximo ` +
-      `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.</span>`;
+  const textoAviso = atributos.selado ? TEXTO_DO_SELO
+    : atributos.equipamentoLimitado ? 'Seus equipamentos são fortes demais para o seu reino: rendem no máximo ' +
+      `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.` : '';
+  aviso.classList.toggle('escondido', !textoAviso);
+  if (aviso.dataset.texto !== textoAviso) {
+    aviso.dataset.texto = textoAviso;
+    aviso.innerHTML = textoAviso ? `${icone('cadeado')} <span>${textoAviso}</span>` : '';
   }
 }
 

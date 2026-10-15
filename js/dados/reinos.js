@@ -193,9 +193,11 @@ export const REINOS = [
     descricao: 'Além da 9ª Ordem: o poder de criar — e de restaurar — mundos inteiros. Antes de você, só a origem da Tinta chegou aqui.',
     desbloqueio: 'Você rompeu a 9ª Ordem: o Reino da Criação começa com uma semente dentro do seu Pequeno Universo.',
     // Copa do Universo (4º estágio) só abre com o chefe do Mapa 84 (fim do Mundo 7)
-    mapaParaEstagio: { 3: 84 },
+    // v0.26.0: o Fruto do Universo (último estágio do jogo) só amadurece depois de vencer Mo (Mapa 96)
+    mapaParaEstagio: { 3: 84, 5: 96 },
     marcos: {
       2: 'Seu Pequeno Universo ganhou um tronco: ele já sustenta outros mundos.',
+      3: 'A Copa do Universo se abriu: seu Pequeno Universo já abriga incontáveis mundos.',
       5: 'O Fruto do Universo amadureceu. Você alcançou o ápice da Criação.',
     },
   },

@@ -21,7 +21,7 @@ import { personagemDe } from '../sistemas/personagem.js';
 import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
 import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
 import { desenharFundo } from './fundo.js';
-import { previsaoDaFase, textoDoPoder } from './poder.js';
+import { previsaoDaFase, textoDoPoder, TEXTO_DO_SELO } from './poder.js';
 import { EFEITO_PROVISORIO } from '../dados/classes.js';
 import { SPRITES } from '../dados/sprites.js';
 import { golpesPorTurno } from '../sistemas/atributos.js';
@@ -129,7 +129,8 @@ export function atualizarTelaCombate(estado) {
   if (chave !== chaveDesenhada && inimigoLivre) {
     chaveDesenhada = chave;
     const mapa = MAPAS[fase.mapa];
-    $('cb-mapa').innerHTML = `${iconeDoMapa(fase.mapa)} Mapa ${fase.mapa + 1}: ${mapa.nome}`;
+    $('cb-mapa').innerHTML = `${iconeDoMapa(fase.mapa)} Mapa ${fase.mapa + 1}: ${mapa.nome}` +
+      (fase.selado ? ` <span class="cb-selo" title="${TEXTO_DO_SELO}">${icone('cadeado')} Selado</span>` : '');   // v0.26.0
     $('cb-numero').textContent = `Fase ${fase.numero}/12`;
     $('cb-local').textContent = fase.local;
     $('cb-tipo').innerHTML = `${icone(fase.tipo.sprite)} ${fase.tipo.nome}`;

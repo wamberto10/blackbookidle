@@ -13,7 +13,7 @@ import { cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
 import { formatarNumero } from '../format.js';
 import { icone, desenharInimigo } from './sprite.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
-import { previsaoDaFase, textoDaPrevisao, textoDoPoder } from './poder.js';
+import { previsaoDaFase, textoDaPrevisao, textoDoPoder, TEXTO_CURTO_DO_SELO } from './poder.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -196,7 +196,8 @@ function desenharDesafio(estado) {
   const fator = fatorDoInimigo(estado, fase);
   $('md-fase-recompensa').innerHTML =
     `${icone('cultivo')} ${formatarNumero(cultivoDaVitoria(estado, fase))} · ${icone('pedra')} ${formatarNumero(fase.recompensa.pedras)}` +
-    (fator < 0.9 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '');
+    (fator < 0.9 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '') +
+    (fase.selado ? `<small class="md-selo">${icone('cadeado')} ${TEXTO_CURTO_DO_SELO}</small>` : '');   // v0.26.0
   const aqui = fase.indice === estado.combate.faseAtual && !estado.combate.autoAvancar;
   $('md-farmar').textContent = aqui ? '✔ Farmando aqui' : '⚔️ Farmar aqui';
   $('md-farmar').classList.toggle('ativo', aqui);

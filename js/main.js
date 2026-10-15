@@ -34,7 +34,8 @@ let estado = carregar() ?? criarEstadoInicial();
 // com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
 let resumoFora = null;
 
-const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0, mundoConcluido: null });
+const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0,
+  desmanchados: 0, mesclas: 0, pedrasMochila: 0, mundoConcluido: null });   // v0.26.0: Mochila automática
 
 // Aba escondida, mas o navegador continua rodando o jogo (computador: outra aba aberta).
 // O tempo passa normalmente, só que sem animações nem avisos — tudo vai para o resumo
@@ -51,6 +52,11 @@ function passoEscondido(segundos) {
     r.pedras += evento.pedras;
     if (evento.primeira) r.fasesNovas += 1;
     if (evento.drop) r.itens += 1;
+    if (evento.drop?.auto) {
+      r.desmanchados += evento.drop.auto.desmanchados;
+      r.mesclas += evento.drop.auto.mesclas;
+      r.pedrasMochila += evento.drop.auto.pedras;
+    }
     if (evento.nucleo) r.nucleos += 1;
     if (evento.pilula) r.pilulas += 1;
     if (evento.ultimaDoMundo) r.mundoConcluido = evento.ultimaDoMundo;
@@ -79,6 +85,10 @@ function mostrarResumoFora() {
   if (r.vitorias > 0) texto += `, ${r.vitorias} vitória(s), +${formatarNumero(r.pedras)} 💎`;
   if (r.fasesNovas > 0) texto += `, ${r.fasesNovas} fase(s) nova(s)`;
   if (r.itens > 0) texto += `, ${r.itens} item(ns)`;
+  // v0.26.0: o que a Mochila automática fez
+  if (r.desmanchados > 0) texto += ` (${r.desmanchados} obsoleto(s) desmanchado(s)`;
+  if (r.mesclas > 0) texto += `${r.desmanchados > 0 ? ',' : ' ('} ${r.mesclas} mescla(s)`;
+  if (r.desmanchados > 0 || r.mesclas > 0) texto += `${r.pedrasMochila > 0 ? `: +${formatarNumero(r.pedrasMochila)} 💎` : ''})`;
   if (r.nucleos > 0) texto += `, ${r.nucleos} núcleo(s)`;
   if (r.pilulas > 0) texto += `, ${r.pilulas} pílula(s)`;
   mostrarMensagem(texto + '.');
@@ -199,10 +209,13 @@ function avisarDrop(drop) {
     equipado: 'vestido automaticamente!',
     mochila: 'guardado na Mochila.',
     desmanchado: `Mochila cheia: desmanchado em +${formatarNumero(drop.pedras)} 💎.`,
+    obsoleto: `obsoleto: desmanchado em +${formatarNumero(drop.pedras)} 💎.`,   // v0.26.0: Desmanche automático
+    mesclado: 'mesclado automaticamente!',                                     // v0.26.0: Mescla automática
   }[drop.destino];
-  registrarBatalha(`🎁 ${nome} — ${destino}`, 'drop raridade-' + raridade.id);
-  // Itens Raros ou melhores ganham destaque na tela
-  if (indiceRaridade(drop.item) >= 2) mostrarMensagem(`🎁 Item ${raridade.nome}! ${nome}`);
+  const mesclas = drop.auto?.mesclas ? ` (${drop.auto.mesclas} mescla(s) automática(s))` : '';
+  registrarBatalha(`🎁 ${nome} — ${destino}${mesclas}`, 'drop raridade-' + raridade.id);
+  // Itens Raros ou melhores ganham destaque na tela (menos os que já chegaram obsoletos)
+  if (indiceRaridade(drop.item) >= 2 && drop.destino !== 'obsoleto') mostrarMensagem(`🎁 Item ${raridade.nome}! ${nome}`);
   salvar(estado);
 }
 
@@ -274,6 +287,17 @@ montarInterface({
     depoisDeMexerNosItens();
   },
   aoMudarAutoEquipar: (ligado) => { estado.opcoes.autoEquipar = ligado; },
+  // v0.26.0: Mochila automática — ao ligar, já organiza o que está guardado
+  aoMudarMochilaAuto: (opcao, ligado) => {
+    estado.opcoes[opcao] = ligado;
+    if (!ligado) return salvar(estado);
+    const r = EQ.organizarMochila(estado);
+    const partes = [];
+    if (r.desmanchados > 0) partes.push(`${r.desmanchados} obsoleto(s) desmanchado(s)`);
+    if (r.mesclas > 0) partes.push(`${r.mesclas} mescla(s)`);
+    if (partes.length) mostrarMensagem(`🎒 Mochila organizada: ${partes.join(', ')}${r.pedras > 0 ? ` (+${formatarNumero(r.pedras)} 💎)` : ''}.`);
+    depoisDeMexerNosItens();
+  },
 
   // ---- Pilhas: Mesclar e Desmanchar a pilha toda ----
   aoMesclar: (slot, raridade, grau) => {

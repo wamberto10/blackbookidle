@@ -14,9 +14,14 @@ const TEXTOS = {
   tempo:     { texto: 'Tempo insuficiente', classe: 'previsao-derrota' },
 };
 
+// v0.26.0: explicação do Selo do Mundo Primordial (Mapa, Combate e Personagem)
+export const TEXTO_DO_SELO = 'Selo do Mundo Primordial: aqui você luta com a força do Elemento Verdadeiro. ' +
+  'Black Book, Núcleos e itens (até o limite do reino selado) continuam valendo; subir de estágio não muda a luta.';
+export const TEXTO_CURTO_DO_SELO = 'Selado: aqui você luta com a força do Elemento Verdadeiro';
+
 // Previsão da luta contra a fase, já com texto e cor
 export function previsaoDaFase(estado, fase) {
-  const jogador = calcularAtributos(estado);
+  const jogador = calcularAtributos(estado, { selado: fase.selado });   // v0.26.0: como você lutaria NAQUELA fase
   const p = preverLuta(jogador, fase, CONFIG.combate.duracaoMaxima / CONFIG.combate.duracaoDoTurno);
   return { ...p, ...TEXTOS[p.resultado], poderInimigo: poderDoInimigo(fase), poderJogador: poderTotal(jogador) };
 }

@@ -71,15 +71,16 @@ export function atributosDoBoss(estado) {
   const chefesVencidos = Math.floor((estado.combate.fasesConcluidas + 1) / CONFIG.combate.fasesPorMapa);
   const mapa = Math.min(Math.max(0, chefesVencidos - 1), FASES[FASES.length - 1].mapa);
   const chefe = chefeDoMapa(mapa);
+  const inimigo = chefe.inimigoSemSelo ?? chefe.inimigo;   // v0.26.0: sem o Selo do Mundo Primordial
   return {
     nome: B.nome,
     forma: 'humano',
     mapa,
     faseDoChefe: chefe.indice,
-    vidaTotal: chefe.inimigo.vida * B.vidaEmChefes,
-    ataque: chefe.inimigo.ataque * B.ataque,
-    defesa: chefe.inimigo.defesa * B.defesa,
-    velocidade: chefe.inimigo.velocidade * B.velocidade,
+    vidaTotal: inimigo.vida * B.vidaEmChefes,
+    ataque: inimigo.ataque * B.ataque,
+    defesa: inimigo.defesa * B.defesa,
+    velocidade: inimigo.velocidade * B.velocidade,
   };
 }
 
@@ -111,7 +112,8 @@ export function lutaDoBoss() {
 
 export function comecarLuta(estado) {
   if (!podeLutar(estado)) return false;
-  const jogador = calcularAtributos(estado);
+  // v0.26.0: o boss do evento fica fora do Mundo Primordial — luta sem o Selo (e usa o chefe "sem selo")
+  const jogador = calcularAtributos(estado, { selado: false });
   const boss = atributosDoBoss(estado);
   luta = {
     jogador,

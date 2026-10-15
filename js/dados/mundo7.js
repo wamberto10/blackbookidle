@@ -302,6 +302,6 @@ export const MUNDO_FORNO_DO_UNIVERSO = {
       'seu alcance — e se abre o caminho para dentro da Grande Restrição do Céu Inicial: o Mundo Primordial, onde a ' +
       'origem da Tinta se escondeu depois de recuar.\n\n' +
       '"Para vencer o que existe desde antes dos mundos, primeiro você vai precisar esquecer quem é."\n\n' +
-      '✨ MUNDO 8 — EM BREVE\n(o Mundo Primordial e a batalha final estão em desenvolvimento)',
+      '✨ MUNDO 8 LIBERADO: Mundo Primordial — Batalha Final!\nDentro da Grande Restrição, um selo prende o cultivo de todos no Elemento Verdadeiro.',
   },
 };

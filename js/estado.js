@@ -67,6 +67,9 @@ export function criarEstadoInicial() {
     opcoes: {
       autoAvancar: false,   // avançar estágios de cultivo automaticamente
       autoEquipar: true,    // vestir sozinho itens que aumentam o Poder Total
+      // v0.26.0: a cada item que cai, a Mochila se organiza sozinha (ligados também em saves antigos)
+      desmancheAuto: true,  // desmancha os itens obsoletos (EQ.ehObsoleto)
+      mesclaAuto: true,     // mescla as pilhas com 3 itens iguais
       meditarAuto: true,    // VIP: Meditar automático ligado (o botão Meditar liga/desliga)
       bossAuto: false,      // Evento de Boss: começa as lutas sozinho (quando o boss volta e após cada descanso)
     },

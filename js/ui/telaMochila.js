@@ -33,6 +33,8 @@ let reinoDesenhado = null;
 export function montarTelaMochila(acoes) {
   acoesGuardadas = acoes;
   $('opcao-auto-equipar').addEventListener('change', (e) => acoes.aoMudarAutoEquipar(e.target.checked));
+  $('opcao-mescla-auto').addEventListener('change', (e) => acoes.aoMudarMochilaAuto('mesclaAuto', e.target.checked));
+  $('opcao-desmanche-auto').addEventListener('change', (e) => acoes.aoMudarMochilaAuto('desmancheAuto', e.target.checked));
   $('mesclar-tudo').addEventListener('click', () => acoes.aoMesclarTudo());
   $('desmanchar-obsoletos').addEventListener('click', () => acoes.aoDesmancharObsoletos());
   $('desmanchar-comuns').addEventListener('click', () => acoes.aoDesmancharAteTier(0));
@@ -85,6 +87,8 @@ export function atualizarTelaMochila(estado) {
   $('mochila-pedras').textContent = formatarNumero(Math.floor(estado.pedras));
   $('mochila-poder').textContent = formatarNumero(poderTotal(calcularAtributos(estado)));
   $('opcao-auto-equipar').checked = estado.opcoes.autoEquipar;
+  $('opcao-mescla-auto').checked = estado.opcoes.mesclaAuto;
+  $('opcao-desmanche-auto').checked = estado.opcoes.desmancheAuto;
 
   const aparencia = `${estado.reino}|${JSON.stringify(personagemDe(estado))}`;
   if (reinoDesenhado !== aparencia) {

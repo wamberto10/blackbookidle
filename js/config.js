@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.25.0',
+  versao: '0.26.0',
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -50,6 +50,13 @@ export const CONFIG = {
   meditacaoComSentido: 0.5,
   // Mestre Estelar: no Rei da Origem, refinar a Fonte Estelar (custa 1 estágio de Cultivo) = +15% Cultivo nesta vida
   mestreEstelar: { reino: 'rei_origem', bonusCultivo: 0.15 },
+  // v0.26.0: Selo do Mundo Primordial (Mundo 8, mapas com selado: true). Lá dentro você e os inimigos lutam com a
+  // força do Elemento Verdadeiro (9º estágio): reino, estágio e Batismos ficam selados; Black Book, Núcleos, classe,
+  // VIP e itens (até o limite do reino SELADO) continuam valendo. O cultivo (meditar, subir estágio) segue normal.
+  // forcaDosInimigos: 1 = os inimigos selados ficam tão difíceis quanto ficariam sem o selo (sistemas/mundo.js).
+  // Robô (Refinador, 4 rodadas): com 1 os mapas selados caíam em minutos (lá dentro os itens rendem o máximo do reino
+  // selado) e o Mapa 91 virava uma muralha de 17 h; com 4 (e Mundo 8 = 1,2) cada mapa leva 2–5 h e o mundo ~43 h.
+  selo: { reino: 'elemento_verdadeiro', estagio: 8, forcaDosInimigos: 4 },
   // Pílulas de cultivo: caem dos inimigos a partir do Mapa 2 (chance = base × "pedras" do tipo da fase:
   // comum 0,07%, chefe 1%) e sempre na 1ª vitória contra um chefe de mapa. Ficam ao reencarnar.
   // Robô (Refinador, 6 rodadas): com tudo isto o Mundo 1 vai de 35 h para 28 h e o Mundo 3 de 107 h para 90 h.
@@ -125,7 +132,8 @@ export const CONFIG = {
     // fortalece menos: com 1,5 o robô levava ~133 h e ~30 reencarnações; 1,31 = 41 h; 1,25 = ~25 h (mapas até ~4 h).
     // v0.24.0: Mundo 6 = 1,25 também (de novo só Ordens, sem rompimento de reino)
     // v0.25.0: Mundo 7 = 1,25 (robô: ~31 h, igual ao Mundo 6; 1,35 = 73 h; 1,45 = 146 h)
-    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25, 1.25],
+    // v0.26.0: Mundo 8 = 1,2 (robô: ~43 h, mapas de 2–5 h; com 1,25 ~58 h). Ver também CONFIG.selo.
+    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25, 1.25, 1.2],
     // v0.21.2: Velocidade dos inimigos × isto a cada mapa (decide quem ataca primeiro e o ataque duplo). Antes não
     // crescia: no Mundo 2 o jogador já tinha 1,4–3,8× a velocidade dos chefes e no Mundo 3 ~10× (ataque duplo sempre).
     // Com 1,03: Mundo 2 ≈ 1,5–1,9× (o ataque duplo precisa ser conquistado), Mundo 3 ≈ 2–4×. Ritmo igual no robô.

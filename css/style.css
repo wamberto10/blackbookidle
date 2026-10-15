@@ -1036,6 +1036,8 @@ canvas.curando { animation: curar 0.8s ease-in-out; }
 /* v0.14.1: cabeçalho, barra de ferramentas compacta, filtros numa linha, partes recolhíveis */
 .mochila-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
 .mochila-cabecalho h3 { margin: 0; }
+/* v0.26.0: chaves da Mochila automática (Vestir, Mesclar, Desmanchar obsoletos) */
+.automaticos-mochila { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 2px 0 6px; }
 .chave-auto { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--texto-fraco); cursor: pointer; white-space: nowrap; }
 .chave-auto input { display: none; }
 .chave-auto .chave { width: 32px; height: 18px; border-radius: 9px; background: #3a3448; position: relative; transition: background 0.2s; flex: none; }
@@ -2551,7 +2553,12 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 @keyframes iluminacao-gira { to { transform: rotate(360deg); } }
 
 /* v0.21.1: aviso de inimigo fraco (rende menos Cultivo) na seleção de desafio do Mapa */
-.md-fraco { display: block; margin-top: 2px; font-size: 0.68rem; color: #ffb27a; text-transform: none; letter-spacing: 0; }
+/* v0.26.0: com .md-recompensa na frente (a regra ".md-recompensa small" deixava o aviso cinza e em maiúsculas) */
+.md-recompensa .md-fraco { display: block; margin-top: 2px; font-size: 0.68rem; color: #ffb27a; text-transform: none; letter-spacing: 0; }
+/* v0.26.0: Selo do Mundo Primordial */
+.md-recompensa .md-selo { display: block; margin-top: 2px; font-size: 0.68rem; color: #c9b8ff; text-transform: none; letter-spacing: 0; }
+.cb-selo { display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; padding: 0 4px; border-radius: 4px; background: rgba(120, 90, 200, 0.35); color: #e0d6ff; font-size: 0.85em; }
+.cb-selo img { width: 12px; height: 12px; }
 
 
 /* v0.22.1: aviso do limite do equipamento pelo reino (tela do herói) */

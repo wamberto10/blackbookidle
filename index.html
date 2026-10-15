@@ -341,8 +341,18 @@
              ajuda e chances de drop recolhíveis -->
         <div class="mochila-cabecalho">
           <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
+        </div>
+        <!-- v0.26.0: a Mochila se organiza sozinha a cada item que cai -->
+        <div class="automaticos-mochila">
+          <span class="pequeno">Automático:</span>
           <label class="chave-auto" title="Vestir automaticamente os itens que aumentam o Poder Total">
-            <input type="checkbox" id="opcao-auto-equipar"><span class="chave"></span> Auto-vestir
+            <input type="checkbox" id="opcao-auto-equipar"><span class="chave"></span> Vestir
+          </label>
+          <label class="chave-auto" title="Mesclar sozinho toda pilha com 3 itens iguais (os vestidos não entram)">
+            <input type="checkbox" id="opcao-mescla-auto"><span class="chave"></span> Mesclar
+          </label>
+          <label class="chave-auto" title="Desmanchar sozinho os itens obsoletos: os que nem mesclados até ★5 e melhorados ao máximo ganhariam do item vestido">
+            <input type="checkbox" id="opcao-desmanche-auto"><span class="chave"></span> Desmanchar obsoletos
           </label>
         </div>
         <div class="ferramentas-mochila">
@@ -361,6 +371,8 @@
           <p class="pequeno">
             Toque numa pilha para <b>Equipar</b>, <b>Desmanchar</b> ou <b>Mesclar</b> (3 iguais viram 1 do grau seguinte, até ★5; o tier não muda).<br>
             <span class="item-melhor-legenda">▲</span> = melhor que o vestido · <span class="item-potencial">⬆</span> = fica melhor se melhorar até o nível máximo.<br>
+            <b>Automático</b>: a cada item que cai, a mochila veste o melhor, mescla as pilhas de 3 iguais e desmancha os
+            obsoletos (os que nem no ★5 e no nível máximo ganhariam do vestido) — cada um tem sua chave lá em cima.<br>
             <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
             Ao reencarnar, os equipamentos, a mochila e as Pedras ficam.
           </p>

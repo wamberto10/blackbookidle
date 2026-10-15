@@ -5,7 +5,8 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import { REINOS } from '../dados/reinos.js';
-import { indiceNivel, producaoPorSegundo, batismosMundiais } from './progressao.js';
+import { MUNDOS } from '../dados/mundos.js';
+import { indiceNivel, producaoPorSegundo, batismosMundiais, inicioDoReino } from './progressao.js';
 import { multiplicadorMelhoria as mult, efeitoMelhoria as soma } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
 import { classeDe } from './personagem.js';
@@ -31,6 +32,18 @@ export const ATRIBUTOS = [
 
 // Reino a partir do qual o Sentido Divino aparece (Ascensão Imortal)
 const REINO_SENTIDO_DIVINO = REINOS.findIndex(r => r.liberaSentidoDivino);
+
+// ---- v0.26.0: Selo do Mundo Primordial (CONFIG.selo) ----
+// Nos mapas com "selado: true" (dados/mundo8.js) você luta com a força do Elemento Verdadeiro, 9º estágio.
+const REINO_DO_SELO = REINOS.findIndex(r => r.id === CONFIG.selo.reino);
+export const SELO = { reino: REINO_DO_SELO, nivel: inicioDoReino(REINO_DO_SELO) + CONFIG.selo.estagio };
+const MAPA_SELADO = MUNDOS.flatMap(m => m.mapas).map(m => Boolean(m.selado));   // mesma ordem de MAPAS (mundo.js)
+
+// A fase atual do combate fica num mapa selado?
+export function estaSelado(estado) {
+  const fase = estado.combate?.faseAtual;
+  return fase != null && MAPA_SELADO[Math.floor(fase / CONFIG.combate.fasesPorMapa)] === true;
+}
 
 // Sentido Divino do jogador num nível (0 antes da Ascensão Imortal). Usado também para estimar
 // o Sentido Divino guardado de saves antigos.
@@ -58,12 +71,16 @@ export function atributosBase(nivel, indiceReino) {
 
 // opcoes.semLimite: ignora o limite do equipamento pelo reino (usado para COMPARAR itens: o melhor item fica
 // vestido mesmo quando o reino ainda não libera toda a força dele)
+// opcoes.selado: true/false força o Selo do Mundo Primordial (padrão: selado se a fase atual for de um mapa selado)
 export function calcularAtributos(estado, opcoes = {}) {
-  const nivel = indiceNivel(estado);
-  const base = { ...atributosBase(nivel, estado.reino) };
+  // v0.26.0: selado, vale o reino/estágio do selo (Elemento Verdadeiro) em vez do seu
+  const selado = opcoes.selado ?? estaSelado(estado);
+  const reino = selado ? SELO.reino : estado.reino;
+  const nivel = selado ? SELO.nivel : indiceNivel(estado);
+  const base = { ...atributosBase(nivel, reino) };
   // Bônus EXTRA de reino só do jogador (os inimigos usam atributosBase puro).
   // Faz cada rompimento valer mais que o ganho dos inimigos (v0.9.16, pedido do dono).
-  const extraReino = Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, estado.reino);
+  const extraReino = Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, reino);
   for (const atributo of ['ataque', 'vitalidade', 'defesa', 'sentidoDivino']) base[atributo] *= extraReino;
 
   // eq = soma dos equipamentos vestidos
@@ -85,7 +102,7 @@ export function calcularAtributos(estado, opcoes = {}) {
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
   const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +25% (CONFIG.vip.atributos)
   // v0.21.0: Batismo Mundial — +3% Ataque, Vitalidade e Defesa por rompimento desde a Transformação do Qi
-  const batismo = 1 + batismosMundiais(estado) * CONFIG.batismo.bonusPorBatismo;
+  const batismo = 1 + batismosMundiais(selado ? { reino } : estado) * CONFIG.batismo.bonusPorBatismo;
   return {
     ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo,
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
@@ -95,14 +112,15 @@ export function calcularAtributos(estado, opcoes = {}) {
     defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo,
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
-    // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado
+    // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado (selado, não vale)
     // Cultivador de Alma: Sentido Divino aberto desde o 1º estágio e ×2 (classe)
-    sentidoDivino: Math.max(sentidoDivinoLiberado(estado) || c.especial.sentidoDesdeOInicio ? base.sentidoDivino * classe('sentidoDivino') : 0,
-      estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
+    sentidoDivino: Math.max(reino >= REINO_SENTIDO_DIVINO || c.especial.sentidoDesdeOInicio ? base.sentidoDivino * classe('sentidoDivino') : 0,
+      selado ? 0 : estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
     tecnica: c.tecnica,
     equipamentoLimitado,   // v0.22.1: true = algum item rende menos que o normal (limite do reino)
+    selado,                // v0.26.0: true = lutando sob o Selo do Mundo Primordial
   };
 }
 

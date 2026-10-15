@@ -7,8 +7,8 @@ import { CONFIG } from '../config.js';
 import { MUNDOS } from '../dados/mundos.js';
 import { REINOS } from '../dados/reinos.js';
 import { TIPOS_DE_FASE, ESTRUTURA_DO_MAPA } from '../dados/fases.js';
-import { inicioDoReino, producaoNoNivel } from './progressao.js';
-import { atributosBase, calcularAtributos } from './atributos.js';
+import { inicioDoReino, producaoNoNivel, batismosMundiais } from './progressao.js';
+import { atributosBase, calcularAtributos, SELO } from './atributos.js';
 import { definirInicioDaVida } from './blackbook.js';
 
 const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
@@ -30,6 +30,16 @@ MAPAS.forEach((mapa, indiceMapa) => {
   const porMapa = CONFIG.combate.dificuldadePorMundo?.[mapa.mundo] ?? CONFIG.combate.dificuldadePorMapa;
   dificuldadeDoMapa.push(indiceMapa === 0 ? 1 : dificuldadeDoMapa[indiceMapa - 1] * porMapa);
 });
+
+// v0.26.0: força de um jogador "comum" num nível (base × bônus de reino só do jogador × Batismos).
+// Mede quanto o Selo do Mundo Primordial tira de quem luta num mapa selado.
+function forcaDoJogador(nivel, reino) {
+  const A = CONFIG.atributos;
+  const base = atributosBase(nivel, reino);
+  const batismo = 1 + batismosMundiais({ reino }) * CONFIG.batismo.bonusPorBatismo;
+  return { ataque: base.ataque * Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, reino) * batismo, velocidade: base.velocidade };
+}
+const FORCA_SELADA = forcaDoJogador(SELO.nivel, SELO.reino);
 
 MAPAS.forEach((mapa, indiceMapa) => {
   // Mapas do mesmo reino dividem os estágios entre si.
@@ -57,6 +67,32 @@ MAPAS.forEach((mapa, indiceMapa) => {
     const referencia = atributosBase(nivelReferencia, mapa.reino);
     // Cada mapa é um pouco mais difícil que o anterior (ver config: dificuldadePorMapa / dificuldadePorMundo)
     const dificuldade = dificuldadeDoMapa[indiceMapa];
+    const inimigo = {
+      nome: dados.inimigo,
+      forma: dados.forma,
+      vida: referencia.ataque * tipo.vida * dificuldade,
+      ataque: referencia.ataque * tipo.ataque * dificuldade,
+      defesa: referencia.ataque * tipo.defesa * dificuldade,
+      // v0.21.2: a Velocidade também cresce um pouco por mapa (antes não crescia: no Mundo 3 o jogador
+      // ficava ~10× mais rápido que os chefes e o ataque duplo valia sempre)
+      velocidade: referencia.velocidade * tipo.velocidade * Math.pow(CONFIG.combate.velocidadePorMapa ?? 1, indiceMapa),
+      sentidoDivino: referencia.sentidoDivino * dificuldade,   // para a Supressão de Alma
+    };
+    // v0.26.0: mapa selado — o inimigo perde a mesma fração de força que o Selo tira de um jogador deste nível
+    // (× CONFIG.selo.forcaDosInimigos). O inimigo "sem selo" fica guardado para o boss do evento.
+    let selado = inimigo;
+    if (mapa.selado) {
+      const livre = forcaDoJogador(nivelReferencia, mapa.reino);
+      const fator = (FORCA_SELADA.ataque / livre.ataque) * CONFIG.selo.forcaDosInimigos;
+      selado = {
+        ...inimigo,
+        vida: inimigo.vida * fator,
+        ataque: inimigo.ataque * fator,
+        defesa: inimigo.defesa * fator,
+        velocidade: inimigo.velocidade * (FORCA_SELADA.velocidade / livre.velocidade),
+        sentidoDivino: inimigo.sentidoDivino * fator,
+      };
+    }
 
     FASES.push({
       indice,
@@ -71,17 +107,9 @@ MAPAS.forEach((mapa, indiceMapa) => {
       nivel: nivelReferencia,   // v0.21.1: nível de cultivo da fase (inimigo fraco demais dá menos Cultivo)
       reino: mapa.reino,
       referencia,   // atributos de um cultivador comum neste ponto (base dos itens que caem aqui)
-      inimigo: {
-        nome: dados.inimigo,
-        forma: dados.forma,
-        vida: referencia.ataque * tipo.vida * dificuldade,
-        ataque: referencia.ataque * tipo.ataque * dificuldade,
-        defesa: referencia.ataque * tipo.defesa * dificuldade,
-        // v0.21.2: a Velocidade também cresce um pouco por mapa (antes não crescia: no Mundo 3 o jogador
-        // ficava ~10× mais rápido que os chefes e o ataque duplo valia sempre)
-        velocidade: referencia.velocidade * tipo.velocidade * Math.pow(CONFIG.combate.velocidadePorMapa ?? 1, indiceMapa),
-        sentidoDivino: referencia.sentidoDivino * dificuldade,   // para a Supressão de Alma
-      },
+      selado: Boolean(mapa.selado),   // v0.26.0: Selo do Mundo Primordial
+      inimigo: selado,
+      inimigoSemSelo: inimigo,
       recompensa: {
         cultivo: producaoNoNivel(nivelReferencia, mapa.reino) * tipo.cultivo,
         pedras: Math.ceil(tipo.pedras * Math.pow(CONFIG.combate.crescimentoPedras, indice) * CONFIG.combate.multiplicadorPedras),
@@ -160,7 +188,7 @@ export function textoDoInicioDaVida(estado) {
 function comecarVidaNova(novo, anterior) {
   // "A alma se lembra" (v0.12.0): o Sentido Divino é força da alma, não do corpo — guarda o maior já alcançado
   novo.reencarnacao.sentidoDivinoMaximo = Math.max(anterior.reencarnacao.sentidoDivinoMaximo ?? 0,
-    calcularAtributos(anterior).sentidoDivino);
+    calcularAtributos(anterior, { selado: false }).sentidoDivino);
   const indiceMundo = mundoDeInicio(anterior);
   if (indiceMundo === 0) return;
   const primeira = primeiraFaseDoMundo(indiceMundo);
