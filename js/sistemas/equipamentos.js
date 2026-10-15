@@ -218,7 +218,7 @@ export function melhorar(estado, id) {
 
 export function desmanchar(estado, id) {
   const indice = estado.mochila.findIndex(i => i.id === id);
-  if (indice < 0) return 0;
+  if (indice < 0 || estado.mochila[indice].travado) return 0;   // v0.27.1: travado não desmancha
   const [item] = estado.mochila.splice(indice, 1);
   const pedras = pedrasAoDesmanchar(item);
   estado.pedras += pedras;
@@ -261,14 +261,19 @@ export function melhorDaPilha(estado, pilha) {
   return pilha.itens.reduce((melhor, item) => (ganhoDePoder(estado, item) > ganhoDePoder(estado, melhor) ? item : melhor));
 }
 
-// O item mais fraco da pilha (é o que "Desmanchar" usa)
+// O item mais fraco da pilha (é o que "Desmanchar" usa). v0.27.1: itens travados ficam de fora (null = todos travados)
 export function maisFracoDaPilha(estado, pilha) {
-  return pilha.itens.reduce((fraco, item) => (ganhoDePoder(estado, item) < ganhoDePoder(estado, fraco) ? item : fraco));
+  const livres = pilha.itens.filter(livre);
+  if (!livres.length) return null;
+  return livres.reduce((fraco, item) => (ganhoDePoder(estado, item) < ganhoDePoder(estado, fraco) ? item : fraco));
 }
+
+// v0.27.1: item TRAVADO (cadeado da Mochila) não é desmanchado nem gasto em mesclas — por botão, em massa ou no automático
+export const livre = (item) => !item.travado;
 
 export function podeMesclar(estado, slotId, raridadeId, grau) {
   return proximoDaMescla(raridadeId, grau) !== null &&
-    itensDaPilha(estado, slotId, raridadeId, grau).length >= ITENS_PARA_MESCLAR;
+    itensDaPilha(estado, slotId, raridadeId, grau).filter(livre).length >= ITENS_PARA_MESCLAR;
 }
 
 // Mescla 3 itens de uma pilha. Devolve { item, destino, pedras } ou null se não for possível.
@@ -276,7 +281,7 @@ export function mesclar(estado, slotId, raridadeId, grau) {
   if (!podeMesclar(estado, slotId, raridadeId, grau)) return null;
 
   // Usa o item de fase mais avançada (define a força do novo) + os mais fracos
-  const candidatos = itensDaPilha(estado, slotId, raridadeId, grau).sort((a, b) => a.fase - b.fase);
+  const candidatos = itensDaPilha(estado, slotId, raridadeId, grau).filter(livre).sort((a, b) => a.fase - b.fase);
   const melhor = candidatos[candidatos.length - 1];
   const escolhidos = [melhor, ...candidatos.slice(0, ITENS_PARA_MESCLAR - 1)];
   const ids = new Set(escolhidos.map(i => i.id));
@@ -325,7 +330,7 @@ export function mesclarTudo(estado) {
 
 // Desmancha a pilha inteira
 export function desmancharPilha(estado, slotId, raridadeId, grau) {
-  const itens = itensDaPilha(estado, slotId, raridadeId, grau);
+  const itens = itensDaPilha(estado, slotId, raridadeId, grau).filter(livre);
   const pedras = itens.reduce((soma, i) => soma + pedrasAoDesmanchar(i), 0);
   const ids = new Set(itens.map(i => i.id));
   estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
@@ -351,8 +356,16 @@ export function ehObsoleto(estado, item) {
   return ganhoDePoder(estado, versaoMaxima(item)) <= 0;
 }
 
+// v0.27.1: trava/destrava itens (o cadeado da Mochila)
+export function travar(estado, ids, travado) {
+  const alvo = new Set(ids);
+  for (const item of [...estado.mochila, ...Object.values(estado.equipados)]) {
+    if (item && alvo.has(item.id)) item.travado = travado || undefined;
+  }
+}
+
 export function obsoletos(estado) {
-  const itens = estado.mochila.filter(item => ehObsoleto(estado, item));
+  const itens = estado.mochila.filter(item => livre(item) && ehObsoleto(estado, item));
   return { itens, pedras: itens.reduce((soma, i) => soma + pedrasAoDesmanchar(i), 0) };
 }
 
@@ -369,7 +382,7 @@ export function desmancharAteTier(estado, indiceMaximo) {
   let pedras = 0;
   let quantidade = 0;
   estado.mochila = estado.mochila.filter((item) => {
-    if (indiceRaridade(item) > indiceMaximo) return true;
+    if (indiceRaridade(item) > indiceMaximo || !livre(item)) return true;
     pedras += pedrasAoDesmanchar(item);
     quantidade += 1;
     return false;

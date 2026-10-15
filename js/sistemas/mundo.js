@@ -175,11 +175,17 @@ export function mundoDeInicio(estado) {
 
 // Texto de onde a próxima vida começa. Ex.: "Santo — 1º Estágio, no Mapa 13 (Fronteira de Tong Xuan)"
 export function textoDoInicioDaVida(estado) {
+  const inicio = inicioDaVida(estado);
+  return `${inicio.reino} — ${inicio.estagio}, no Mapa ${inicio.indiceMapa + 1} (${inicio.mapa})`;
+}
+
+// v0.27.1: as partes do começo da próxima vida (cartão "Próxima vida começa em" do Black Book)
+export function inicioDaVida(estado) {
   const indiceMapa = FASES[primeiraFaseDoMundo(mundoDeInicio(estado))].mapa;
   const mapa = MAPAS[indiceMapa];
   const reino = REINOS[indiceMapa === 0 ? 0 : mapa.reino];
   const estagio = indiceMapa === 0 ? 0 : (mapa.inicioNoReino ?? 0);
-  return `${reino.nome} — ${reino.estagios[estagio]}, no Mapa ${indiceMapa + 1} (${mapa.nome})`;
+  return { mundo: mundoDoMapa(indiceMapa).nome, reino: reino.nome, estagio: reino.estagios[estagio], indiceMapa, mapa: mapa.nome };
 }
 
 // Coloca a vida nova no começo do mundo certo: reino e estágio do 1º mapa dele

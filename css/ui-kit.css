@@ -1,0 +1,71 @@
+/* GERADO por ferramentas/converter-ui.py — não edite à mão. Peças do kit de interface (img/ui/). */
+.ui-botao-dourado { background:
+  url('../img/ui/botao_dourado_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_dourado_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_dourado_m.png') left center / auto 100% repeat-x; }
+.ui-botao-escuro { background:
+  url('../img/ui/botao_escuro_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_escuro_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_escuro_m.png') left center / auto 100% repeat-x; }
+.ui-botao-escuro-ativo { background:
+  url('../img/ui/botao_escuro_ativo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_escuro_ativo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_escuro_ativo_m.png') left center / auto 100% repeat-x; }
+.ui-botao-reencarnar { background:
+  url('../img/ui/botao_reencarnar_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_reencarnar_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_reencarnar_m.png') left center / auto 100% repeat-x; }
+.ui-botao-roxo { background:
+  url('../img/ui/botao_roxo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_roxo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_roxo_m.png') left center / auto 100% repeat-x; }
+.ui-botao-verde { background:
+  url('../img/ui/botao_verde_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_verde_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_verde_m.png') left center / auto 100% repeat-x; }
+.ui-botao-vermelho { background:
+  url('../img/ui/botao_vermelho_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_vermelho_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_vermelho_m.png') left center / auto 100% repeat-x; }
+.ui-caixa-comparacao { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 12.0) calc(var(--u) * 14.5) calc(var(--u) * 14.0) calc(var(--u) * 15.5);
+  border-image: url('../img/ui/caixa_comparacao.png') 24 29 28 31 fill / 1 / 0 stretch; }
+.ui-card-titulo-entalhe { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 14.0) calc(var(--u) * 16.0) calc(var(--u) * 14.5) calc(var(--u) * 15.5);
+  border-image: url('../img/ui/card_titulo_entalhe.png') 28 32 29 31 fill / 1 / 0 stretch; }
+.ui-card-verde { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 37.0) calc(var(--u) * 31.0) calc(var(--u) * 36.5) calc(var(--u) * 30.5);
+  border-image: url('../img/ui/card_verde.png') 74 62 73 61 fill / 1 / 0 stretch; }
+.ui-card-vermelho { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 31.5) calc(var(--u) * 19.0) calc(var(--u) * 18.0) calc(var(--u) * 19.0);
+  border-image: url('../img/ui/card_vermelho.png') 63 38 36 38 fill / 1 / 0 stretch; }
+.ui-chip-auto { background:
+  url('../img/ui/chip_auto_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/chip_auto_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/chip_auto_m.png') left center / auto 100% repeat-x; }
+.ui-chip-auto-ativo { background:
+  url('../img/ui/chip_auto_ativo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/chip_auto_ativo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/chip_auto_ativo_m.png') left center / auto 100% repeat-x; }
+.ui-custo-pilula { background:
+  url('../img/ui/custo_pilula_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/custo_pilula_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/custo_pilula_m.png') left center / auto 100% repeat-x; }
+.ui-etiqueta-moldura { background:
+  url('../img/ui/etiqueta_moldura_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/etiqueta_moldura_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/etiqueta_moldura_m.png') left center / auto 100% repeat-x; }
+.ui-linha-moldura { background:
+  url('../img/ui/linha_moldura_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/linha_moldura_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/linha_moldura_m.png') left center / auto 100% repeat-x; }
+.ui-painel-moldura { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 43.0) calc(var(--u) * 42.2) calc(var(--u) * 43.8) calc(var(--u) * 58.7);
+  border-image: url('../img/ui/painel_moldura.png') 52 51 53 71 fill / 1 / 0 stretch; }
+.ui-poder-placa { background:
+  url('../img/ui/poder_placa_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/poder_placa_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/poder_placa_m.png') left center / auto 100% repeat-x; }
+.ui-secao-titulo { background:
+  url('../img/ui/secao_titulo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/secao_titulo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/secao_titulo_m.png') left center / auto 100% repeat-x; }
+.ui-vida-linha { background:
+  url('../img/ui/vida_linha_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/vida_linha_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/vida_linha_m.png') left center / auto 100% repeat-x; }

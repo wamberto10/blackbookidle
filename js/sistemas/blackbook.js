@@ -185,7 +185,22 @@ export function reencarnar(estado) {
   novo.proximoIdItem = estado.proximoIdItem;
   novo.opcoes = { ...estado.opcoes };
   novo.estatisticas = { ...estado.estatisticas };
+  // v0.27.1: registro das vidas (tela do Black Book) — guarda as últimas 20
+  const antiga = estado.reencarnacao;
+  const vida = {
+    numero: antiga.vezes + 1,
+    reino: estado.reino,
+    estagio: estado.estagio,
+    fase: estado.combate.fasesConcluidas,
+    // duração em segundos de jogo (inclui o offline); null = vida de antes do registro existir
+    segundos: antiga.tempoNoInicio === undefined && antiga.vezes > 0 ? null
+      : estado.estatisticas.tempoJogado - (antiga.tempoNoInicio ?? 0),
+    essencia: ganho,
+    quando: Date.now(),
+  };
   novo.reencarnacao = {
+    historico: [...(antiga.historico ?? []), vida].slice(-20),
+    tempoNoInicio: estado.estatisticas.tempoJogado,
     vezes: estado.reencarnacao.vezes + 1,
     melhorFaseDeTodas: Math.max(estado.reencarnacao.melhorFaseDeTodas, estado.combate.fasesConcluidas),
     faseDaUltima: estado.combate.fasesConcluidas,

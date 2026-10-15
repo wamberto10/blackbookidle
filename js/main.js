@@ -287,6 +287,8 @@ montarInterface({
     depoisDeMexerNosItens();
   },
   aoMudarAutoEquipar: (ligado) => { estado.opcoes.autoEquipar = ligado; },
+  // v0.27.1: cadeado da Mochila — item travado não é desmanchado nem mesclado
+  aoTravarItens: (ids, travado) => { EQ.travar(estado, ids, travado); depoisDeMexerNosItens(); },
   // v0.26.0: Mochila automática — ao ligar, já organiza o que está guardado
   aoMudarMochilaAuto: (opcao, ligado) => {
     estado.opcoes[opcao] = ligado;

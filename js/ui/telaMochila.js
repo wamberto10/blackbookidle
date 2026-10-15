@@ -1,14 +1,14 @@
 // =============================================================
 // ui/telaMochila.js — aba Mochila (equipamentos e itens)
 //
-// - Em volta do personagem: os 10 espaços com os itens vestidos.
-// - Embaixo: os itens guardados. Itens iguais (mesmo tipo, tier e grau ★)
-//   aparecem EMPILHADOS, com a quantidade no canto.
-// - Clicar numa pilha: Equipar, Desmanchar ou Mesclar.
-// - Clicar num item vestido: Tirar ou Melhorar (com Pedras).
+// v0.27.1: layout novo, igual ao mockup (docs/layout/layout_mochila.png), com as peças de img/ui/:
+// - Em volta do personagem: os 10 espaços com os itens vestidos (moldura da raridade, +nível, "Nv." = mapa).
+// - Detalhe do item: ícone, nome na cor da raridade, tier, estrelas, atributos com a diferença para o vestido,
+//   caixa "Comparado com atual", descrição, cadeado (travar) e os botões Equipar / Melhorar / Mesclar / Desmanchar.
+// - Embaixo: ações, automáticos, filtros e a grade. Itens iguais (mesmo tipo, tier e grau ★) ficam EMPILHADOS.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { SLOTS, RARIDADES, ATRIBUTOS_EM_PORCENTO, NOMES_DOS_ATRIBUTOS } from '../dados/equipamentos.js';
+import { SLOTS, RARIDADES, ATRIBUTOS_EM_PORCENTO } from '../dados/equipamentos.js';
 import { liberado } from '../sistemas/desbloqueios.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
 import * as P from '../sistemas/progressao.js';
@@ -16,19 +16,52 @@ import { FASES, MAPAS } from '../sistemas/mundo.js';
 import * as EQ from '../sistemas/equipamentos.js';
 import { RARIDADE_POR_ID, SLOT_POR_ID, nomeDoItem, atributosDoItem, nivelMaximo, custoMelhoria, pedrasAoDesmanchar, grauDe, estrelas, proximoDaMescla } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
-import { personagemDe } from '../sistemas/personagem.js';
+import { personagemDe, classeDe } from '../sistemas/personagem.js';
 import { desenharPersonagem, icone, iconeEquipamento } from './sprite.js';
 
 const $ = (id) => document.getElementById(id);
+
+// Atributos dos itens: nome curto e ícone (img/ui/)
+const ATRIB = {
+  ataque: { nome: 'ATQ', icone: 'icone_atq' },
+  vitalidade: { nome: 'HP', icone: 'icone_hp' },
+  defesa: { nome: 'DEF', icone: 'icone_def' },
+  critico: { nome: 'Taxa Crítica', icone: 'icone_crit' },
+  danoCritico: { nome: 'Dano Crítico', icone: 'icone_dano_crit' },
+  velocidade: { nome: 'Velocidade', icone: 'icone_velocidade' },
+  esquiva: { nome: 'Esquiva', icone: 'icone_esquiva' },
+  cultivo: { nome: 'Cultivo', icone: 'icone_cultivo_peq' },
+};
+
+// Descrição curta de cada tipo de item (no mockup, embaixo dos atributos)
+const DESCRICAO = {
+  elmo: 'Forjado para proteger a mente do cultivador nas batalhas mais duras.',
+  colar: 'O pingente guarda um fio de Qi antigo que afia cada golpe.',
+  ombreiras: 'Placas pesadas que seguram golpes que quebrariam montanhas.',
+  capa: 'Leve como névoa: desvia golpes e acompanha o vento.',
+  peitoral: 'A armadura do tronco, onde o Qi do cultivador circula.',
+  luvas: 'Punhos protegidos, golpes certeiros e críticos devastadores.',
+  calcas: 'Firmam a base do cultivador — e uma base firme não cai.',
+  botas: 'Passos rápidos como relâmpago e difíceis de acompanhar.',
+  anel: 'Um anel de Qi concentrado que reforça o ataque.',
+  berloque: 'Uma cabaça encantada que também ajuda o cultivo.',
+};
 
 let acoesGuardadas = null;
 let ultimoEstado = null;
 // O que está aberto nos detalhes:
 //   { tipo: 'vestido', id }  ou  { tipo: 'pilha', slot, raridade, grau }  ou  null
-let selecionado = null;
+// (undefined = ainda não abriu a Mochila: começa mostrando o primeiro item vestido, como no mockup)
+let selecionado;
 let filtroTipo = 'todos';   // 'todos' ou o id de um espaço (ex.: 'elmo')
 let chaveDesenhada = '';
 let reinoDesenhado = null;
+
+const imgUi = (nome, classe = '') => `<img class="${classe}" src="img/ui/${nome}.png" alt="">`;
+const iconeItem = (slotId, classe = 'item-ic') => imgUi(`item_${slotId}`, classe);
+const nivelDoItem = (item) => FASES[item.fase].mapa + 1;   // "Nv." do item = mapa onde caiu (define a força dele)
+const estrelasImg = (grau) => Array.from({ length: CONFIG.equipamentos.graus },
+  (_, i) => imgUi(i < grau ? 'icone_estrela' : 'icone_estrela_vazia', 'moch-estrela')).join('');
 
 export function montarTelaMochila(acoes) {
   acoesGuardadas = acoes;
@@ -67,9 +100,9 @@ function selecionar(alvo) {
   }
 }
 
-// Valor de um atributo como texto: "+123" ou "+1.5%"
-function textoDoAtributo(atributo, valor) {
-  return ATRIBUTOS_EM_PORCENTO.includes(atributo) ? `+${valor.toFixed(1)}%` : `+${formatarNumero(valor)}`;
+// Valor de um atributo como texto: "1.250" ou "12.0%"
+function textoDoValor(atributo, valor) {
+  return ATRIBUTOS_EM_PORCENTO.includes(atributo) ? `${valor.toFixed(1)}%` : formatarNumero(valor);
 }
 
 function ondeCaiu(item) {
@@ -84,16 +117,29 @@ export function atualizarTelaMochila(estado) {
   $('mochila-conteudo').classList.toggle('escondido', !aberta);
   if (!aberta) return;
 
-  $('mochila-pedras').textContent = formatarNumero(Math.floor(estado.pedras));
   $('mochila-poder').textContent = formatarNumero(poderTotal(calcularAtributos(estado)));
-  $('opcao-auto-equipar').checked = estado.opcoes.autoEquipar;
-  $('opcao-mescla-auto').checked = estado.opcoes.mesclaAuto;
-  $('opcao-desmanche-auto').checked = estado.opcoes.desmancheAuto;
+  for (const [id, ligado] of [['opcao-auto-equipar', estado.opcoes.autoEquipar], ['opcao-mescla-auto', estado.opcoes.mesclaAuto],
+    ['opcao-desmanche-auto', estado.opcoes.desmancheAuto]]) {
+    $(id).checked = ligado;
+    const chip = $(id).parentElement;
+    chip.classList.toggle('ui-chip-auto-ativo', ligado);
+    chip.classList.toggle('ui-chip-auto', !ligado);
+  }
 
   const aparencia = `${estado.reino}|${JSON.stringify(personagemDe(estado))}`;
   if (reinoDesenhado !== aparencia) {
     reinoDesenhado = aparencia;
     desenharPersonagem($('mochila-sprite'), P.reinoAtual(estado).id, 'combate', personagemDe(estado));
+    // Miniatura chibi do herói (img/ui/mochila_heroi_<sexo>_<classe>.png); sem ela, fica o sprite de batalha
+    const imagem = $('mochila-heroi-img');
+    imagem.onload = () => { imagem.classList.remove('escondido'); $('mochila-sprite').classList.add('escondido'); };
+    imagem.onerror = () => { imagem.classList.add('escondido'); $('mochila-sprite').classList.remove('escondido'); };
+    imagem.src = `img/ui/mochila_heroi_${personagemDe(estado).sexo}_${classeDe(estado).id}.png`;
+  }
+
+  if (selecionado === undefined) {
+    const primeiro = SLOTS.map(s => estado.equipados[s.id]).find(Boolean);
+    selecionado = primeiro ? { tipo: 'vestido', id: primeiro.id } : null;
   }
 
   // Se o que estava aberto sumiu (desmanchado, mesclado, reencarnou...), fecha os detalhes
@@ -103,8 +149,8 @@ export function atualizarTelaMochila(estado) {
   // Só redesenha quando algo mudou nos itens (economiza processamento)
   const vestidoAberto = selecionado?.tipo === 'vestido' ? EQ.buscarItem(estado, selecionado.id) : null;
   const chave = [
-    Object.values(estado.equipados).map(i => i ? `${i.id}.${i.nivel}` : '-').join(','),
-    estado.mochila.map(i => i.id).join(','),
+    Object.values(estado.equipados).map(i => i ? `${i.id}.${i.nivel}.${i.travado ? 1 : 0}` : '-').join(','),
+    estado.mochila.map(i => `${i.id}${i.travado ? 't' : ''}`).join(','),
     JSON.stringify(selecionado),
     vestidoAberto ? EQ.podeMelhorar(estado, vestidoAberto) : '',
     FASES[estado.combate.faseAtual].mapa,
@@ -114,16 +160,19 @@ export function atualizarTelaMochila(estado) {
   if (chave === chaveDesenhada) return;
   chaveDesenhada = chave;
 
-  $('mochila-contagem').textContent = `(${estado.mochila.length} itens)`;
+  $('mochila-contagem').textContent = `(${estado.mochila.length})`;
   $('mesclar-tudo').disabled = !EQ.temAlgoParaMesclar(estado);
   // v0.26.1: com o automático ligado o botão manual sobra (a mochila já se organiza a cada item que cai)
   $('mesclar-tudo').classList.toggle('escondido', estado.opcoes.mesclaAuto);
   $('desmanchar-obsoletos').classList.toggle('escondido', estado.opcoes.desmancheAuto);
   const quantosObsoletos = EQ.obsoletos(estado).itens.length;
-  const textoObs = `${icone('desmanchar')} Obsoletos (${quantosObsoletos})`;
+  const textoObs = `${imgUi('icone_desmanchar')} Obsoletos (${quantosObsoletos})`;
   if ($('desmanchar-obsoletos').dataset.html !== textoObs) { $('desmanchar-obsoletos').dataset.html = textoObs; $('desmanchar-obsoletos').innerHTML = textoObs; }
   $('desmanchar-obsoletos').disabled = quantosObsoletos === 0;
-  desenharEspacos(estado);
+
+  // Espaços com algo melhor guardado na mochila (bolinha vermelha no espaço, como no mockup)
+  const melhoraveis = new Set(EQ.pilhas(estado).filter(p => EQ.ganhoDePoder(estado, EQ.melhorDaPilha(estado, p)) > 0).map(p => p.slot));
+  desenharEspacos(estado, melhoraveis);
   desenharDetalhe(estado);
   desenharFiltros(estado);
   desenharGrade(estado);
@@ -131,7 +180,7 @@ export function atualizarTelaMochila(estado) {
 }
 
 // ---- Os 10 espaços ao redor do personagem ----
-function desenharEspacos(estado) {
+function desenharEspacos(estado, melhoraveis) {
   const mapaAtual = FASES[estado.combate.faseAtual].mapa;
   for (const lado of ['esquerda', 'direita']) {
     const coluna = $(`slots-${lado}`);
@@ -139,20 +188,23 @@ function desenharEspacos(estado) {
     for (const slot of SLOTS.filter(s => s.lado === lado)) {
       const item = estado.equipados[slot.id];
       const botao = document.createElement('button');
-      botao.className = 'slot-item';
+      botao.className = 'ui moch-slot';
       if (item) {
-        botao.classList.add('raridade-' + item.raridade);
         if (mesmoSelecionado(selecionado, { tipo: 'vestido', id: item.id })) botao.classList.add('selecionado');
-        botao.innerHTML = `${iconeEquipamento(item.slot, item.raridade)}
-          <span class="slot-nome">${slot.nome}</span>
-          <span class="item-grau">${estrelas(grauDe(item))}</span>
-          ${item.nivel > 0 ? `<span class="item-nivel">+${item.nivel}</span>` : ''}`;
+        botao.innerHTML = `<span class="moch-moldura moldura-${item.raridade}">${iconeItem(slot.id)}
+            ${item.nivel > 0 ? `<span class="moch-mais">+${item.nivel}</span>` : ''}
+            <span class="moch-nv">Nv.${nivelDoItem(item)}</span>
+            ${melhoraveis.has(slot.id) ? '<span class="moch-ponto"></span>' : ''}
+            ${item.travado ? imgUi('botao_cadeado', 'moch-travado') : ''}</span>
+          <span class="moch-slot-nome">${slot.nome}</span>`;
+        botao.title = `${nomeDoItem(item)}${item.nivel > 0 ? ` +${item.nivel}` : ''}`;
         botao.addEventListener('click', () => selecionar({ tipo: 'vestido', id: item.id }));
       } else {
         botao.classList.add('vazio');
         const aviso = slot.mapaMinimo > mapaAtual + 1 ? `Mapa ${slot.mapaMinimo}` : 'Vazio';
-        botao.innerHTML = `${iconeEquipamento(slot.id, 'comum', 'fantasma')}
-          <span class="slot-nome">${slot.nome}</span><span class="slot-aviso">${aviso}</span>`;
+        botao.innerHTML = `<span class="moch-moldura moldura-comum">${iconeItem(slot.id, 'item-ic fantasma')}
+            ${melhoraveis.has(slot.id) ? '<span class="moch-ponto"></span>' : ''}</span>
+          <span class="moch-slot-nome">${slot.nome}<small>${aviso}</small></span>`;
         botao.disabled = true;
       }
       coluna.appendChild(botao);
@@ -169,12 +221,13 @@ function desenharFiltros(estado) {
     const quantidade = opcao.id === 'todos'
       ? estado.mochila.length
       : estado.mochila.filter(i => i.slot === opcao.id).length;
+    const ativo = filtroTipo === opcao.id;
     const botao = document.createElement('button');
-    botao.className = 'filtro' + (filtroTipo === opcao.id ? ' ativo' : '');
+    botao.className = `ui moch-filtro ${ativo ? 'ui-botao-escuro-ativo ativo' : 'ui-botao-escuro'}`;
     botao.title = `${opcao.nome} (${quantidade})`;
     if (quantidade === 0 && opcao.id !== 'todos') botao.classList.add('vazio');
-    botao.innerHTML = `${opcao.id === 'todos' ? icone('aba_mochila') : iconeEquipamento(opcao.id, 'comum')}
-      <span>${opcao.nome}</span><small>${quantidade}</small>`;
+    botao.innerHTML = `${opcao.id === 'todos' ? imgUi('icone_todos', 'moch-filtro-ic') : iconeItem(opcao.id, 'moch-filtro-ic')}
+      <span>${opcao.nome}<small>(${quantidade})</small></span>`;
     botao.addEventListener('click', () => { filtroTipo = opcao.id; redesenharAgora(); });
     caixa.appendChild(botao);
   }
@@ -193,19 +246,20 @@ function desenharGrade(estado) {
   for (const pilha of lista) {
     const alvo = { tipo: 'pilha', slot: pilha.slot, raridade: pilha.raridade, grau: pilha.grau };
     const botao = document.createElement('button');
-    botao.className = `celula-item raridade-${pilha.raridade}`;
+    botao.className = `ui moch-celula moldura-${pilha.raridade}`;
     if (mesmoSelecionado(selecionado, alvo)) botao.classList.add('selecionado');
-    // ▲ verde: o melhor item da pilha já aumentaria o Poder Total.
-    // ⬆ amarelo: ainda não, mas aumentaria depois de melhorado até o nível máximo.
+    // Seta verde: o melhor item da pilha já aumentaria o Poder Total; amarela: aumentaria se melhorado ao máximo
     const melhorItem = EQ.melhorDaPilha(estado, pilha);
     const melhor = EQ.ganhoDePoder(estado, melhorItem) > 0;
     const potencial = !melhor && EQ.ganhoNoNivelMaximo(estado, melhorItem) > 0;
     const podeMesclar = EQ.podeMesclar(estado, pilha.slot, pilha.raridade, pilha.grau);
-    botao.innerHTML = `${iconeEquipamento(pilha.slot, pilha.raridade)}
-      ${pilha.itens.length > 1 ? `<span class="item-quantidade${podeMesclar ? ' pode-mesclar' : ''}">${pilha.itens.length}</span>` : ''}
-      ${melhor ? '<span class="item-melhor">▲</span>' : ''}
-      ${potencial ? '<span class="item-melhor item-potencial" title="Fica melhor que o vestido se melhorar até o nível máximo">⬆</span>' : ''}
-      <span class="item-grau">${estrelas(pilha.grau)}</span>`;
+    botao.innerHTML = `${iconeItem(pilha.slot)}
+      ${pilha.itens.length > 1 ? `<span class="moch-qtd${podeMesclar ? ' pode-mesclar' : ''}">×${pilha.itens.length}</span>` : ''}
+      ${melhor ? imgUi('icone_seta_verde', 'moch-seta') : ''}
+      ${potencial ? imgUi('icone_seta_verde', 'moch-seta potencial') : ''}
+      ${pilha.itens.some(i => i.travado) ? imgUi('botao_cadeado', 'moch-travado') : ''}
+      <span class="moch-nv">Nv.${nivelDoItem(melhorItem)}</span>
+      <span class="moch-estrelas">${estrelasImg(pilha.grau)}</span>`;
     botao.title = `${SLOT_POR_ID[pilha.slot].nome} ${RARIDADE_POR_ID[pilha.raridade].nome} ${estrelas(pilha.grau)} × ${pilha.itens.length}`;
     botao.addEventListener('click', () => selecionar(alvo));
     grade.appendChild(botao);
@@ -217,52 +271,43 @@ function desenharGrade(estado) {
 }
 
 // ---- Detalhes ----
-function listaDeAtributos(item) {
-  return Object.entries(atributosDoItem(item))
-    .map(([a, v]) => `<li><span>${NOMES_DOS_ATRIBUTOS[a]}</span><b>${textoDoAtributo(a, v)}</b></li>`).join('');
-}
-
-// "Melhorado até +12: ▲ Poder +X" — mostra se vale a pena gastar Pedras melhorando este item.
-function linhaDoNivelMaximo(estado, item) {
-  const maximo = nivelMaximo(item);
-  if (item.nivel >= maximo) return '';
-  const ganho = EQ.ganhoNoNivelMaximo(estado, item);
-  return `<div class="comparacao ${ganho > 0 ? 'melhor' : 'pior'} comparacao-maximo">
-      ${ganho > 0 ? '⬆' : '▼'} Melhorado até +${maximo}: Poder Total ${ganho >= 0 ? '+' : '-'}${formatarNumero(Math.abs(ganho))}
-      <span class="pequeno">${ganho > 0 ? '(vale a pena melhorar)' : '(nem no nível máximo ganha do vestido)'}</span>
-    </div>`;
-}
-
-// Comparação lado a lado: este item × o item vestido no mesmo espaço, atributo por atributo.
-// Mostra todos os atributos que aparecem em qualquer um dos dois (o que um tem e o outro não, conta como 0).
-function tabelaDeComparacao(item, vestido) {
+// Atributos do item com a diferença para o vestido (verde = ganha, vermelho = perde)
+function listaDeAtributos(item, vestido) {
   const novo = atributosDoItem(item);
-  const atual = vestido ? atributosDoItem(vestido) : {};
-  const chaves = [...new Set([...Object.keys(novo), ...Object.keys(atual)])];
-  const linhas = chaves.map((a) => {
-    const v1 = novo[a] ?? 0;
-    const v2 = atual[a] ?? 0;
-    const diferenca = v1 - v2;
-    // "Igual" só se a diferença for menor que 0,5% do maior valor (os números podem ser pequenos ou enormes)
-    const quase = Math.abs(diferenca) <= Math.max(Math.abs(v1), Math.abs(v2)) * 0.005;
-    const classe = quase ? 'igual' : diferenca > 0 ? 'melhor' : 'pior';
-    const textoDif = quase ? '=' : `${diferenca > 0 ? '▲' : '▼'} ${textoDoAtributo(a, Math.abs(diferenca)).slice(1)}`;
-    return `<tr>
-      <td>${NOMES_DOS_ATRIBUTOS[a]}</td>
-      <td>${v1 ? textoDoAtributo(a, v1) : '—'}</td>
-      <td>${v2 ? textoDoAtributo(a, v2) : '—'}</td>
-      <td class="dif ${classe}">${textoDif}</td>
-    </tr>`;
+  const atual = vestido ? atributosDoItem(vestido) : null;
+  const chaves = [...new Set([...Object.keys(novo), ...Object.keys(atual ?? {})])];
+  return chaves.map((a) => {
+    const v = novo[a] ?? 0;
+    let dif = '';
+    if (atual) {
+      const d = v - (atual[a] ?? 0);
+      const quase = Math.abs(d) <= Math.max(Math.abs(v), Math.abs(atual[a] ?? 0)) * 0.005;
+      if (!quase) dif = `<em class="${d > 0 ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${d > 0 ? '' : ' baixo'}`)}(${d > 0 ? '+' : '−'}${textoDoValor(a, Math.abs(d))})</em>`;
+    }
+    const info = ATRIB[a] ?? { nome: a, icone: 'icone_atq' };
+    return `<li>${imgUi(info.icone, 'moch-stat-ic')}<span>${info.nome}</span><b>${v ? textoDoValor(a, v) : '—'}</b>${dif}</li>`;
   }).join('');
-  return `<table class="tabela-comparacao">
-    <thead><tr>
-      <th>Atributo</th>
-      <th>${iconeEquipamento(item.slot, item.raridade)} Este</th>
-      <th>${vestido ? iconeEquipamento(vestido.slot, vestido.raridade) : ''} Vestido</th>
-      <th>Diferença</th>
-    </tr></thead>
-    <tbody>${linhas}</tbody>
-  </table>`;
+}
+
+// Caixa "Comparado com atual": diferença atributo a atributo e no Poder Total
+function caixaDeComparacao(estado, item, vestido, ganho) {
+  if (!vestido) {
+    return `<div class="moch-comparacao ui-caixa-comparacao"><div class="moch-comp-titulo">Espaço vazio:</div>
+      <div class="melhor">Poder Total +${formatarNumero(Math.abs(ganho))}</div></div>`;
+  }
+  const novo = atributosDoItem(item);
+  const atual = atributosDoItem(vestido);
+  const linhas = [...new Set([...Object.keys(novo), ...Object.keys(atual)])].map((a) => {
+    const d = (novo[a] ?? 0) - (atual[a] ?? 0);
+    if (Math.abs(d) <= Math.max(Math.abs(novo[a] ?? 0), Math.abs(atual[a] ?? 0)) * 0.005) return '';
+    const info = ATRIB[a] ?? { nome: a };
+    return `<li class="${d > 0 ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${d > 0 ? '' : ' baixo'}`)}<span>${info.nome}</span><b>${d > 0 ? '+' : '−'}${textoDoValor(a, Math.abs(d))}</b></li>`;
+  }).join('');
+  return `<div class="moch-comparacao ui-caixa-comparacao">
+      <div class="moch-comp-titulo">Comparado com atual:</div>
+      <ul>${linhas || '<li class="igual"><span>Atributos iguais</span></li>'}</ul>
+      <div class="moch-comp-poder ${ganho > 0 ? 'melhor' : 'pior'}">Poder ${ganho >= 0 ? '+' : '−'}${formatarNumero(Math.abs(ganho))}</div>
+    </div>`;
 }
 
 function desenharDetalhe(estado) {
@@ -271,35 +316,55 @@ function desenharDetalhe(estado) {
   if (!selecionado) return;
   if (selecionado.tipo === 'vestido') desenharDetalheVestido(estado, caixa);
   else desenharDetalhePilha(estado, caixa);
-  $('detalhe-fechar').addEventListener('click', () => { selecionado = null; redesenharAgora(); });
+  caixa.insertAdjacentHTML('afterbegin', '<div class="moch-det-moldura ui-painel-moldura"></div>');   // moldura atrás do conteúdo
 }
+
+// Parte de cima do detalhe (igual para vestido e pilha)
+function topoDoDetalhe(item, raridade, etiqueta, quantidade, travado) {
+  return `<div class="moch-det-topo">
+      <div class="moch-det-icone moldura-${raridade.id}">${iconeItem(item.slot)}${quantidade > 1 ? `<span class="moch-qtd">×${quantidade}</span>` : ''}</div>
+      <div class="moch-det-info">
+        <div class="moch-det-nome" style="color:${raridade.cor}">${SLOT_POR_ID[item.slot].nome} ${raridade.material}${item.nivel > 0 ? ` +${item.nivel}` : ''}</div>
+        <div class="moch-det-linha"><span class="moch-tier" style="color:${raridade.cor};border-color:${raridade.cor}">${raridade.tier}</span>
+          <span class="moch-estrelas grande">${estrelasImg(grauDe(item))}</span><span class="moch-det-nv">Nv. ${nivelDoItem(item)}</span></div>
+      </div>
+      <div class="moch-det-cantos">
+        <span class="moch-etiqueta ui-etiqueta-moldura">${etiqueta}</span>
+        <button class="botao-icone moch-cadeado${travado ? ' ativo' : ''}" id="detalhe-travar" title="${travado ? 'Travado: não é desmanchado nem mesclado. Toque para destravar.' : 'Travar: protege o item dos desmanches e das mesclas.'}">${imgUi('botao_cadeado')}</button>
+      </div>
+    </div>`;
+}
+
+const botao = (id, cor, iconeNome, texto, ativo = true, titulo = '', ponto = false) =>
+  `<button id="${id}" class="ui ui-botao-${cor} moch-botao${ponto ? ' com-ponto' : ''}" ${ativo ? '' : 'disabled'} title="${titulo}">${imgUi(iconeNome)}<span>${texto}</span></button>`;
 
 // Item vestido: Tirar ou Melhorar
 function desenharDetalheVestido(estado, caixa) {
   const item = EQ.buscarItem(estado, selecionado.id);
   const raridade = RARIDADE_POR_ID[item.raridade];
   const noMaximo = item.nivel >= nivelMaximo(item);
-  caixa.style.setProperty('--cor-raridade', raridade.cor);
-  caixa.innerHTML = `
-    <div class="detalhe-topo">
-      ${iconeEquipamento(item.slot, item.raridade, 'icone-grande')}
-      <div>
-        <div class="item-nome">${nomeDoItem(item)}${item.nivel > 0 ? ` +${item.nivel}` : ''}</div>
-        <div class="pequeno">Tier ${raridade.tier} · ${raridade.nome} ${estrelas(grauDe(item))} · Nível ${item.nivel}/${nivelMaximo(item)} · <b>Vestido</b></div>
-        <div class="pequeno">Caiu em: ${ondeCaiu(item)}</div>
+  const podeMelhorar = !noMaximo && EQ.podeMelhorar(estado, item);
+  caixa.innerHTML = `${topoDoDetalhe(item, raridade, 'Equipado', 1, item.travado)}
+    <div class="moch-det-meio">
+      <ul class="moch-stats">${listaDeAtributos(item, null)}</ul>
+      <div class="moch-comparacao ui-caixa-comparacao">
+        <div class="moch-comp-titulo">Poder do item:</div>
+        <div class="moch-comp-poder melhor">+${formatarNumero(EQ.poderDoItem(estado, item))}</div>
+        <div class="moch-comp-titulo">Nível ${item.nivel}/${nivelMaximo(item)}</div>
+        ${noMaximo ? '' : `<div class="pequeno">Melhorar: ${formatarNumero(custoMelhoria(item))} ${icone('pedra')}</div>`}
       </div>
-      <button class="botao-icone" id="detalhe-fechar">✕</button>
     </div>
-    <ul class="item-atributos">${listaDeAtributos(item)}</ul>
-    <div class="poder-item">Poder do item: <b>+${formatarNumero(EQ.poderDoItem(estado, item))}</b></div>
-    <div class="botoes">
-      <button id="detalhe-remover">Tirar</button>
-      <button id="detalhe-melhorar" class="principal" ${noMaximo || !EQ.podeMelhorar(estado, item) ? 'disabled' : ''}>
-        ${noMaximo ? 'Nível máximo' : `Melhorar: ${formatarNumero(custoMelhoria(item))} ${icone('pedra')}`}
-      </button>
+    <p class="moch-desc">${DESCRICAO[item.slot] ?? ''} <span>Caiu em: ${ondeCaiu(item)}.</span></p>
+    <div class="moch-det-botoes">
+      ${botao('detalhe-remover', 'dourado', 'icone_equipar', 'Tirar')}
+      ${botao('detalhe-melhorar', 'verde', 'icone_melhorar', noMaximo ? 'Máximo' : 'Melhorar', podeMelhorar,
+        noMaximo ? 'Nível máximo' : `Custa ${formatarNumero(custoMelhoria(item))} Pedras`, podeMelhorar)}
+      ${botao('detalhe-mesclar', 'roxo', 'icone_mesclar', 'Mesclar', false, 'Só itens guardados na mochila se mesclam')}
+      ${botao('detalhe-desmanchar', 'vermelho', 'icone_desmanchar', 'Desmanchar', false, 'Tire o item antes de desmanchar')}
     </div>`;
   $('detalhe-remover').addEventListener('click', () => acoesGuardadas.aoRemoverItem(item.slot));
   $('detalhe-melhorar').addEventListener('click', () => acoesGuardadas.aoMelhorarItem(item.id));
+  $('detalhe-travar').addEventListener('click', () => acoesGuardadas.aoTravarItens([item.id], !item.travado));
 }
 
 // Pilha guardada: Equipar, Desmanchar ou Mesclar
@@ -307,64 +372,41 @@ function desenharDetalhePilha(estado, caixa) {
   const pilha = EQ.buscarPilha(estado, selecionado.slot, selecionado.raridade, selecionado.grau);
   const raridade = RARIDADE_POR_ID[pilha.raridade];
   const proxima = proximoDaMescla(pilha.raridade, pilha.grau);   // { raridade, grau } ou null
-  const nomeProxima = proxima ? `${proxima.raridade.nome} ${estrelas(proxima.grau)}` : '';
   const melhor = EQ.melhorDaPilha(estado, pilha);
-  const fraco = EQ.maisFracoDaPilha(estado, pilha);
+  const fraco = EQ.maisFracoDaPilha(estado, pilha);              // null = todos travados
   const quantidade = pilha.itens.length;
   const necessarios = CONFIG.equipamentos.itensParaMesclar;
-
-  // Comparação do melhor item da pilha com o vestido
+  const livres = pilha.itens.filter(EQ.livre).length;
+  const travada = pilha.itens.every(i => i.travado);
   const ganho = EQ.ganhoDePoder(estado, melhor);
   const atual = estado.equipados[pilha.slot];
-  const comparacao = `<div class="comparacao ${ganho > 0 ? 'melhor' : 'pior'}">
-      ${ganho > 0 ? '▲' : '▼'} Poder Total ${ganho >= 0 ? '+' : '-'}${formatarNumero(Math.abs(ganho))}
-      <span class="pequeno">${atual ? `(comparado com ${nomeDoItem(atual)})` : '(espaço vazio)'}</span>
-    </div>${linhaDoNivelMaximo(estado, melhor)}`;
+  const podeMesclar = EQ.podeMesclar(estado, pilha.slot, pilha.raridade, pilha.grau);
+  const tituloMesclar = !proxima ? `${estrelas(5)}: grau máximo`
+    : `${Math.min(livres, necessarios)}/${necessarios} → ${proxima.raridade.nome} ${estrelas(proxima.grau)}`;
 
-  // Botão Mesclar
-  let botaoMesclar;
-  if (!proxima) {
-    botaoMesclar = `<button disabled>★5 — grau máximo</button>`;
-  } else {
-    botaoMesclar = `<button id="detalhe-mesclar" class="botao-mesclar" ${quantidade >= necessarios ? '' : 'disabled'}>
-      Mesclar ${Math.min(quantidade, necessarios)}/${necessarios} →
-      ${iconeEquipamento(pilha.slot, proxima.raridade.id)} <span style="color:${proxima.raridade.cor}">${proxima.raridade.tier} ${nomeProxima}</span>
-    </button>`;
-  }
-
-  caixa.style.setProperty('--cor-raridade', raridade.cor);
-  caixa.innerHTML = `
-    <div class="detalhe-topo">
-      <div class="icone-pilha">
-        ${iconeEquipamento(pilha.slot, pilha.raridade, 'icone-grande')}
-        ${quantidade > 1 ? `<span class="item-quantidade">${quantidade}</span>` : ''}
-      </div>
-      <div>
-        <div class="item-nome">${nomeDoItem(melhor)}${melhor.nivel > 0 ? ` +${melhor.nivel}` : ''}</div>
-        <div class="pequeno">Tier ${raridade.tier} · ${raridade.nome} ${estrelas(pilha.grau)} · ${quantidade} na mochila</div>
-        <div class="pequeno">${quantidade > 1 ? 'Mostrando o melhor da pilha · ' : ''}Caiu em: ${ondeCaiu(melhor)}</div>
-      </div>
-      <button class="botao-icone" id="detalhe-fechar">✕</button>
+  caixa.innerHTML = `${topoDoDetalhe(melhor, raridade, quantidade > 1 ? `Na mochila (${quantidade})` : 'Na mochila', quantidade, travada)}
+    <div class="moch-det-meio">
+      <ul class="moch-stats">${listaDeAtributos(melhor, atual)}</ul>
+      ${caixaDeComparacao(estado, melhor, atual, ganho)}
     </div>
-    ${atual
-      ? `<div class="pequeno comparando-com">Comparando com o vestido: <b>${nomeDoItem(atual)}${atual.nivel > 0 ? ` +${atual.nivel}` : ''}</b></div>
-         ${tabelaDeComparacao(melhor, atual)}`
-      : `<ul class="item-atributos">${listaDeAtributos(melhor)}</ul>`}
-    <div class="poder-item">Poder do item: <b>+${formatarNumero(EQ.poderDoItem(estado, melhor))}</b>${atual
-      ? ` · vestido: <b>+${formatarNumero(EQ.poderDoItem(estado, atual))}</b>` : ''}</div>
-    ${comparacao}
-    <div class="botoes botoes-pilha">
-      <button id="detalhe-vestir" class="principal">Equipar</button>
-      <button id="detalhe-desmanchar" class="perigo">Desmanchar 1: +${formatarNumero(pedrasAoDesmanchar(fraco))} ${icone('pedra')}</button>
-      ${botaoMesclar}
+    <p class="moch-desc">${DESCRICAO[pilha.slot] ?? ''} <span>${quantidade > 1 ? 'Mostrando o melhor da pilha. ' : ''}Caiu em: ${ondeCaiu(melhor)}.</span></p>
+    <div class="moch-det-botoes">
+      ${botao('detalhe-vestir', 'dourado', 'icone_equipar', 'Equipar')}
+      ${botao('detalhe-melhorar', 'verde', 'icone_melhorar', 'Melhorar', false, 'Vista o item para melhorar com Pedras')}
+      ${botao('detalhe-mesclar', 'roxo', 'icone_mesclar', 'Mesclar', podeMesclar, tituloMesclar)}
+      ${botao('detalhe-desmanchar', 'vermelho', 'icone_desmanchar', 'Desmanchar', Boolean(fraco),
+        fraco ? `Desmanchar 1: +${formatarNumero(pedrasAoDesmanchar(fraco))} Pedras` : 'Item travado')}
     </div>
-    ${quantidade > 1 ? `<button id="detalhe-desmanchar-todos" class="perigo largo">Desmanchar a pilha toda (${quantidade})</button>` : ''}
-    ${proxima && quantidade < necessarios ? `<p class="pequeno dica">Junte ${necessarios} para mesclar em 1 item ${nomeProxima}. Faltam ${necessarios - quantidade}.</p>` : ''}`;
+    <div class="moch-det-extra">
+      ${proxima ? `<span>Mesclar: ${tituloMesclar}</span>` : `<span>${estrelas(5)} — grau máximo</span>`}
+      ${livres > 1 ? '<button class="botao-icone moch-link" id="detalhe-desmanchar-todos">Desmanchar a pilha toda</button>' : ''}
+    </div>`;
 
   $('detalhe-vestir').addEventListener('click', () => acoesGuardadas.aoEquiparItem(melhor.id));
-  $('detalhe-desmanchar').addEventListener('click', () => acoesGuardadas.aoDesmancharItem(fraco.id));
-  $('detalhe-mesclar')?.addEventListener('click', () => acoesGuardadas.aoMesclar(pilha.slot, pilha.raridade, pilha.grau));
+  if (fraco) $('detalhe-desmanchar').addEventListener('click', () => acoesGuardadas.aoDesmancharItem(fraco.id));
+  $('detalhe-mesclar').addEventListener('click', () => acoesGuardadas.aoMesclar(pilha.slot, pilha.raridade, pilha.grau));
   $('detalhe-desmanchar-todos')?.addEventListener('click', () => acoesGuardadas.aoDesmancharPilha(pilha.slot, pilha.raridade, pilha.grau));
+  $('detalhe-travar').addEventListener('click', () => acoesGuardadas.aoTravarItens(pilha.itens.map(i => i.id), !travada));
 }
 
 // ---- Chances de drop no mapa atual ----

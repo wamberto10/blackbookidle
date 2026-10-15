@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0a080e">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ui-kit.css">
 </head>
 <body>
   <!-- ===== Moldura do jogo: tudo fica dentro dela (tamanho de celular em pé) ===== -->
@@ -323,63 +324,57 @@
   </section>
 
   <!-- ===== Mochila ===== -->
-  <section class="painel" id="aba-mochila">
+  <section class="painel painel-novo" id="aba-mochila">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_mochila.png" alt=""> Mochila</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
       <div class="bloqueado" id="mochila-bloqueado">
         🎒 A Mochila será liberada no <b>5º estágio do Corpo Temperado</b>.
       </div>
-      <div id="mochila-conteudo" class="escondido">
-        <!-- Boneco: 5 espaços à esquerda, personagem no meio, 5 à direita -->
-        <div class="boneco">
-          <div class="coluna-slots" id="slots-esquerda"></div>
-          <div class="boneco-centro">
-            <canvas id="mochila-sprite" width="32" height="32"></canvas>
-            <div class="rotulo">Poder Total</div>
-            <div class="poder" id="mochila-poder">0</div>
-            <div class="pequeno"><img class="icone-px" src="img/icones/pedra.png" alt=""> <b id="mochila-pedras">0</b></div>
-          </div>
-          <div class="coluna-slots" id="slots-direita"></div>
+      <!-- v0.27.1 (layout novo — docs/layout/layout_mochila.png): boneco com os 10 espaços, detalhe do item,
+           ações, automáticos, filtros e grade -->
+      <div id="mochila-conteudo" class="escondido mochila-nova">
+        <div class="moch-boneco" id="moch-boneco">
+          <div class="moch-coluna" id="slots-esquerda"></div>
+          <div class="moch-heroi"><img id="mochila-heroi-img" class="escondido" alt=""><canvas id="mochila-sprite" width="32" height="32"></canvas></div>
+          <div class="moch-coluna moch-coluna-dir" id="slots-direita"></div>
+          <div class="moch-poder ui-poder-placa"><small>Poder Total</small><b id="mochila-poder">0</b></div>
         </div>
 
         <!-- Detalhes do item clicado -->
-        <div class="cartao detalhe-item escondido" id="item-detalhe"></div>
+        <div class="moch-detalhe escondido" id="item-detalhe"></div>
 
-        <!-- v0.14.1: mochila reorganizada — ações numa barra compacta, filtros numa linha,
-             ajuda e chances de drop recolhíveis -->
-        <!-- v0.26.1: título e ações manuais na mesma linha (Mesclar/Obsoletos só aparecem com o automático desligado) -->
-        <div class="mochila-cabecalho">
-          <h3>Itens <small class="pequeno" id="mochila-contagem"></small></h3>
+        <div class="moch-secao">
+          <div class="moch-titulo ui-secao-titulo">Itens <span id="mochila-contagem"></span></div>
           <div class="ferramentas-mochila">
-            <button id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais"><img class="icone-px" src="img/icones/mesclar.png" alt=""> Mesclar</button>
-            <button id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Obsoletos</button>
-            <button id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> Comuns</button>
-            <button id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila"><img class="icone-px" src="img/icones/desmanchar.png" alt=""> +Incomuns</button>
+            <button class="ui ui-botao-escuro" id="mesclar-tudo" title="Mescla todas as pilhas com 3 itens iguais"><img src="img/ui/icone_mesclar.png" alt=""> Mesclar</button>
+            <button class="ui ui-botao-escuro" id="desmanchar-obsoletos" title="Desmancha os itens que nunca vão ficar melhores que o que você está vestindo, nem mesclados até ★5 e melhorados ao máximo"><img src="img/ui/icone_desmanchar.png" alt=""> Obsoletos</button>
+            <button class="ui ui-botao-escuro" id="desmanchar-comuns" title="Desmancha todos os itens Comuns da mochila (os travados ficam)"><img src="img/ui/icone_desmanchar.png" alt=""> Comuns</button>
+            <button class="ui ui-botao-escuro moch-verde" id="desmanchar-incomuns" title="Desmancha todos os itens Comuns e Incomuns da mochila (os travados ficam)"><img src="img/ui/icone_desmanchar.png" alt=""> +Incomuns</button>
           </div>
         </div>
         <!-- v0.26.0: a Mochila se organiza sozinha a cada item que cai -->
-        <div class="automaticos-mochila">
-          <span class="pequeno">Auto:</span>
-          <label class="chave-auto" title="Vestir automaticamente os itens que aumentam o Poder Total">
-            <input type="checkbox" id="opcao-auto-equipar"><span class="chave"></span> Vestir
+        <div class="moch-auto">
+          <span>Auto:</span>
+          <label class="moch-chip ui-chip-auto" title="Vestir automaticamente os itens que aumentam o Poder Total">
+            <input type="checkbox" id="opcao-auto-equipar"><img src="img/ui/icone_vestir.png" alt=""> Vestir
           </label>
-          <label class="chave-auto" title="Mesclar sozinho toda pilha com 3 itens iguais (os vestidos não entram)">
-            <input type="checkbox" id="opcao-mescla-auto"><span class="chave"></span> Mesclar
+          <label class="moch-chip ui-chip-auto" title="Mesclar sozinho toda pilha com 3 itens iguais (os vestidos e os travados não entram)">
+            <input type="checkbox" id="opcao-mescla-auto"><img src="img/ui/icone_mesclar.png" alt=""> Mesclar
           </label>
-          <label class="chave-auto" title="Desmanchar sozinho os itens obsoletos: os que nem mesclados até ★5 e melhorados ao máximo ganhariam do item vestido">
-            <input type="checkbox" id="opcao-desmanche-auto"><span class="chave"></span> Desmanchar
+          <label class="moch-chip ui-chip-auto" title="Desmanchar sozinho os itens obsoletos: os que nem mesclados até ★5 e melhorados ao máximo ganhariam do item vestido (os travados ficam)">
+            <input type="checkbox" id="opcao-desmanche-auto"><img src="img/ui/icone_desmanchar.png" alt=""> Desmanchar
           </label>
         </div>
         <!-- Abas por tipo de item (uma linha, rola para o lado se não couber) -->
-        <div class="filtros" id="filtros-itens"></div>
-        <!-- Itens iguais (mesmo tipo e tier) aparecem empilhados -->
-        <div class="grade-itens" id="grade-itens"></div>
+        <div class="moch-filtros" id="filtros-itens"></div>
+        <!-- Itens iguais (mesmo tipo, tier e grau) aparecem empilhados -->
+        <div class="moch-grade" id="grade-itens"></div>
 
         <details class="recolhivel">
           <summary>ⓘ Como funciona a mochila</summary>
           <p class="pequeno">
             Toque numa pilha para <b>Equipar</b>, <b>Desmanchar</b> ou <b>Mesclar</b> (3 iguais viram 1 do grau seguinte, até ★5; o tier não muda).<br>
-            <span class="item-melhor-legenda">▲</span> = melhor que o vestido · <span class="item-potencial">⬆</span> = fica melhor se melhorar até o nível máximo.<br>
+            <img class="icone-px" src="img/ui/icone_seta_verde.png" alt="▲"> = melhor que o vestido · <img class="icone-px moch-seta-amarela" src="img/ui/icone_seta_verde.png" alt="⬆"> = fica melhor se melhorar até o nível máximo · <img class="icone-px" src="img/ui/botao_cadeado.png" alt="🔒"> = travado (não é desmanchado nem mesclado).<br>
             <b>Automático</b>: a cada item que cai, a mochila veste o melhor, mescla as pilhas de 3 iguais e desmancha os
             obsoletos (os que nem no ★5 e no nível máximo ganhariam do vestido) — cada um tem sua chave lá em cima.<br>
             <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
@@ -439,45 +434,77 @@
   </section>
 
   <!-- ===== Black Book ===== -->
-  <section class="painel" id="aba-blackbook">
+  <section class="painel painel-novo" id="aba-blackbook">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/livro.png" alt=""> Black Book</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
       <div class="bloqueado" id="blackbook-bloqueado">
         <img class="icone-px" src="img/icones/livro.png" alt=""> O Black Book será liberado quando você completar o <b>Corpo Temperado</b>.
       </div>
-      <div id="blackbook-conteudo" class="escondido">
-        <div class="cartao livro">
-          <p class="lema">"Toda vida chega ao fim. O que a alma conquistou, o Black Book guarda."</p>
-          <details class="recolhivel mundo-sobre"><summary>Como funciona</summary>
-          <p>Quando uma fase ficar difícil demais, reencarne: o cultivo e as fases recomeçam, mas você recebe
-            Essência da Alma de acordo com a fase mais distante que venceu (e guarda equipamentos, mochila,
-            Pedras e Núcleos). Use a Essência aqui para fortalecer seus atributos para sempre e chegar mais
-            longe na próxima vida.</p></details>
-        </div>
-
-        <div class="cartao">
-          <h3><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> Reencarnação</h3>
-          <div class="bb-dados">
-            <div><small>Mais longe nesta vida</small><strong id="bb-fase"></strong></div>
-            <div><small>Essência ao reencarnar</small><strong id="bb-ganho" class="destaque"></strong></div>
-            <div class="bb-dado-largo"><small>A próxima vida começa em</small><strong id="bb-inicio"></strong></div>
+      <!-- v0.27.1 (layout novo — docs/layout/layout_blackbook.png): banner, reencarnação, melhorias e registro das vidas -->
+      <div id="blackbook-conteudo" class="escondido bb-novo">
+        <div class="bb-banner">
+          <div class="bb-banner-texto">
+            <h2 class="bb-titulo">Black Book</h2>
+            <p class="bb-lema">Múltiplas vidas, um único caminho.</p>
+            <p class="bb-lema2">O que se perde é passageiro.<br>O que se grava aqui é eterno.</p>
           </div>
-          <p class="pequeno dica">
-            ❌ Recomeça: Cultivo, reino, estágio e fases do mapa.<br>
-            ✔ Fica para sempre: Essência da Alma, melhorias do Black Book, equipamentos, mochila, Pedras Espirituais, Núcleos e VIP.
-          </p>
-          <button id="bb-reencarnar" class="principal rompimento largo">📕 Reencarnar</button>
         </div>
 
-        <h3>Melhorias permanentes <small class="pequeno">— você tem <img class="icone-px" src="img/icones/essencia.png" alt=""> <span id="bb-essencia">0</span> Essência da Alma</small></h3>
-        <div class="lista-melhorias" id="lista-melhorias"></div>
-
-        <h3>Registro das vidas</h3>
-        <div class="atributos">
-          <div class="atributo"><span><img class="icone-px" src="img/icones/reencarnacao.png" alt=""> Reencarnações</span><strong id="bb-vezes">0</strong></div>
-          <div class="atributo"><span>🏔️ Mais longe (todas as vidas)</span><strong id="bb-recorde"></strong></div>
-          <div class="atributo"><span><img class="icone-px" src="img/icones/essencia.png" alt=""> Essência ganha no total</span><strong id="bb-total">0</strong></div>
+        <div class="bb-secao"><span class="ui-secao-titulo">Reencarnação</span></div>
+        <div class="bb-reenc">
+          <div class="bb-card bb-essencia" id="bb-essencia-card">
+            <div class="bb-moldura ui-card-titulo-entalhe"></div>
+            <div class="bb-card-titulo">Essência da Alma obtida</div>
+            <div class="bb-essencia-valor"><img src="img/ui/icone_essencia.png" alt=""><b id="bb-ganho">0</b></div>
+            <p>Quanto mais longe você for, mais Essência da Alma receberá.</p>
+          </div>
+          <div class="bb-card bb-lista bb-lista-vermelha" title="Também acabam: Reclusão, Iluminação, Pílula do Fluxo e a Fonte Estelar refinada">
+            <div class="bb-moldura ui-card-vermelho"></div>
+            <div class="bb-lista-titulo"><img src="img/ui/bb_icone_reiniciar.png" alt=""> O que reinicia</div>
+            <ul>
+              <li><img src="img/ui/icone_cultivo.png" alt=""><span>Cultivo</span><em>Zera</em></li>
+              <li><img src="img/ui/aba_icone_cultivo.png" alt=""><span>Reino</span><em>Volta</em></li>
+              <li><img src="img/ui/bb_icone_estrela.png" alt=""><span>Fases</span><em>Recomeçam</em></li>
+              <li><img src="img/icones/iluminacao.png" alt=""><span>Efeitos</span><em>Acabam</em></li>
+            </ul>
+          </div>
+          <div class="bb-card bb-lista bb-lista-verde" title="Também ficam: o personagem, a Essência da Alma, o Arranjo, o VIP e o Evento de Boss">
+            <div class="bb-moldura ui-card-verde"></div>
+            <div class="bb-lista-titulo"><img src="img/ui/bb_icone_permanece.png" alt=""> O que permanece</div>
+            <ul>
+              <li><img src="img/ui/bb_icone_lotus.png" alt=""><span>Melhorias do Black Book</span></li>
+              <li><img src="img/ui/aba_icone_mochila.png" alt=""><span>Itens da Mochila</span></li>
+              <li><img src="img/ui/icone_pedras.png" alt=""><span>Pedras Espirituais</span></li>
+              <li><img src="img/ui/bb_icone_nucleo.png" alt=""><span>Núcleos e Pílulas</span></li>
+            </ul>
+          </div>
+          <div class="bb-card bb-proxima">
+            <div class="bb-moldura ui-card-titulo-entalhe"></div>
+            <div class="bb-card-titulo">Próxima vida começa em</div>
+            <img src="img/ui/bb_icone_montanha.png" alt="">
+            <div class="bb-proxima-texto"><b id="bb-inicio-mundo"></b><small id="bb-inicio"></small></div>
+          </div>
+          <div class="bb-reencarnar-caixa">
+            <button id="bb-reencarnar" class="ui ui-botao-reencarnar">Reencarnar</button>
+            <p class="bb-aviso" id="bb-aviso"></p>
+          </div>
         </div>
+
+        <div class="bb-secao"><span class="ui-secao-titulo">Melhorias permanentes</span></div>
+        <div class="bb-melhorias" id="lista-melhorias"></div>
+
+        <div class="bb-secao"><span class="ui-secao-titulo">Registro das vidas</span></div>
+        <div class="bb-vidas" id="bb-vidas"></div>
+        <p class="bb-resumo">Reencarnações: <b id="bb-vezes">0</b> · Mais longe nesta vida: <b id="bb-fase"></b> ·
+          Em todas: <b id="bb-recorde"></b> · Essência ganha no total: <b id="bb-total">0</b></p>
+
+        <details class="recolhivel"><summary>ⓘ Como funciona</summary>
+          <p class="pequeno">"Toda vida chega ao fim. O que a alma conquistou, o Black Book guarda."<br>
+            Quando uma fase ficar difícil demais, reencarne: o Cultivo, o reino e as fases recomeçam, mas você recebe
+            Essência da Alma de acordo com a fase mais distante que venceu. O personagem, os equipamentos, a mochila,
+            as Pedras, os Núcleos, as Pílulas, o Arranjo e o VIP ficam. Use a Essência aqui para fortalecer seus
+            atributos para sempre e chegar mais longe na próxima vida.</p>
+        </details>
       </div>
     </div>
   </section>
