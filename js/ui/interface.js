@@ -319,7 +319,7 @@ export function nomeCurtoDoMundo(mundo) {
 // tamanho = em u (px do mockup) para até `cabe` letras; acima disso diminui na mesma proporção (mínimo 60%)
 function ajustarFonte(el, texto, tamanho, cabe) {
   const u = Math.max(tamanho * 0.6, Math.min(tamanho, tamanho * cabe / Math.max(1, texto.length)));
-  el.style.fontSize = `max(calc(var(--u) * ${u.toFixed(1)}), 10px)`;
+  el.style.fontSize = `calc(var(--ut) * ${u.toFixed(1)})`;   // v0.30.1: mesma unidade de texto do CSS
 }
 
 // v0.20.2: só troca o texto quando ele muda de verdade (trocar 10×/s, no meio de um toque,
@@ -493,6 +493,7 @@ function atualizarNivel(estado) {
   if (!dica.classList.contains('escondido')) dica.innerHTML = $(dica.dataset.orbe)?.dataset.dica ?? '';
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;
+  ajustarFonte($('inicio-reino'), reino.nome, 22, 14);   // v0.30.1: nome longo do reino cabe no topo (celular)
   $('inicio-faixa-reino').textContent = reino.nome;   // v0.27.0: faixa da tela inicial
   ajustarFonte($('inicio-faixa-reino'), reino.nome, 33, 14);
   $('topo-nivel').textContent = `Nv. ${P.indiceNivel(estado) + 1}`;

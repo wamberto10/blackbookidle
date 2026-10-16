@@ -42,14 +42,14 @@ export function montarTelaBlackBook(acoes) {
   for (const melhoria of melhorias) {
     const visual = VISUAL[melhoria.id] ?? { nome: melhoria.nome, icone: 'bb_icone_lotus', alvo: '' };
     const linha = document.createElement('div');
-    linha.className = 'bb-melhoria ui-linha-moldura';
+    linha.className = 'bb-melhoria';
     linha.title = `${melhoria.nome}: ${melhoria.descricao} por nível`;
     linha.innerHTML = `
       <span class="bb-mel-icone"><img src="img/ui/${visual.icone}.png" alt=""></span>
       <b class="bb-mel-nome">${visual.nome}</b>
       <span class="bb-mel-nivel"></span>
       <span class="bb-mel-efeito"></span>
-      <span class="bb-mel-custo ui-custo-pilula"><img src="img/ui/icone_essencia.png" alt=""><b></b></span>
+      <span class="bb-mel-custo"><img src="img/ui/icone_essencia.png" alt=""><b></b></span>
       <button class="ui ui-botao-dourado bb-mel-botao">Melhorar</button>`;
     const botao = linha.querySelector('button');
     botao.addEventListener('click', () => acoes.aoComprarMelhoria(melhoria.id));
@@ -151,7 +151,7 @@ function desenharVidas(r) {
     const indiceMapa = vida.fase >= 0 ? FASES[vida.fase].mapa : 0;
     const mapa = MAPAS[indiceMapa];
     const ultimoReino = vida.reino === REINOS.length - 1;
-    return `<div class="bb-vida ui-vida-linha">
+    return `<div class="bb-vida">
         <span class="bb-vida-num"><b>${vida.numero}</b></span>
         <img class="bb-vida-mapa" src="img/fundos/mapa${String(indiceMapa + 1).padStart(2, '0')}.jpg" alt="" onerror="this.style.visibility='hidden'">
         <div class="bb-vida-info"><b>${reino?.nome ?? '—'}</b>
