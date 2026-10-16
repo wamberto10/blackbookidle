@@ -3416,3 +3416,140 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
   font-size: calc(var(--ut) * 21); line-height: 1.35; color: var(--ui-marfim); text-align: center;
 }
 .cri-tecnica b { color: #ffd56a; font-weight: normal; }
+
+/* =============================================================
+   v0.31.0: LAYOUT NOVO — fase 6: MAPA (docs/layout/layout_mapa.png), com bordas finas e simples (pedido do dono)
+   Ícones, nós da trilha, seta, baú e gemas em img/ui/; molduras = bordas finas no CSS.
+   ============================================================= */
+#aba-mapa.painel-novo { background: #0b0912; }
+/* as regras antigas do Mapa punham padding e um "container" na .painel-corpo (o --u passaria a medir ela) */
+#aba-mapa.painel-novo .painel-corpo { container-type: normal; padding: 0 0 calc(var(--u) * 28); }
+.mp-novo { color: var(--ui-marfim); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 20); }
+.mp-novo button { font-family: inherit; }
+
+/* ---- Abas dos mundos ---- */
+.mp-mundos { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: calc(var(--u) * 8); margin: calc(var(--u) * 14) calc(var(--u) * 22) 0; }
+.mp-novo .mp-mundo {
+  height: calc(var(--u) * 90); min-height: 40px; padding: calc(var(--u) * 6) 0; margin: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 4);
+  border: 1px solid rgba(217, 173, 87, 0.6); border-radius: calc(var(--u) * 10); background: rgba(20, 16, 30, 0.95); color: var(--ui-marfim);
+}
+.mp-mundo img { height: calc(var(--u) * 42); width: auto; max-width: 80%; object-fit: contain; }
+.mp-mundo span { font-size: calc(var(--ut) * 19); white-space: nowrap; }
+.mp-novo .mp-mundo.ativo {
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #ffd36b; color: #ffe7a6;
+  background: linear-gradient(rgba(217, 173, 87, 0.35), rgba(40, 28, 10, 0.95)); box-shadow: 0 0 calc(var(--u) * 10) rgba(255, 200, 90, 0.35);
+}
+.mp-novo .mp-mundo.trancado { opacity: 1; cursor: default; border-color: rgba(140, 135, 125, 0.45); color: #8c8578; }
+.mp-mundo.trancado img { height: calc(var(--u) * 30); filter: grayscale(1) brightness(0.8); }
+
+/* ---- Carrossel dos mapas ---- */
+.mp-carrossel { position: relative; display: flex; align-items: center; gap: calc(var(--u) * 6); margin: calc(var(--u) * 16) calc(var(--u) * 8) 0; }
+.mp-novo .mp-seta { flex: none; width: calc(var(--u) * 38); height: calc(var(--u) * 70); min-width: 16px; padding: 0; border: none; background: none; cursor: pointer; }
+.mp-seta img { width: 100%; height: 100%; object-fit: contain; }
+.mp-seta-dir img { transform: scaleX(-1); }
+.mp-cartas { position: relative; flex: 1; min-width: 0; display: flex; gap: calc(var(--u) * 12); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: calc(var(--u) * 6) calc(var(--u) * 2); }
+.mp-cartas::-webkit-scrollbar { display: none; }
+.mp-novo .mp-carta {
+  flex: none; scroll-snap-align: center; position: relative; width: calc(var(--u) * 268); height: calc(var(--u) * 196); padding: 0; margin: 0; overflow: hidden;
+  display: flex; flex-direction: column; cursor: pointer; color: var(--ui-marfim);
+  border: 1px solid rgba(217, 173, 87, 0.6); border-radius: calc(var(--u) * 12); background: #120e1a;
+}
+.mp-carta-foto { flex: 1; background: center / cover no-repeat; }
+.mp-carta-texto { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 2); padding: calc(var(--u) * 6) calc(var(--u) * 8) calc(var(--u) * 8); background: rgba(12, 9, 18, 0.95); }
+.mp-carta-texto b { font-weight: normal; font-size: calc(var(--ut) * 21); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: #f3d58a; }
+.mp-carta-texto small { display: flex; align-items: center; gap: calc(var(--u) * 6); font-size: calc(var(--ut) * 19); }
+.mp-carta-texto img { width: calc(var(--u) * 22); height: calc(var(--u) * 22); }
+.mp-novo .mp-carta.ativa { border: max(1.5px, calc(var(--u) * 2.5)) solid #ffd36b; box-shadow: 0 0 calc(var(--u) * 12) rgba(255, 200, 90, 0.45); }
+.mp-novo .mp-carta.trancada { opacity: 1; cursor: default; }
+.mp-carta.trancada .mp-carta-foto { filter: grayscale(1) brightness(0.35); }
+.mp-carta.trancada .mp-carta-texto b { color: #8c8578; }
+
+/* ---- Painel do desafio ---- */
+.mp-desafio {
+  display: grid; grid-template-columns: calc(var(--u) * 206) minmax(0, 1fr) calc(var(--u) * 336); column-gap: calc(var(--u) * 18);
+  margin: calc(var(--u) * 14) calc(var(--u) * 11) 0; padding: calc(var(--u) * 12); box-sizing: border-box;
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 14); background: rgba(14, 11, 22, 0.94);
+}
+.mp-retrato { position: relative; height: calc(var(--u) * 250); border: 1px solid rgba(217, 173, 87, 0.5); border-radius: calc(var(--u) * 10); overflow: hidden; background: center / cover no-repeat; }
+.mp-retrato canvas { position: absolute; left: 50%; bottom: 0; width: calc(var(--u) * 240); height: calc(var(--u) * 240); transform: translateX(-50%); image-rendering: pixelated; }
+.mp-info { display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--u) * 6); min-width: 0; padding-top: calc(var(--u) * 4); }
+.mp-fase {
+  padding: calc(var(--u) * 2) calc(var(--u) * 18); border: 1px solid #d9ad57; border-radius: calc(var(--u) * 8); background: rgba(40, 28, 10, 0.6);
+  font-size: calc(var(--ut) * 30); color: #ffd56a; text-shadow: 0 2px 2px #000; white-space: nowrap;
+}
+.mp-local { font-size: calc(var(--ut) * 24); color: #fff; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-inimigo { display: flex; align-items: center; gap: calc(var(--u) * 8); max-width: 100%; font-size: calc(var(--ut) * 22); }
+.mp-inimigo img { width: calc(var(--u) * 30); height: calc(var(--u) * 30); flex: none; }
+.mp-inimigo span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-tipo { padding: 0 calc(var(--u) * 14); border: 1px solid #b070ff; border-radius: calc(var(--u) * 8); background: rgba(100, 40, 160, 0.5); font-size: calc(var(--ut) * 19); color: #e9d6ff; }
+.mp-tipo.tipo-chefe, .mp-tipo.tipo-miniChefe { border-color: #ff5a4a; background: rgba(150, 30, 20, 0.55); color: #ffd6cf; }
+.mp-poder, .mp-previsao { font-size: calc(var(--ut) * 22); }
+.mp-poder b { font-weight: normal; color: #fff; }
+.mp-previsao b { font-weight: normal; }
+.mp-lado { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 10); padding-left: calc(var(--u) * 16); border-left: 1px solid rgba(217, 173, 87, 0.45); }
+.mp-rec-titulo { font-size: calc(var(--ut) * 20); color: #f3d58a; }
+.mp-recompensas { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 10); width: 100%; }
+.mp-rec {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 4); height: calc(var(--u) * 92); min-height: 40px;
+  border: 1px solid rgba(217, 173, 87, 0.6); border-radius: calc(var(--u) * 10); background: rgba(20, 16, 30, 0.95);
+}
+.mp-rec img { width: calc(var(--u) * 44); height: calc(var(--u) * 44); object-fit: contain; }
+.mp-rec b { font-weight: normal; font-size: calc(var(--ut) * 18); white-space: nowrap; }
+.mp-novo .mp-farmar {
+  display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 14); width: 100%; height: calc(var(--u) * 78); min-height: 34px;
+  padding: 0 calc(var(--u) * 36); border: none; cursor: pointer; white-space: nowrap; font-size: calc(var(--ut) * 26); color: #2e1804; text-shadow: 0 1px 0 rgba(255, 236, 170, 0.6);
+}
+.mp-farmar img { width: calc(var(--u) * 40); height: calc(var(--u) * 40); filter: brightness(0.35); }
+.mp-novo .mp-farmar.ativo { filter: saturate(0.6) brightness(0.9); }
+.mp-aviso { grid-column: 1 / -1; margin: calc(var(--u) * 6) 0 0; font-size: calc(var(--ut) * 18); color: #ffb27a; }
+.mp-aviso:empty { display: none; }
+
+/* ---- Trilha das 12 fases sobre a paisagem do mapa ---- */
+.mp-trilha { position: relative; height: calc(var(--u) * 615); margin-top: calc(var(--u) * 12); background: center / cover no-repeat; overflow: hidden; }
+.mp-trilha-titulo {
+  position: absolute; z-index: 2; left: 0; top: calc(var(--u) * 12); display: flex; align-items: baseline; gap: calc(var(--u) * 12);
+  padding: calc(var(--u) * 6) calc(var(--u) * 40) calc(var(--u) * 6) calc(var(--u) * 22);
+  border-bottom: 1px solid rgba(217, 173, 87, 0.8); background: linear-gradient(90deg, rgba(10, 8, 16, 0.9) 70%, transparent);
+}
+.mp-trilha-titulo b { font-weight: normal; font-size: calc(var(--ut) * 28); color: #f3d58a; text-shadow: 0 2px 2px #000; white-space: nowrap; }
+.mp-trilha-titulo small { font-size: calc(var(--ut) * 18); color: #d8ccb2; }
+.mp-caminho { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mp-caminho-linha { fill: none; stroke: #ffd36b; stroke-width: 3.5; stroke-dasharray: 0.5 9; stroke-linecap: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8)); }
+.mp-nos { position: absolute; inset: 0; }
+.mp-novo .mp-no {
+  position: absolute; z-index: 1; width: calc(var(--u) * 70); padding: 0; margin: 0; border: none; background: none; cursor: pointer;
+  transform: translate(-50%, -40%); display: flex; flex-direction: column; align-items: center;
+}
+.mp-no img { width: calc(var(--u) * 70); height: calc(var(--u) * 70); filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
+.mp-no span { margin-top: calc(var(--u) * -2); font-size: calc(var(--ut) * 26); color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+.mp-novo .mp-no.chefe { width: calc(var(--u) * 104); }
+.mp-no.chefe img { width: calc(var(--u) * 104); height: calc(var(--u) * 104); }
+.mp-no.atual img { animation: mp-pulsar 1.6s ease-in-out infinite; }
+@keyframes mp-pulsar { 50% { filter: drop-shadow(0 0 calc(var(--u) * 12) rgba(80, 255, 190, 0.9)); } }
+.mp-no.selecionado img { border-radius: 50%; box-shadow: 0 0 0 max(1.5px, calc(var(--u) * 3)) #ffd36b, 0 0 calc(var(--u) * 14) rgba(255, 210, 100, 0.8); }
+.mp-novo .mp-no.trancada { opacity: 1; cursor: default; }
+.mp-novo .selecionado { outline: none; }   /* a regra global .selecionado põe um contorno branco */
+.mp-no.trancada span { color: #9a948a; }
+
+/* ---- Dificuldades ---- */
+.mp-dificuldades {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: calc(var(--u) * 12);
+  margin: calc(var(--u) * 12) calc(var(--u) * 11) 0; padding: calc(var(--u) * 12); box-sizing: border-box;
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 14); background: rgba(14, 11, 22, 0.94);
+}
+.mp-dif {
+  display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 10); height: calc(var(--u) * 64); min-height: 30px;
+  border: 1px solid rgba(217, 173, 87, 0.55); border-radius: calc(var(--u) * 10); background: rgba(20, 16, 30, 0.95);
+}
+.mp-dif img { width: calc(var(--u) * 34); height: calc(var(--u) * 34); object-fit: contain; flex: none; }
+.mp-dif span { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.mp-dif b { font-weight: normal; font-size: calc(var(--ut) * 19); white-space: nowrap; }
+.mp-dif small { font-size: calc(var(--ut) * 15); color: #8c8578; }
+.mp-dif.ativa { border: max(1.5px, calc(var(--u) * 2.5)) solid #3fd08a; background: linear-gradient(rgba(30, 140, 100, 0.4), rgba(14, 30, 26, 0.95)); box-shadow: 0 0 calc(var(--u) * 10) rgba(60, 230, 170, 0.35); }
+.mp-dif.trancada { color: #8c8578; }
+.mp-dif.trancada img { width: calc(var(--u) * 24); height: calc(var(--u) * 24); filter: grayscale(1); opacity: 0.8; }
+.mp-dica { margin: calc(var(--u) * 10) calc(var(--u) * 22) 0; text-align: center; font-size: calc(var(--ut) * 17); color: #a99e88; font-family: "Segoe UI", system-ui, sans-serif; }
+@container jogo (max-width: 440px) {
+  .mp-dif.trancada img { display: none; }   /* celular estreito: só o nome e "Em breve" */
+}

@@ -390,45 +390,49 @@
   </section>
 
   <!-- ===== Mapa ===== -->
-  <section class="painel" id="aba-mapa">
+  <section class="painel painel-novo" id="aba-mapa">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_mapa.png" alt=""> Mapa</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
       <div class="bloqueado" id="mapa-bloqueado">
         🗺️ O Mapa será liberado no <b>5º estágio do Corpo Temperado</b>.
       </div>
-      <!-- v0.19.0: layout em 3 colunas (referência do dono): zonas | trilha das fases | seleção do desafio -->
-      <div id="mapa-conteudo" class="escondido mapa-novo">
-        <div class="md-coluna md-esquerda">
-          <div class="md-cabecalho"><span>Seleção da Zona</span><b id="md-mundo-nome"></b></div>
-          <div class="md-mundos" id="md-mundos"></div>
-          <div class="md-zonas" id="md-zonas"></div>
+      <!-- v0.31.0 (layout novo — docs/layout/layout_mapa.png, com bordas finas e simples): abas dos mundos,
+           carrossel dos mapas, painel do desafio, trilha das 12 fases e dificuldades -->
+      <div id="mapa-conteudo" class="escondido mp-novo">
+        <div class="mp-mundos" id="mp-mundos"></div>
+
+        <div class="mp-carrossel">
+          <button class="botao-icone mp-seta" id="mp-seta-esq" title="Mapas anteriores"><img src="img/ui/seta_carrossel.png" alt="◀"></button>
+          <div class="mp-cartas" id="mp-cartas"></div>
+          <button class="botao-icone mp-seta mp-seta-dir" id="mp-seta-dir" title="Próximos mapas"><img src="img/ui/seta_carrossel.png" alt="▶"></button>
         </div>
 
-        <div class="md-coluna md-centro">
-          <div class="md-titulo" id="md-titulo"></div>
-          <div class="md-trilha" id="md-trilha">
-            <svg class="md-caminho" id="md-caminho" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-            <div class="md-nos" id="md-nos"></div>
+        <div class="mp-desafio">
+          <div class="mp-retrato" id="mp-retrato"><canvas id="mp-sprite" width="32" height="32"></canvas></div>
+          <div class="mp-info">
+            <div class="mp-fase" id="mp-fase"></div>
+            <div class="mp-local" id="mp-local"></div>
+            <div class="mp-inimigo"><img id="mp-tipo-icone" alt=""><span id="mp-inimigo-nome"></span></div>
+            <span class="mp-tipo" id="mp-tipo"></span>
+            <div class="mp-poder" id="mp-poder"></div>
+            <div class="mp-previsao" id="mp-previsao"></div>
           </div>
+          <div class="mp-lado">
+            <small class="mp-rec-titulo">Recompensa por vitória</small>
+            <div class="mp-recompensas" id="mp-recompensas"></div>
+            <button class="ui ui-botao-grande-dourado mp-farmar" id="md-farmar"><img src="img/ui/icone_equipar.png" alt=""><span>Farmar aqui</span></button>
+          </div>
+          <p class="mp-aviso" id="mp-aviso"></p>
         </div>
 
-        <div class="md-coluna md-direita">
-          <div class="md-cabecalho"><span>Seleção do Desafio</span></div>
-          <div class="md-dificuldades" id="md-dificuldades"></div>
-          <div class="md-card-fase">
-            <div class="md-fase-topo">
-              <div class="md-fase-miniatura" id="md-fase-miniatura"><canvas id="md-fase-sprite" width="32" height="32"></canvas></div>
-              <div class="md-fase-info">
-                <b id="md-fase-numero"></b> <span id="md-fase-local"></span>
-                <div id="md-fase-inimigo"></div>
-              </div>
-            </div>
-            <div class="md-previsao" id="md-fase-previsao"></div>
-            <div class="md-recompensa"><small>Recompensa por vitória</small><span id="md-fase-recompensa"></span></div>
-          </div>
-          <button class="principal largo" id="md-farmar">⚔️ Farmar aqui</button>
-          <p class="pequeno md-dica">O herói fica lutando nesta fase (o avanço automático é desligado).</p>
+        <div class="mp-trilha" id="md-trilha">
+          <div class="mp-trilha-titulo" id="md-titulo"></div>
+          <svg class="mp-caminho" id="md-caminho" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+          <div class="mp-nos" id="md-nos"></div>
         </div>
+
+        <div class="mp-dificuldades" id="md-dificuldades"></div>
+        <p class="pequeno mp-dica">Farmar aqui: o herói fica lutando na fase escolhida (o avanço automático é desligado).</p>
       </div>
     </div>
   </section>

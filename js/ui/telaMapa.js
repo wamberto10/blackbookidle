@@ -1,37 +1,39 @@
 // =============================================================
-// ui/telaMapa.js — aba Mapa (v0.19.0: layout em 3 colunas, como a referência do dono)
-//   esquerda → mundos e a lista dos mapas (zonas) com miniatura, descrição e progresso
-//   centro   → o fundo do mapa com a trilha das 12 fases (clicáveis), o chefe no topo
-//   direita  → seleção do desafio: dificuldade (em breve), card da fase e "Farmar aqui"
-// No celular as três partes ficam uma embaixo da outra, na mesma ordem.
+// ui/telaMapa.js — aba Mapa
+// v0.31.0: layout do mockup (docs/layout/layout_mapa.png), com bordas finas e simples (pedido do dono):
+//   abas dos 8 mundos → carrossel com os 12 mapas do mundo → painel do desafio da fase escolhida
+//   (inimigo, Poder, previsão, recompensas e "Farmar aqui") → trilha das 12 fases sobre a paisagem
+//   do mapa → dificuldades (só a Fácil existe; as outras ficam "Em breve").
 // =============================================================
+import { CONFIG } from '../config.js';
 import { MUNDOS } from '../dados/mundos.js';
 import { liberado as sistemaLiberado } from '../sistemas/desbloqueios.js';
 import { MAPAS, FASES, MUNDOS_JOGAVEIS, mapaLiberado, faseLiberada, fasesVencidasNoMapa,
   mapasDoMundo, primeiraFaseDoMundo } from '../sistemas/mundo.js';
 import { cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
 import { formatarNumero } from '../format.js';
-import { icone, desenharInimigo } from './sprite.js';
+import { desenharInimigo } from './sprite.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
 import { previsaoDaFase, textoDaPrevisao, textoDoPoder, TEXTO_CURTO_DO_SELO } from './poder.js';
 
 const $ = (id) => document.getElementById(id);
 
-// Posição de cada fase na trilha (% da largura, % da altura), de baixo (fase 1) para cima (chefe)
+// Posição de cada fase na trilha (% da largura, % da altura), como no mockup:
+// 1 a 7 em cima, da esquerda para a direita; 8 a 12 voltando embaixo (o chefe à esquerda)
 const TRILHA = [
-  [30, 92], [58, 85], [78, 76], [55, 68], [28, 61], [42, 52],
-  [70, 46], [80, 37], [55, 30], [28, 24], [46, 16], [62, 7],
+  [13, 30], [27, 36], [41, 43], [54, 35], [68, 41], [80, 50],
+  [90, 64], [79, 75], [64, 82], [48, 77], [33, 82], [15, 81],
 ];
 // Dificuldades (a escolha vem em uma etapa futura; por enquanto só a Fácil existe)
 const DIFICULDADES = [
-  { nome: 'Inferno', estrelas: 5 }, { nome: 'Muito Difícil', estrelas: 4 }, { nome: 'Difícil', estrelas: 3 },
-  { nome: 'Normal', estrelas: 2 }, { nome: 'Fácil', estrelas: 1, ativa: true },
+  { nome: 'Fácil', icone: 'dif_facil', ativa: true }, { nome: 'Normal', icone: 'dif_normal' },
+  { nome: 'Difícil', icone: 'dif_dificil' }, { nome: 'Muito Difícil', icone: 'dif_muito_dificil' }, { nome: 'Inferno' },
 ];
 
 let acoesGuardadas = null;
 let ultimoEstado = null;
 let mapaSelecionado = null;    // mapa aberto na tela (não precisa ser salvo)
-let faseSelecionada = null;    // fase marcada na trilha (mostrada no painel da direita)
+let faseSelecionada = null;    // fase marcada na trilha (mostrada no painel do desafio)
 let chaveDesenhada = '';
 
 export function montarTelaMapa(acoes) {
@@ -41,10 +43,19 @@ export function montarTelaMapa(acoes) {
     acoesGuardadas.aoEscolherFase(faseSelecionada);
     acoesGuardadas.aoMudarAutoCombate(false);   // fica lutando nesta fase
   });
+  // Setas do carrossel: andam um cartão
+  const andar = (lado) => {
+    const cartas = $('mp-cartas');
+    const carta = cartas.querySelector('.mp-carta');
+    cartas.scrollBy({ left: lado * (carta ? carta.offsetWidth + 10 : 200), behavior: 'smooth' });
+  };
+  $('mp-seta-esq').addEventListener('click', () => andar(-1));
+  $('mp-seta-dir').addEventListener('click', () => andar(1));
   // Dificuldades: só a lista (a escolha vem depois)
   $('md-dificuldades').innerHTML = DIFICULDADES.map(d =>
-    `<div class="dificuldade${d.ativa ? ' ativa' : ''}">${d.ativa ? '' : icone('cadeado')}<b>${d.nome}</b>` +
-    `<span class="estrelas">${'★'.repeat(d.estrelas)}</span>${d.ativa ? '' : '<small>em breve</small>'}</div>`).join('');
+    `<div class="mp-dif${d.ativa ? ' ativa' : ' trancada'}" title="${d.ativa ? 'Dificuldade atual' : 'Em breve'}">` +
+    (d.icone && d.ativa ? `<img src="img/ui/${d.icone}.png" alt="">` : '<img src="img/icones/cadeado.png" alt="">') +
+    `<span><b>${d.nome}</b>${d.ativa ? '' : '<small>Em breve</small>'}</span></div>`).join('');
 }
 
 const fundoDoMapa = (indice) => `url('img/fundos/mapa${String(indice + 1).padStart(2, '0')}.jpg')`;
@@ -75,7 +86,7 @@ export function atualizarTelaMapa(estado) {
   $('mapa-conteudo').classList.toggle('escondido', !liberado);
   if (!liberado) return;
 
-  // 8) Com o Mapa fechado não precisa calcular nada (redesenha em até 0,1 s ao abrir)
+  // Com o Mapa fechado não precisa calcular nada (redesenha em até 0,1 s ao abrir)
   if (!$('aba-mapa').classList.contains('aberto')) return;
   // Seleção que ficou inválida (reencarnou ou apagou o progresso): volta para o mapa atual
   if (mapaSelecionado === null || !mapaLiberado(estado, mapaSelecionado)) {
@@ -90,88 +101,115 @@ export function atualizarTelaMapa(estado) {
     `${Math.round(poderTotal(calcularAtributos(estado)))}`;
   if (chave === chaveDesenhada) return;
   chaveDesenhada = chave;
-  desenharZonas(estado);
-  desenharTrilha(estado);
+  desenharMundos(estado);
+  desenharCartas(estado);
   desenharDesafio(estado);
+  desenharTrilha(estado);
 }
 
-// ---------------------------------------------------------------- esquerda
-function desenharZonas(estado) {
+// ---------------------------------------------------------------- abas dos mundos
+function desenharMundos(estado) {
   const indiceMundo = MAPAS[mapaSelecionado].mundo;
-
-  // Mundos (liberados + o próximo trancado)
-  const mundos = $('md-mundos');
-  mundos.innerHTML = '';
+  const caixa = $('mp-mundos');
+  caixa.innerHTML = '';
   MUNDOS.forEach((mundo, i) => {
     const jogavel = i < MUNDOS_JOGAVEIS.length;
     if (!jogavel && i > MUNDOS_JOGAVEIS.length) return;   // dos mundos futuros, só o próximo aparece
     const aberto = jogavel && mundoLiberado(estado, i);
     const botao = document.createElement('button');
-    botao.className = 'md-mundo' + (i === indiceMundo ? ' selecionado' : '');
+    botao.className = 'ui mp-mundo' + (i === indiceMundo ? ' ativo' : '') + (aberto ? '' : ' trancado');
     botao.disabled = !aberto;
-    botao.innerHTML = aberto ? `Mundo ${i + 1}` : `${icone('cadeado')} Mundo ${i + 1}`;
+    botao.innerHTML = `<img src="${aberto ? `img/ui/mundo_icone_${i + 1}.png` : 'img/icones/cadeado.png'}" alt=""><span>Mundo ${i + 1}</span>`;
     botao.title = aberto ? mundo.nome : (jogavel ? `Vença o chefe final do Mundo ${i}` : 'Em desenvolvimento');
     if (aberto) botao.addEventListener('click', () => selecionarMapa(mapasDoMundo(i)[0]));
-    mundos.appendChild(botao);
+    caixa.appendChild(botao);
   });
-  $('md-mundo-nome').textContent = MUNDOS_JOGAVEIS[indiceMundo].nome.split(' — ')[0];
+}
 
-  // Zonas (os 12 mapas do mundo), com miniatura do fundo
-  const lista = $('md-zonas');
+// ---------------------------------------------------------------- carrossel dos mapas
+function desenharCartas(estado) {
+  const indiceMundo = MAPAS[mapaSelecionado].mundo;
+  const lista = $('mp-cartas');
   lista.innerHTML = '';
   mapasDoMundo(indiceMundo).forEach((indice) => {
     const mapa = MAPAS[indice];
     const liberado = mapaLiberado(estado, indice);
     const vencidas = fasesVencidasNoMapa(estado, indice);
-    const zona = document.createElement('button');
-    zona.className = 'md-zona' + (indice === mapaSelecionado ? ' selecionado' : '') + (vencidas === 12 ? ' completo' : '');
-    zona.disabled = !liberado;
-    zona.style.backgroundImage = `linear-gradient(90deg, rgba(10, 8, 16, 0.95) 35%, rgba(10, 8, 16, 0.35)), ${fundoDoMapa(indice)}`;
-    zona.style.setProperty('--cor-mapa', mapa.cor);
-    zona.innerHTML = liberado
-      ? `<b>${indice + 1}. ${mapa.nome}</b><span class="md-zona-estrela">${vencidas === 12 ? '★' : '☆'} ${vencidas}/12</span>` +
-        `<small>${mapa.descricao}</small>`
-      : `<b>${icone('cadeado')} ${indice + 1}. ???</b><small>Vença o chefe do mapa anterior.</small>`;
-    if (liberado) zona.addEventListener('click', () => selecionarMapa(indice));
-    lista.appendChild(zona);
+    const carta = document.createElement('button');
+    carta.className = 'ui mp-carta' + (indice === mapaSelecionado ? ' ativa' : '') + (liberado ? '' : ' trancada') + (vencidas === 12 ? ' completa' : '');
+    carta.disabled = !liberado;
+    carta.title = liberado ? `Mapa ${indice + 1}: ${mapa.descricao}` : 'Vença o chefe do mapa anterior.';
+    carta.innerHTML = `<span class="mp-carta-foto" style="background-image:${fundoDoMapa(indice)}"></span>
+      <span class="mp-carta-texto">${liberado
+        ? `<b>${mapa.nome}</b><small><img src="img/ui/icone_estrela.png" alt="">${vencidas}/12</small>`
+        : `<b><img src="img/icones/cadeado.png" alt=""> Mapa ${indice + 1}</b><small>Trancado</small>`}</span>`;
+    if (liberado) carta.addEventListener('click', () => selecionarMapa(indice));
+    lista.appendChild(carta);
   });
-  // No celular a lista rola de lado: deixa o mapa aberto à vista
-  requestAnimationFrame(() => {
-    const sel = lista.querySelector('.selecionado');
-    if (sel && lista.scrollWidth > lista.clientWidth) lista.scrollLeft = sel.offsetLeft - (lista.clientWidth - sel.offsetWidth) / 2;
-    else if (sel) lista.scrollTop = sel.offsetTop - lista.offsetTop - 8;
-  });
+  // Deixa o mapa aberto à vista (no meio do carrossel) — na hora, sem esperar o próximo quadro
+  const sel = lista.querySelector('.ativa');
+  if (sel) lista.scrollLeft = sel.offsetLeft - (lista.clientWidth - sel.offsetWidth) / 2;
 }
 
-// ---------------------------------------------------------------- centro
+// ---------------------------------------------------------------- painel do desafio
+function desenharDesafio(estado) {
+  const fase = FASES[faseSelecionada];
+  const previsao = previsaoDaFase(estado, fase);
+  $('mp-fase').textContent = `Fase ${fase.mapa + 1}-${fase.numero}`;
+  $('mp-local').textContent = fase.local;
+  $('mp-tipo-icone').src = `img/icones/${fase.tipo.sprite}.png`;
+  $('mp-inimigo-nome').textContent = fase.inimigo.nome;
+  $('mp-tipo').textContent = fase.tipo.nome;
+  $('mp-tipo').className = `mp-tipo tipo-${fase.chaveTipo}`;
+  $('mp-retrato').style.backgroundImage = `linear-gradient(rgba(10, 8, 16, 0.2), rgba(10, 8, 16, 0.75)), ${fundoDoMapa(fase.mapa)}`;
+  desenharInimigo($('mp-sprite'), fase);
+  $('mp-poder').innerHTML = `Poder: <b>${textoDoPoder(previsao.poderInimigo)}</b>`;
+  $('mp-previsao').innerHTML = `Previsão: <b class="${previsao.classe}">${previsao.texto}</b>`;
+  $('mp-previsao').title = textoDaPrevisao(previsao);
+  // Recompensas reais: Cultivo, Pedras e a chance de cair um item
+  const chanceItem = CONFIG.equipamentos.chanceDeDrop[fase.chaveTipo] ?? 0;
+  const caixa = (icone, valor, titulo) => `<span class="mp-rec" title="${titulo}"><img src="img/ui/${icone}.png" alt=""><b>${valor}</b></span>`;
+  $('mp-recompensas').innerHTML =
+    caixa('icone_cultivo', '+' + formatarNumero(cultivoDaVitoria(estado, fase)), 'Cultivo por vitória') +
+    caixa('icone_pedras', '+' + formatarNumero(fase.recompensa.pedras), 'Pedras Espirituais por vitória') +
+    caixa('icone_bau', `${Math.round(chanceItem * 1000) / 10}%`, 'Chance de cair um equipamento a cada vitória');
+  // v0.21.1: inimigo bem mais fraco que você rende menos Cultivo | v0.26.0: Selo do Mundo Primordial
+  const fator = fatorDoInimigo(estado, fase);
+  $('mp-aviso').textContent = fase.selado ? TEXTO_CURTO_DO_SELO
+    : fator < 0.9 ? `Inimigo fraco para você: rende ${Math.max(1, Math.round(fator * 100))}% do Cultivo.` : '';
+  const aqui = fase.indice === estado.combate.faseAtual && !estado.combate.autoAvancar;
+  $('md-farmar').querySelector('span').textContent = aqui ? 'Farmando aqui' : 'Farmar aqui';
+  $('md-farmar').classList.toggle('ativo', aqui);
+}
+
+// ---------------------------------------------------------------- trilha das fases
 function desenharTrilha(estado) {
   const mapa = MAPAS[mapaSelecionado];
-  $('md-trilha').style.backgroundImage = `linear-gradient(rgba(10, 8, 16, 0.1), rgba(10, 8, 16, 0.3)), ${fundoDoMapa(mapaSelecionado)}`;
-  $('md-titulo').innerHTML = `<b>Mapa ${mapaSelecionado + 1}</b> · ${mapa.nome}`;
+  $('md-trilha').style.backgroundImage = `linear-gradient(rgba(10, 8, 16, 0.05), rgba(10, 8, 16, 0.25)), ${fundoDoMapa(mapaSelecionado)}`;
+  $('md-titulo').innerHTML = `<b>${mapa.nome}</b><small>Mapa ${mapaSelecionado + 1}</small>`;
 
   const fases = FASES.filter(f => f.mapa === mapaSelecionado);
-  // Caminho ligando as fases (SVG por baixo dos botões)
+  // Caminho pontilhado ligando as fases (SVG por baixo dos nós)
   const pontos = TRILHA.map(([x, y]) => `${x},${y}`).join(' ');
-  const vencidas = fases.filter(f => f.indice <= estado.combate.fasesConcluidas).length;
-  const pontosVencidos = TRILHA.slice(0, Math.max(1, vencidas + 1)).map(([x, y]) => `${x},${y}`).join(' ');
-  $('md-caminho').innerHTML =
-    `<polyline points="${pontos}" class="md-caminho-base"/><polyline points="${pontosVencidos}" class="md-caminho-feito"/>`;
+  $('md-caminho').innerHTML = `<polyline points="${pontos}" class="mp-caminho-linha"/>`;
 
   const nos = $('md-nos');
   nos.innerHTML = '';
   fases.forEach((fase, i) => {
     const liberada = faseLiberada(estado, fase.indice);
     const vencida = fase.indice <= estado.combate.fasesConcluidas;
+    const chefe = fase.chaveTipo === 'chefe';
+    const atual = fase.indice === estado.combate.faseAtual;
+    // vencida (✔) · atual / próxima (espadas) · chefe (caveira) · trancada (cadeado)
+    const imagem = chefe && !vencida ? 'no_chefe' : vencida && !atual ? 'no_vencido' : liberada ? 'no_atual' : 'no_trancado';
     const no = document.createElement('button');
-    no.className = `md-no tipo-${fase.chaveTipo}` + (vencida ? ' vencida' : '') + (liberada ? '' : ' trancada') +
-      (fase.indice === estado.combate.faseAtual ? ' atual' : '') + (fase.indice === faseSelecionada ? ' selecionado' : '');
+    no.className = 'ui mp-no' + (chefe ? ' chefe' : '') + (atual ? ' atual' : '') + (liberada ? '' : ' trancada') +
+      (fase.indice === faseSelecionada ? ' selecionado' : '');
     no.style.left = TRILHA[i][0] + '%';
     no.style.top = TRILHA[i][1] + '%';
     no.disabled = !liberada;
-    const forte = fase.chaveTipo === 'chefe' || fase.chaveTipo === 'miniChefe';
-    no.innerHTML = (!liberada ? icone('cadeado') : vencida ? '✔' : forte ? icone(fase.tipo.sprite) : '') +
-      `<span class="md-no-rotulo">[${mapaSelecionado + 1}-${fase.numero}]</span>`;
-    no.title = liberada ? `${fase.local} — ${fase.inimigo.nome}` : 'Vença a fase anterior para liberar';
+    no.innerHTML = `<img src="img/ui/${imagem}.png" alt=""><span>${fase.numero}</span>`;
+    no.title = liberada ? `${fase.local} — ${fase.inimigo.nome} (${fase.tipo.nome})` : 'Vença a fase anterior para liberar';
     if (liberada) no.addEventListener('click', () => {
       faseSelecionada = fase.indice;
       chaveDesenhada = '';
@@ -179,28 +217,6 @@ function desenharTrilha(estado) {
     });
     nos.appendChild(no);
   });
-}
-
-// ---------------------------------------------------------------- direita
-function desenharDesafio(estado) {
-  const fase = FASES[faseSelecionada];
-  const previsao = previsaoDaFase(estado, fase);
-  $('md-fase-numero').textContent = `[${fase.mapa + 1}-${fase.numero}]`;
-  $('md-fase-local').textContent = fase.local;
-  $('md-fase-inimigo').innerHTML = `${fase.inimigo.nome} <span class="etiqueta tipo-${fase.chaveTipo}">${icone(fase.tipo.sprite)} ${fase.tipo.nome}</span>`;
-  $('md-fase-miniatura').style.backgroundImage = fundoDoMapa(fase.mapa);
-  desenharInimigo($('md-fase-sprite'), fase);
-  $('md-fase-previsao').className = 'md-previsao ' + previsao.classe;
-  $('md-fase-previsao').textContent = `Poder ${textoDoPoder(previsao.poderInimigo)} · ${textoDaPrevisao(previsao)}`;
-  // v0.21.1: inimigo bem mais fraco que você rende menos Cultivo — avisa quanto
-  const fator = fatorDoInimigo(estado, fase);
-  $('md-fase-recompensa').innerHTML =
-    `${icone('cultivo')} ${formatarNumero(cultivoDaVitoria(estado, fase))} · ${icone('pedra')} ${formatarNumero(fase.recompensa.pedras)}` +
-    (fator < 0.9 ? `<small class="md-fraco">Inimigo fraco para você: ${Math.max(1, Math.round(fator * 100))}% do Cultivo</small>` : '') +
-    (fase.selado ? `<small class="md-selo">${icone('cadeado')} ${TEXTO_CURTO_DO_SELO}</small>` : '');   // v0.26.0
-  const aqui = fase.indice === estado.combate.faseAtual && !estado.combate.autoAvancar;
-  $('md-farmar').textContent = aqui ? '✔ Farmando aqui' : '⚔️ Farmar aqui';
-  $('md-farmar').classList.toggle('ativo', aqui);
 }
 
 // Usado quando o jogador escolhe uma fase: mostra o mapa dela da próxima vez
