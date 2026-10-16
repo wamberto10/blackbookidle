@@ -528,37 +528,43 @@
   <!-- =========================================================
        CRIAÇÃO DE PERSONAGEM (aparece antes de começar a jogar)
        ========================================================= -->
-  <div id="criacao" class="criacao escondido">
-    <div class="criacao-caixa">
-      <div class="criacao-titulo">
-        <img class="icone-px" src="img/icones/livro.png" alt="">
-        <h1>Black Book Idle</h1>
-      </div>
-      <p class="lema">"Do servo insignificante ao ápice do Mundo Inicial."</p>
-      <div class="criacao-passos"><span id="passo-1" class="ativo">1. Quem é você</span><span id="passo-2">2. Seu caminho</span></div>
+  <!-- v0.30.0 (layout novo — docs/layout/layout_criacao_1.png e _2.png): 2 telas que cabem sem rolar —
+       1) sexo e nome, 2) classe (ui/telaCriacao.js) -->
+  <div id="criacao" class="criacao cri-nova escondido">
+    <div class="cri-caixa">
+      <header class="cri-topo">
+        <img class="cri-logo" src="img/ui/criacao_logo.png" alt="Black Book Idle">
+        <div class="cri-subtitulo ui-criacao-placa-subtitulo">Criação de Personagem</div>
+        <div class="cri-passos">
+          <button class="botao-icone cri-passo ativo" id="passo-1" title="Quem é você">1</button>
+          <span class="cri-passo-linha"></span>
+          <button class="botao-icone cri-passo" id="passo-2" title="Seu caminho">2</button>
+        </div>
+      </header>
 
       <!-- Etapa 1: sexo e nome -->
-      <div id="criacao-etapa1">
-        <h2>Quem é você, cultivador?</h2>
-        <div class="escolha-sexo" id="escolha-sexo"></div>
-        <label class="campo-nome">
-          <span>Nome do personagem</span>
-          <input id="criacao-nome" type="text" maxlength="16" autocomplete="off" placeholder="Ex.: Lin Feng">
-        </label>
-        <div class="requisito" id="criacao-erro"></div>
-        <button id="criacao-continuar" class="principal largo">Continuar ▶</button>
+      <div id="criacao-etapa1" class="cri-etapa">
+        <h2 class="cri-titulo"><img class="cri-orn" src="img/ui/titulo_ornamento.png" alt=""><span>Quem é você,<br>cultivador?</span><img class="cri-orn cri-orn-dir" src="img/ui/titulo_ornamento.png" alt=""></h2>
+        <p class="cri-sub">Escolha sua aparência. Seu caminho começa aqui.</p>
+        <div class="cri-cartas" id="escolha-sexo"></div>
+        <label class="cri-nome-rotulo" for="criacao-nome">Qual é o seu nome?</label>
+        <div class="cri-campo ui-campo-nome">
+          <input id="criacao-nome" type="text" maxlength="16" autocomplete="off" placeholder="Viajante">
+          <button class="botao-icone cri-dado" id="criacao-dado" title="Sortear um nome"><img src="img/ui/icone_dado.png" alt="Sortear"></button>
+        </div>
+        <div class="requisito cri-erro" id="criacao-erro"></div>
+        <button id="criacao-continuar" class="ui ui-botao-grande-dourado cri-botao">Continuar</button>
       </div>
 
       <!-- Etapa 2: classe -->
-      <div id="criacao-etapa2" class="escondido">
-        <h2 id="criacao-titulo-classe">Escolha seu caminho marcial</h2>
-        <p class="pequeno escondido" id="criacao-aviso-classe">O caminho que você trilhava não existe mais.
+      <div id="criacao-etapa2" class="cri-etapa escondido">
+        <h2 class="cri-titulo"><img class="cri-orn" src="img/ui/titulo_ornamento.png" alt=""><span id="criacao-titulo-classe">Escolha seu<br>caminho marcial</span><img class="cri-orn cri-orn-dir" src="img/ui/titulo_ornamento.png" alt=""></h2>
+        <p class="cri-sub" id="criacao-sub-classe">Cada caminho possui um estilo único e uma habilidade passiva.</p>
+        <p class="cri-sub cri-aviso escondido" id="criacao-aviso-classe">O caminho que você trilhava não existe mais.
           Escolha uma nova classe — seu nome, reino, itens e todo o progresso continuam.</p>
-        <div class="escolha-classe" id="escolha-classe"></div>
-        <div class="botoes">
-          <button id="criacao-voltar">◀ Voltar</button>
-          <button id="criacao-confirmar" class="principal" disabled>Iniciar jornada</button>
-        </div>
+        <div class="cri-classes" id="escolha-classe"></div>
+        <p class="cri-tecnica" id="criacao-tecnica"></p>
+        <button id="criacao-confirmar" class="ui ui-botao-grande-dourado cri-botao" disabled>Começar jornada</button>
       </div>
     </div>
   </div>

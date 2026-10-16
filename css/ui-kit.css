@@ -11,6 +11,10 @@
   url('../img/ui/botao_escuro_ativo_e.png') left center / auto 100% no-repeat,
   url('../img/ui/botao_escuro_ativo_d.png') right center / auto 100% no-repeat,
   url('../img/ui/botao_escuro_ativo_m.png') left center / auto 100% repeat-x; }
+.ui-botao-grande-dourado { background:
+  url('../img/ui/botao_grande_dourado_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_grande_dourado_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_grande_dourado_m.png') left center / auto 100% repeat-x; }
 .ui-botao-reencarnar { background:
   url('../img/ui/botao_reencarnar_e.png') left center / auto 100% no-repeat,
   url('../img/ui/botao_reencarnar_d.png') right center / auto 100% no-repeat,
@@ -29,12 +33,24 @@
   url('../img/ui/botao_vermelho_m.png') left center / auto 100% repeat-x; }
 .ui-caixa-comparacao { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 12.0) calc(var(--u) * 14.5) calc(var(--u) * 14.0) calc(var(--u) * 15.5);
   border-image: url('../img/ui/caixa_comparacao.png') 24 29 28 31 fill / 1 / 0 stretch; }
+.ui-campo-nome { background:
+  url('../img/ui/campo_nome_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/campo_nome_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/campo_nome_m.png') left center / auto 100% repeat-x; }
 .ui-card-titulo-entalhe { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 14.0) calc(var(--u) * 16.0) calc(var(--u) * 14.5) calc(var(--u) * 15.5);
   border-image: url('../img/ui/card_titulo_entalhe.png') 28 32 29 31 fill / 1 / 0 stretch; }
 .ui-card-verde { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 37.0) calc(var(--u) * 31.0) calc(var(--u) * 36.5) calc(var(--u) * 30.5);
   border-image: url('../img/ui/card_verde.png') 74 62 73 61 fill / 1 / 0 stretch; }
 .ui-card-vermelho { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 31.5) calc(var(--u) * 19.0) calc(var(--u) * 18.0) calc(var(--u) * 19.0);
   border-image: url('../img/ui/card_vermelho.png') 63 38 36 38 fill / 1 / 0 stretch; }
+.ui-carta-moldura { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 66.5) calc(var(--u) * 66.5) calc(var(--u) * 68.0) calc(var(--u) * 64.5);
+  border-image: url('../img/ui/carta_moldura.png') 133 133 136 129 fill / 1 / 0 stretch; }
+.ui-carta-moldura-ativa { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 84.0) calc(var(--u) * 82.5) calc(var(--u) * 83.5) calc(var(--u) * 82.0);
+  border-image: url('../img/ui/carta_moldura_ativa.png') 168 165 167 164 fill / 1 / 0 stretch; }
+.ui-carta-rotulo { background:
+  url('../img/ui/carta_rotulo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/carta_rotulo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/carta_rotulo_m.png') left center / auto 100% repeat-x; }
 .ui-chip-auto { background:
   url('../img/ui/chip_auto_e.png') left center / auto 100% no-repeat,
   url('../img/ui/chip_auto_d.png') right center / auto 100% no-repeat,
@@ -43,6 +59,14 @@
   url('../img/ui/chip_auto_ativo_e.png') left center / auto 100% no-repeat,
   url('../img/ui/chip_auto_ativo_d.png') right center / auto 100% no-repeat,
   url('../img/ui/chip_auto_ativo_m.png') left center / auto 100% repeat-x; }
+.ui-classe-linha { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 35.5) calc(var(--u) * 44.4) calc(var(--u) * 35.5) calc(var(--u) * 44.4);
+  border-image: url('../img/ui/classe_linha.png') 44 55 44 55 fill / 1 / 0 stretch; }
+.ui-classe-linha-ativa { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 45.2) calc(var(--u) * 52.4) calc(var(--u) * 45.2) calc(var(--u) * 50.8);
+  border-image: url('../img/ui/classe_linha_ativa.png') 56 65 56 63 fill / 1 / 0 stretch; }
+.ui-criacao-placa-subtitulo { background:
+  url('../img/ui/criacao_placa_subtitulo_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/criacao_placa_subtitulo_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/criacao_placa_subtitulo_m.png') left center / auto 100% repeat-x; }
 .ui-custo-pilula { background:
   url('../img/ui/custo_pilula_e.png') left center / auto 100% no-repeat,
   url('../img/ui/custo_pilula_d.png') right center / auto 100% no-repeat,
