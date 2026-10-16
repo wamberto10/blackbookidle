@@ -3142,3 +3142,142 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .bb-resumo b { font-weight: normal; color: #e9dfc8; }
 .bb-novo .recolhivel { margin: calc(var(--u) * 16) calc(var(--u) * 30) 0; background: rgba(10, 8, 16, 0.75); }
 .bb-novo .recolhivel p { font-family: "Segoe UI", system-ui, sans-serif; }
+
+/* =============================================================
+   v0.29.0: LAYOUT NOVO — fase 4: PERSONAGEM (docs/layout/layout_personagem.png)
+   O herói da vitrine aparece da cintura para cima (pedido do dono): as pernas ficam por trás da placa do nome,
+   das orbes e da faixa do Poder, e o palco corta o resto.
+   ============================================================= */
+#aba-personagem.painel-novo { background: #0b0912; }
+.pers-nova { color: var(--ui-marfim); font-family: Georgia, "Times New Roman", serif; font-size: max(calc(var(--u) * 20), 10px); }
+.pers-nova button { font-family: inherit; }
+
+/* ---- Palco: cenário, herói, equipamento, nome e orbes ---- */
+.pers-palco {
+  position: relative; height: calc(var(--u) * 697); overflow: hidden;
+  background: linear-gradient(rgba(11, 9, 18, 0) 70%, rgba(11, 9, 18, 0.55)), url('../img/ui/cena_heroi.jpg') center top / cover no-repeat, #1a1430;
+}
+.pers-vitrine { position: absolute; z-index: 1; top: calc(var(--u) * 6); left: 50%; height: calc(var(--u) * 1060); transform: translateX(-50%); pointer-events: none; }
+.pers-sprite { position: absolute; z-index: 1; top: calc(var(--u) * 60); left: 50%; width: calc(var(--u) * 440); height: calc(var(--u) * 440); transform: translateX(-50%); image-rendering: pixelated; }
+.pers-coluna { position: absolute; z-index: 3; top: calc(var(--u) * 19); left: calc(var(--u) * 45); display: flex; flex-direction: column; gap: calc(var(--u) * 20); }
+.pers-coluna-dir { left: calc(var(--u) * 772); }
+.pers-nova .pers-slot { position: relative; width: calc(var(--u) * 125); height: calc(var(--u) * 110); padding: 0; margin: 0; border: none; background: none; cursor: pointer; }
+.pers-slot .moch-moldura { width: 100%; height: 100%; }
+.pers-nova .item-ic {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  height: 80%; width: auto; max-width: 80%; object-fit: contain; pointer-events: none;
+}
+.pers-nova .item-ic.fantasma { opacity: 0.2; filter: grayscale(1); }
+.pers-slot .moch-mais { top: calc(var(--u) * 6); right: calc(var(--u) * 8); font-size: max(calc(var(--u) * 22), 10px); }
+.pers-slot .moch-nv { bottom: calc(var(--u) * 6); right: calc(var(--u) * 8); font-size: max(calc(var(--u) * 21), 9px); }
+
+.pers-placa {
+  position: absolute; z-index: 4; top: calc(var(--u) * 492); left: calc(var(--u) * 310); width: calc(var(--u) * 320); height: calc(var(--u) * 56);
+  display: flex; align-items: center; justify-content: center;
+}
+.pers-placa b { font-weight: normal; font-size: max(calc(var(--u) * 31), 13px); color: var(--ui-marfim); text-shadow: 0 2px 2px #000; }
+.pers-classe {
+  position: absolute; z-index: 4; top: calc(var(--u) * 550); left: 0; right: 0; text-align: center;
+  font-size: max(calc(var(--u) * 22), 10px); color: var(--ui-marfim); text-shadow: 0 1px 2px #000, 0 0 6px #000;
+}
+.pers-sexo { color: #8fc4ff; margin-left: 0.2em; }
+.pers-nova .pers-orbe {
+  position: absolute; z-index: 4; top: calc(var(--u) * 574); left: calc(var(--u) * 335); width: calc(var(--u) * 102);
+  display: flex; flex-direction: column; align-items: center; padding: 0; border: none; background: none; cursor: pointer; overflow: visible;
+}
+.pers-nova .pers-orbe-dir { left: calc(var(--u) * 504); }
+.pers-orbe-anel {
+  width: calc(var(--u) * 100); height: calc(var(--u) * 97); display: flex; align-items: center; justify-content: center;
+  background: url('../img/ui/pers_orbe_moldura.png') center / contain no-repeat;
+}
+.pers-orbe-anel img { width: 66%; height: 66%; object-fit: contain; }
+.pers-orbe small { margin-top: 0; line-height: 1.1; white-space: nowrap; font-size: max(calc(var(--u) * 20), 9px); color: var(--ui-marfim); text-shadow: 0 1px 2px #000, 0 0 5px #000; }
+.pers-nova .dica-habilidade {
+  position: absolute; z-index: 6; left: calc(var(--u) * 170); right: calc(var(--u) * 170); top: calc(var(--u) * 330); margin: 0;
+  padding: calc(var(--u) * 14) calc(var(--u) * 18); border: 1px solid rgba(217, 173, 87, 0.7); border-radius: calc(var(--u) * 10);
+  background: rgba(10, 8, 16, 0.94); font-size: max(calc(var(--u) * 19), 10px); line-height: 1.35; text-align: left;
+}
+
+/* ---- Ofensa / Poder Total / Resistência ---- */
+.pers-poder { position: relative; z-index: 5; height: calc(var(--u) * 106); }
+.pers-poder-faixa { position: absolute; left: calc(var(--u) * 15); right: calc(var(--u) * 16); top: calc(var(--u) * 6); height: calc(var(--u) * 98); box-sizing: border-box; }
+.pers-lado {
+  position: absolute; z-index: 1; left: calc(var(--u) * 58); top: calc(var(--u) * 17); width: calc(var(--u) * 224); height: calc(var(--u) * 70);
+  box-sizing: border-box; display: flex; align-items: center; gap: calc(var(--u) * 14); padding: 0 calc(var(--u) * 6);
+}
+.pers-lado-dir { left: auto; right: calc(var(--u) * 56); }
+.pers-lado img { width: calc(var(--u) * 44); height: calc(var(--u) * 44); flex: none; }
+.pers-lado span { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.pers-lado small { font-size: max(calc(var(--u) * 21), 9px); color: #f0d48a; }
+.pers-lado b { font-weight: normal; font-size: max(calc(var(--u) * 26), 11px); color: #fff; white-space: nowrap; }
+.pers-poder-centro {
+  /* a ponta esquerda da placa (com as espadas) tem 1,5× a altura de largura: o texto fica entre ela e a ponta direita */
+  position: absolute; z-index: 2; left: calc(var(--u) * 278); width: calc(var(--u) * 386); top: calc(var(--u) * 10); height: calc(var(--u) * 86);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 calc(var(--u) * 66) 0 calc(var(--u) * 132); box-sizing: border-box; line-height: 1.05;
+}
+.pers-poder-centro small { font-size: max(calc(var(--u) * 28), 11px); color: #f3d58a; text-shadow: 0 2px 2px #000; }
+.pers-poder-centro b { font-size: max(calc(var(--u) * 38), 15px); white-space: nowrap; color: #ffd56a; text-shadow: 0 2px 0 #6b4210, 0 0 8px rgba(255, 190, 70, 0.35); }
+
+/* ---- Quadro: Atributos, Núcleo de Cultivo, Vida/Reencarnações e aviso ---- */
+.pers-quadro { position: relative; isolation: isolate; margin: calc(var(--u) * 4) calc(var(--u) * 11) 0; padding: calc(var(--u) * 6) calc(var(--u) * 24) calc(var(--u) * 20); }
+.pers-moldura { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.pers-secao { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 10); height: calc(var(--u) * 46); margin-left: calc(var(--u) * -12); }
+.pers-secao > .ui-secao-titulo {
+  flex: none; box-sizing: border-box; height: 100%; min-width: calc(var(--u) * 230); padding: 0 calc(var(--u) * 62) 0 calc(var(--u) * 34);
+  display: flex; align-items: center; white-space: nowrap; font-size: max(calc(var(--u) * 28), 12px); color: #f0d48a; text-shadow: 0 2px 2px #000;
+}
+.pers-pontos { display: flex; align-items: center; gap: calc(var(--u) * 8); white-space: nowrap; font-size: max(calc(var(--u) * 21), 10px); color: #6fe0a0; }
+.pers-pontos b { font-weight: normal; }
+.pers-nova .pers-mais { width: calc(var(--u) * 38); height: calc(var(--u) * 38); min-width: 18px; min-height: 18px; padding: 0; border: none; background: none; cursor: pointer; }
+.pers-mais img { display: block; width: 100%; height: 100%; }
+.pers-nova .pers-mais:disabled { opacity: 0.45; filter: grayscale(0.7); cursor: default; }
+
+.pers-atributos {
+  position: relative; display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(5, calc(var(--u) * 44));
+  column-gap: calc(var(--u) * 64); padding: calc(var(--u) * 4) calc(var(--u) * 16) calc(var(--u) * 8);
+}
+.pers-atributos::before { content: ''; position: absolute; left: 50%; top: calc(var(--u) * 8); bottom: calc(var(--u) * 10); width: 1px; background: linear-gradient(transparent, rgba(217, 173, 87, 0.55) 15%, rgba(217, 173, 87, 0.55) 85%, transparent); }
+.pers-atributo {
+  display: grid; grid-template-columns: calc(var(--u) * 40) minmax(0, 1fr) auto auto; align-items: center; column-gap: calc(var(--u) * 8);
+  min-height: 18px; border-bottom: 1px solid rgba(217, 173, 87, 0.12); font-size: max(calc(var(--u) * 22), 10px);
+}
+.pers-atributo img { width: calc(var(--u) * 32); height: calc(var(--u) * 32); object-fit: contain; }
+.pers-atributo span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ui-marfim); }
+.pers-atributo b { font-weight: normal; color: #f0d48a; white-space: nowrap; }
+.pers-atributo b.no-maximo { color: #ffd84a; text-shadow: 0 0 6px rgba(255, 216, 74, 0.5); }
+.pers-atributo b.atributo-trancado { color: #8c8270; font-size: 0.85em; }
+.pers-atributo small { color: #9d927e; font-size: 0.9em; white-space: nowrap; }
+.pers-atributo small:empty { display: none; }
+
+.pers-nucleos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--u) * 14); margin-top: calc(var(--u) * 6); }
+.pers-nucleo {
+  position: relative; isolation: isolate; box-sizing: border-box; height: calc(var(--u) * 98); min-height: 44px;
+  display: grid; grid-template-columns: calc(var(--u) * 60) minmax(0, 1fr); align-items: center; column-gap: calc(var(--u) * 8);
+  padding: calc(var(--u) * 10) calc(var(--u) * 12) calc(var(--u) * 10) calc(var(--u) * 18);
+}
+.pers-nucleo-moldura { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.pers-nucleo-icone { width: calc(var(--u) * 56); height: calc(var(--u) * 56); object-fit: contain; }
+.pers-nucleo-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; padding-right: calc(var(--u) * 30); }
+.pers-nucleo-texto small { font-size: max(calc(var(--u) * 18), 8px); color: var(--ui-marfim); }
+.pers-nucleo-texto b { font-weight: normal; font-size: max(calc(var(--u) * 21), 9px); color: var(--ui-marfim); margin-top: calc(var(--u) * 4); }
+.pers-nucleo .pers-mais { position: absolute; right: calc(var(--u) * 12); bottom: calc(var(--u) * 12); }
+
+.pers-info { display: flex; align-items: center; height: calc(var(--u) * 50); min-height: 26px; margin: calc(var(--u) * 16) calc(var(--u) * 4) 0; padding: 0 calc(var(--u) * 22); }
+.pers-info-item { flex: 1; display: flex; align-items: center; gap: calc(var(--u) * 12); min-width: 0; font-size: max(calc(var(--u) * 21), 9px); white-space: nowrap; }
+.pers-info-item + .pers-info-item { padding-left: calc(var(--u) * 26); margin-left: calc(var(--u) * 16); border-left: 1px solid rgba(217, 173, 87, 0.45); }
+.pers-info-item img:first-child { width: calc(var(--u) * 30); height: calc(var(--u) * 30); object-fit: contain; }
+.pers-info-item b { font-weight: normal; margin-left: auto; }
+.pers-nova .pers-ajuda { width: calc(var(--u) * 32); height: calc(var(--u) * 32); min-width: 16px; min-height: 16px; padding: 0; border: none; background: none; cursor: pointer; }
+.pers-ajuda img { display: block; width: 100%; height: 100%; }
+
+.pers-aviso { display: flex; align-items: center; gap: calc(var(--u) * 14); height: calc(var(--u) * 56); min-height: 30px; margin: calc(var(--u) * 12) calc(var(--u) * -10) 0; padding: 0 calc(var(--u) * 16) 0 calc(var(--u) * 40); }
+.pers-aviso > img { width: calc(var(--u) * 40); height: calc(var(--u) * 40); object-fit: contain; flex: none; }
+.pers-aviso > span { flex: 1; min-width: 0; font-size: max(calc(var(--u) * 21), 9px); line-height: 1.15; color: #ff9a8a; }
+.pers-nova .pers-aviso button { flex: none; height: calc(var(--u) * 42); min-height: 22px; padding: 0 calc(var(--u) * 20); border: none; cursor: pointer; white-space: nowrap; font-size: max(calc(var(--u) * 20), 9px); color: #f3d58a; }
+.pers-nova .recolhivel { margin: calc(var(--u) * 16) calc(var(--u) * 25) 0; background: rgba(10, 8, 16, 0.75); }
+.pers-nova .recolhivel p { font-family: "Segoe UI", system-ui, sans-serif; }
+@container jogo (max-width: 440px) {
+  .pers-nucleo-de { display: none; }   /* celular estreito: só "Ataque", "Vitalidade"... (o texto inteiro não cabe no cartão) */
+  .pers-nucleo { grid-template-columns: calc(var(--u) * 50) minmax(0, 1fr); padding-left: calc(var(--u) * 14); }
+  .pers-nucleo-icone { width: calc(var(--u) * 48); height: calc(var(--u) * 48); }
+}

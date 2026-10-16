@@ -94,64 +94,65 @@
        ========================================================= -->
 
   <!-- ===== Personagem ===== -->
-  <section class="painel painel-personagem" id="aba-personagem">
+  <section class="painel painel-novo" id="aba-personagem">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_personagem.png" alt=""> Personagem</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
-      <!-- v0.19.0: tela do herói (estilo AFK Arena): personagem grande com o equipamento em volta,
-           habilidades em orbes, Poder e atributos principais; a lista completa abre num pergaminho -->
-      <div class="heroi-titulo">
-        <div id="pers-nome" class="pers-nome"></div>
-        <div class="pers-linha"><img class="icone-px" id="pers-classe-icone" src="img/icones/classe_corpo.png" alt=""> <span id="pers-classe"></span></div>
-        <div class="pers-reino"><span id="pers-reino"></span> · <span id="pers-estagio"></span></div>
-      </div>
-
-      <div class="heroi-palco">
-        <div class="heroi-slots" id="heroi-slots-esquerda"></div>
-        <div class="heroi-centro" id="moldura-sprite-pers">
-          <button class="orbe-habilidade" id="orbe-passiva" title="Passiva da classe"></button>
-          <button class="orbe-habilidade orbe-tecnica" id="orbe-tecnica" title="Técnica especial"></button>
-          <canvas id="sprite-pers" width="32" height="32"></canvas>
+      <!-- v0.29.0 (layout novo — docs/layout/layout_personagem.png): herói da vitrine sobre o cenário (só da cintura
+           para cima: as pernas ficam por trás da placa, das orbes e da faixa do Poder), 10 espaços de equipamento,
+           Ofensa / Poder Total / Resistência, atributos, Núcleo de Cultivo, Vida / Reencarnações e o aviso do limite -->
+      <div class="pers-nova">
+        <div class="pers-palco">
+          <img class="pers-vitrine" id="pers-vitrine" alt="">
+          <canvas class="pers-sprite escondido" id="sprite-pers" width="32" height="32"></canvas>
+          <div class="pers-coluna" id="heroi-slots-esquerda"></div>
+          <div class="pers-coluna pers-coluna-dir" id="heroi-slots-direita"></div>
+          <div class="pers-placa ui-pers-placa-nome"><b id="pers-nome"></b></div>
+          <div class="pers-classe" id="pers-classe"></div>
+          <button class="botao-icone pers-orbe" id="orbe-passiva"><span class="pers-orbe-anel"><img id="orbe-passiva-img" alt=""></span><small>Passiva</small></button>
+          <button class="botao-icone pers-orbe pers-orbe-dir" id="orbe-tecnica"><span class="pers-orbe-anel"><img id="orbe-tecnica-img" alt=""></span><small>Técnica Especial</small></button>
+          <div class="dica-habilidade escondido" id="dica-habilidade"></div>
         </div>
-        <div class="heroi-slots" id="heroi-slots-direita"></div>
-      </div>
-      <div class="dica-habilidade escondido" id="dica-habilidade"></div>
 
-      <div class="placa-poder">
-        <div class="placa-poder-rotulo">Poder Total</div>
-        <div id="pers-poder" class="placa-poder-valor"></div>
-      </div>
-      <div class="heroi-stats">
-        <span title="Vitalidade"><img class="icone-px" src="img/icones/atr_vitalidade.png" alt=""><b id="heroi-vida"></b></span>
-        <span title="Ataque"><img class="icone-px" src="img/icones/atr_ataque.png" alt=""><b id="heroi-ataque"></b></span>
-        <span title="Defesa"><img class="icone-px" src="img/icones/atr_defesa.png" alt=""><b id="heroi-defesa"></b></span>
-        <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""><b id="heroi-velocidade"></b></span>
-        <button class="botao-atributos" id="abrir-atributos" title="Todos os atributos">!</button>
-      </div>
-      <div class="poder-partes" id="pers-poder-detalhe"></div>
-      <!-- v0.22.1: aparece quando o reino ainda não libera toda a força dos equipamentos -->
-      <div class="aviso-limite escondido" id="pers-limite"></div>
-      <div class="heroi-vida-linha pequeno"><span id="pers-regiao"></span> · <img class="icone-px" src="img/icones/reencarnacao.png" alt=""> <span id="pers-vidas"></span></div>
+        <div class="pers-poder">
+          <div class="pers-poder-faixa ui-pers-poder-faixa"></div>
+          <div class="pers-lado ui-caixa-comparacao" title="Dano médio por golpe (Ataque + Crítico)">
+            <img src="img/ui/bb_icone_forca.png" alt=""><span><small>Ofensa</small><b id="pers-ofensa">0</b></span></div>
+          <div class="pers-poder-centro ui-poder-placa"><small>Poder Total</small><b id="pers-poder">0</b></div>
+          <div class="pers-lado pers-lado-dir ui-caixa-comparacao" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">
+            <img src="img/ui/bb_icone_defesa.png" alt=""><span><small>Resistência</small><b id="pers-resistencia">0</b></span></div>
+        </div>
 
-      <!-- Pergaminho com todos os atributos (e os núcleos) -->
-      <div class="janela-atributos escondido" id="janela-atributos">
-        <div class="pergaminho">
-          <div class="pergaminho-topo"><b>Atributos</b><button class="botao-icone" id="fechar-atributos">✕</button></div>
-          <div class="pergaminho-corpo">
-            <div class="cartao cartao-classe" id="pers-classe-cartao"></div>
-            <div class="atributos-grade" id="lista-atributos"></div>
-            <div class="atributos-teto" id="lista-atributos-teto"></div>
-            <div class="atributos-extra" id="lista-atributos-extra"></div>
-            <div class="nucleos-chips" id="nucleos-guardados"></div>
+        <div class="pers-quadro">
+          <div class="pers-moldura ui-painel-moldura"></div>
+          <div class="pers-secao"><span class="ui-secao-titulo">Atributos</span></div>
+          <div class="pers-atributos" id="lista-atributos"></div>
+
+          <div class="pers-secao"><span class="ui-secao-titulo">Núcleo de Cultivo</span>
+            <span class="pers-pontos" title="Pontos dos Núcleos guardados (Baixo = 1, Médio = 5, Alto = 20). Use no + de cada cartão.">Pontos disponíveis:
+              <b id="pers-pontos">0</b><button class="botao-icone pers-mais" id="pers-pontos-ajuda"><img src="img/ui/topo_botao_mais.png" alt="+"></button></span>
+          </div>
+          <div class="pers-nucleos" id="pers-nucleos"></div>
+
+          <div class="pers-info ui-linha-moldura">
+            <span class="pers-info-item"><img src="img/ui/icone_hp.png" alt=""><span>Vida</span><b id="pers-vida">0</b>
+              <button class="botao-icone pers-ajuda" data-ajuda="vida"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
+            <span class="pers-info-item"><img src="img/icones/reencarnacao.png" alt=""><span>Reencarnações</span><b id="pers-vidas">0</b>
+              <button class="botao-icone pers-ajuda" data-ajuda="reencarnacoes"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
+          </div>
+          <!-- v0.22.1: aparece quando o reino ainda não libera toda a força dos equipamentos (ou no Selo) -->
+          <div class="pers-aviso ui-pers-aviso-barra escondido" id="pers-limite">
+            <img src="img/ui/icone_aviso.png" alt=""><span id="pers-limite-texto"></span>
+            <button class="ui ui-botao-escuro" id="pers-avancar">Avançar de Reino</button>
           </div>
         </div>
-      </div>
 
-      <details class="recolhivel">
-        <summary>Dicas</summary>
-        <p class="pequeno"><img class="icone-px" src="img/icones/nucleo_medio.png" alt=""> Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de Ataque, Vitalidade, Defesa ou Velocidade para usar: cada ponto dá +1% para sempre.</p>
-        <p class="pequeno"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
-        <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
-      </details>
+        <details class="recolhivel">
+          <summary>Dicas</summary>
+          <p class="pequeno"><img class="icone-px" src="img/icones/nucleo_medio.png" alt=""> Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de um cartão do Núcleo de Cultivo para usar: cada ponto dá +1% para sempre.</p>
+          <p class="pequeno"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
+          <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
+        </details>
+      </div>
     </div>
   </section>
 

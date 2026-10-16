@@ -1,7 +1,8 @@
 // =============================================================
-// ui/nucleos.js — BOTÃO "+" DOS ATRIBUTOS (usar Núcleos)
-// Na aba Personagem: Ataque, Vitalidade, Defesa e Velocidade ganham um "+".
-// Ele abre uma janelinha para escolher qual núcleo usar (Baixo, Médio ou Alto).
+// ui/nucleos.js — NÚCLEO DE CULTIVO (usar Núcleos)
+// Na aba Personagem (v0.29.0, layout do mockup): 4 cartões — Ataque, Vitalidade, Defesa e Velocidade —
+// com o nível (pontos já usados, +1% cada) e um "+". O "+" abre uma janelinha para escolher qual núcleo
+// usar (Baixo, Médio ou Alto). "Pontos disponíveis" = pontos dos núcleos guardados.
 // =============================================================
 import { TIPOS_DE_NUCLEO, ATRIBUTOS_DE_NUCLEO, quantidade, pontosEm, temAlgumNucleo } from '../sistemas/nucleos.js';
 import { ATRIBUTOS } from '../sistemas/atributos.js';
@@ -15,22 +16,28 @@ const rotulosPontos = {};
 let atributoEscolhido = null;
 let ultimoEstado = null;
 
-export function montarNucleos(acoes, linhas) {
-  for (const atributo of ATRIBUTOS_DE_NUCLEO) {
-    const linha = linhas[atributo];
-    // "+12%" ao lado do nome = bônus que já veio dos núcleos
-    const rotulo = document.createElement('small');
-    rotulo.className = 'pontos-nucleo';
-    linha.querySelector('span').appendChild(rotulo);
-    rotulosPontos[atributo] = rotulo;
+// Cartão de cada atributo (cor da moldura e ícone do kit de interface, img/ui/)
+const CARTAO = {
+  ataque: { cor: 'vermelho', icone: 'bb_icone_forca' },
+  vitalidade: { cor: 'verde', icone: 'bb_icone_vitalidade' },
+  defesa: { cor: 'azul', icone: 'bb_icone_defesa' },
+  velocidade: { cor: 'roxo', icone: 'bb_icone_velocidade' },
+};
 
-    const botao = document.createElement('button');
-    botao.className = 'botao-nucleo';
-    botao.textContent = '+';
-    botao.title = 'Usar um Núcleo neste atributo';
-    botao.addEventListener('click', () => abrir(atributo));
-    linha.appendChild(botao);
-    botoesMais[atributo] = botao;
+export function montarNucleos(acoes) {
+  const caixa = $('pers-nucleos');
+  for (const atributo of ATRIBUTOS_DE_NUCLEO) {
+    const visual = CARTAO[atributo];
+    const cartao = document.createElement('div');
+    cartao.className = 'pers-nucleo';
+    cartao.innerHTML = `<div class="pers-nucleo-moldura ui-nucleo-card-${visual.cor}"></div>
+      <img class="pers-nucleo-icone" src="img/ui/${visual.icone}.png" alt="">
+      <span class="pers-nucleo-texto"><small><span class="pers-nucleo-de">Núcleo de </span>${NOME[atributo].replace(' (HP)', '')}</small><b>Nv. 0</b></span>
+      <button class="botao-icone pers-mais" title="Usar um Núcleo neste atributo"><img src="img/ui/topo_botao_mais.png" alt="+"></button>`;
+    rotulosPontos[atributo] = cartao.querySelector('b');
+    botoesMais[atributo] = cartao.querySelector('button');
+    botoesMais[atributo].addEventListener('click', () => abrir(atributo));
+    caixa.appendChild(cartao);
   }
 
   // Janelinha de escolha (uma só, reaproveitada)
@@ -111,16 +118,14 @@ export function atualizarNucleos(estado) {
   ultimoEstado = estado;
   const algum = temAlgumNucleo(estado);
   for (const atributo of ATRIBUTOS_DE_NUCLEO) {
-    const pontos = pontosEm(estado, atributo);
-    rotulosPontos[atributo].textContent = pontos > 0 ? ` +${pontos}%` : '';
+    const texto = `Nv. ${pontosEm(estado, atributo)}`;
+    if (rotulosPontos[atributo].textContent !== texto) rotulosPontos[atributo].textContent = texto;
     botoesMais[atributo].disabled = !algum;
   }
   const chave = TIPOS_DE_NUCLEO.map(t => quantidade(estado, t.id)).join(',');
   if (chave !== chaveGuardados) {
     chaveGuardados = chave;
-    // v0.16.0: um "chip" para cada tipo de núcleo guardado
-    $('nucleos-guardados').innerHTML = '<span class="nucleos-rotulo">Núcleos guardados</span>' + TIPOS_DE_NUCLEO
-      .map(t => `<span class="chip-nucleo" style="--cor:${t.cor}">${icone(t.icone)} ${t.nome.replace('Núcleo de ', '')} <b>${quantidade(estado, t.id)}</b></span>`).join('');
+    $('pers-pontos').textContent = TIPOS_DE_NUCLEO.reduce((soma, t) => soma + quantidade(estado, t.id) * t.pontos, 0);
   }
   if (atributoEscolhido) desenharJanela(estado);
 }

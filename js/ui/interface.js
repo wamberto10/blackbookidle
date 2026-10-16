@@ -12,8 +12,9 @@ import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atribut
 import { liberado } from '../sistemas/desbloqueios.js';
 import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
-import { desenharPersonagem, icone, iconeEquipamento, animarVivo } from './sprite.js';
-import { TEXTO_DO_SELO } from './poder.js';
+import { desenharPersonagem, animarVivo } from './sprite.js';
+import { TEXTO_DO_SELO, TEXTO_CURTO_DO_SELO } from './poder.js';
+import { lutaAtual } from '../sistemas/combate.js';
 import { SLOTS } from '../dados/equipamentos.js';
 import { grauDe } from '../sistemas/itens.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
@@ -35,8 +36,19 @@ import { montarCultivoAvancado, atualizarCultivoAvancado } from './telaCultivoAv
 const $ = (id) => document.getElementById(id);
 
 const elementosAtributos = {};
-const barrasTeto = {};
-const ATRIBUTOS_PRINCIPAIS = ['ataque', 'vitalidade', 'defesa', 'velocidade'];
+const tetosAtributos = {};
+// v0.29.0 (tela Personagem do mockup): ícone de cada atributo (img/ui/) e a linha extra "Recuperação de Vida"
+// (Regeneração do Refinador Corporal: % da Vitalidade por turno; as outras classes não regeneram)
+const ICONE_ATRIBUTO = {
+  ataque: 'icone_atq', critico: 'icone_crit', danoCritico: 'icone_dano_crit', velocidade: 'icone_velocidade',
+  vitalidade: 'icone_hp', defesa: 'icone_def', esquiva: 'icone_esquiva', poderCultivo: 'icone_cultivo_peq',
+  sentidoDivino: 'icone_sentido', regeneracao: 'icone_regeneracao',
+};
+const REGENERACAO = { id: 'regeneracao', nome: 'Recuperação de Vida', formato: 'numero' };
+const AJUDA = {
+  vida: 'Vida do herói na luta de agora. O máximo é a Vitalidade; cada luta nova começa com a vida cheia.',
+  reencarnacoes: 'Quantas vezes você reencarnou pelo Black Book. A Essência da Alma e as melhorias ficam para sempre.',
+};
 let ultimoNivelDesenhado = '';
 let fundoDesenhado = null;
 let painelAberto = null;
@@ -74,30 +86,24 @@ export function montarInterface(acoes) {
   $('botao-resetar').addEventListener('click', acoes.aoResetar);
   $('modal-botao').addEventListener('click', () => $('modal').classList.add('escondido'));
 
-  // ---- Atributos (v0.16.0): os 4 dos núcleos em grade 2×2, os com teto com barrinha,
-  //      Poder de Cultivo e Sentido Divino lado a lado ----
-  const linhas = {};
-  for (const atributo of ATRIBUTOS) {
+  // ---- Atributos (v0.29.0, layout do mockup): 2 colunas — Ataque, Taxa de Crítico, Dano Crítico, Velocidade e
+  //      Vitalidade | Defesa, Esquiva, Poder de Cultivo, Sentido Divino e Recuperação de Vida; o teto entre parênteses ----
+  for (const atributo of [...ATRIBUTOS, REGENERACAO]) {
     const linha = document.createElement('div');
-    const comTeto = atributo.maximo !== undefined;
-    const principal = ATRIBUTOS_PRINCIPAIS.includes(atributo.id);
-    linha.className = 'atributo ' + (principal ? 'atributo-principal' : comTeto ? 'atributo-teto' : 'atributo-extra');
-    linha.innerHTML = principal
-      ? `<span class="atributo-nome">${icone(atributo.icone)} ${atributo.nome.replace(' (HP)', '')}</span><strong>0</strong>`
-      : `<span class="atributo-nome">${icone(atributo.icone)} ${atributo.nome}</span><strong>0</strong>` +
-        (comTeto ? '<div class="barra-teto"><div></div></div>' : '');
-    elementosAtributos[atributo.id] = linha.querySelector('strong');
-    if (comTeto) barrasTeto[atributo.id] = linha.querySelector('.barra-teto > div');
-    linhas[atributo.id] = linha;
-    $(principal ? 'lista-atributos' : comTeto ? 'lista-atributos-teto' : 'lista-atributos-extra').appendChild(linha);
+    linha.className = 'pers-atributo';
+    linha.innerHTML = `<img src="img/ui/${ICONE_ATRIBUTO[atributo.id]}.png" alt=""><span>${atributo.nome.replace(' (HP)', '')}</span><b>0</b><small></small>`;
+    elementosAtributos[atributo.id] = linha.querySelector('b');
+    tetosAtributos[atributo.id] = linha.querySelector('small');
+    $('lista-atributos').appendChild(linha);
   }
-  montarNucleos(acoes, linhas);
+  montarNucleos(acoes);
   animarVivo($('sprite'));
   animarVivo($('sprite-pers'));
-  // v0.19.0: tela do herói — orbes de habilidade e pergaminho de atributos
-  $('abrir-atributos').addEventListener('click', () => $('janela-atributos').classList.remove('escondido'));
-  $('fechar-atributos').addEventListener('click', () => $('janela-atributos').classList.add('escondido'));
-  $('janela-atributos').addEventListener('click', (e) => { if (e.target.id === 'janela-atributos') e.target.classList.add('escondido'); });
+  $('pers-avancar').addEventListener('click', () => abrirPainel('cultivo'));
+  $('pers-pontos-ajuda').addEventListener('click', () => mostrarMensagem('Núcleos caem dos inimigos a partir do Mapa 3. ' +
+    'Use no + de cada cartão do Núcleo de Cultivo: cada ponto dá +1% para sempre.'));
+  document.querySelectorAll('.pers-ajuda').forEach((botao) => botao.addEventListener('click', () => mostrarMensagem(AJUDA[botao.dataset.ajuda])));
+  // v0.19.0: tela do herói — orbes de habilidade (tocar mostra o que fazem)
   for (const id of ['orbe-passiva', 'orbe-tecnica']) {
     $(id).addEventListener('click', () => {
       const dica = $('dica-habilidade');
@@ -179,7 +185,8 @@ export function atualizarInterface(estado) {
   atualizarTelaBoss(estado);
 }
 
-// ---- v0.19.0: equipamento em volta do herói (tocar abre a Mochila) ----
+// ---- Equipamento em volta do herói (tocar abre a Mochila) ----
+// v0.29.0: igual à Mochila — borda na cor da raridade, ícone colorido, "+nível" e "Nv." (mapa onde o item caiu)
 let chaveEquipamento = '';
 function desenharEquipamentoDoHeroi(estado) {
   const chave = SLOTS.map(s => { const i = estado.equipados[s.id]; return i ? `${i.id}.${i.nivel}.${i.raridade}.${grauDe(i)}` : '-'; }).join('|');
@@ -191,11 +198,12 @@ function desenharEquipamentoDoHeroi(estado) {
     for (const slot of SLOTS.filter(s => s.lado === lado)) {
       const item = estado.equipados[slot.id];
       const botao = document.createElement('button');
-      botao.className = 'slot-item heroi-slot' + (item ? ' raridade-' + item.raridade : ' vazio');
-      botao.title = item ? slot.nome : `${slot.nome} (vazio)`;
+      botao.className = 'ui pers-slot' + (item ? '' : ' vazio');
+      botao.title = item ? `${slot.nome}${item.nivel > 0 ? ` +${item.nivel}` : ''}` : `${slot.nome} (vazio)`;
       botao.innerHTML = item
-        ? `${iconeEquipamento(item.slot, item.raridade)}${item.nivel > 0 ? `<span class="item-nivel">+${item.nivel}</span>` : ''}`
-        : iconeEquipamento(slot.id, 'comum', 'fantasma');
+        ? `<span class="moch-moldura moldura-${item.raridade}"><img class="item-ic" src="img/ui/item_${slot.id}.png" alt="">` +
+          `${item.nivel > 0 ? `<span class="moch-mais">+${item.nivel}</span>` : ''}<span class="moch-nv">Nv.${FASES[item.fase].mapa + 1}</span></span>`
+        : `<span class="moch-moldura moldura-comum"><img class="item-ic fantasma" src="img/ui/item_${slot.id}.png" alt=""></span>`;
       botao.addEventListener('click', () => abrirPainel('mochila'));
       coluna.appendChild(botao);
     }
@@ -418,43 +426,40 @@ function atualizarCultivo(estado, producao) {
 // ---- Personagem: atributos ----
 function atualizarPersonagem(estado) {
   const atributos = calcularAtributos(estado);
-  for (const atributo of ATRIBUTOS) {
-    const valor = atributos[atributo.id];
+  const valores = { ...atributos, regeneracao: atributos.vitalidade * (atributos.especial?.regeneracao ?? 0) };
+  for (const atributo of [...ATRIBUTOS, REGENERACAO]) {
+    const valor = valores[atributo.id];
     const bloqueado = atributo.id === 'sentidoDivino' && valor === 0;
     const elemento = elementosAtributos[atributo.id];
-    // Atributos com teto mostram o máximo junto (ex.: "13% / 60%"); no teto, fica dourado
-    const maximo = atributo.maximo !== undefined ? ` / ${formatarAtributo(atributo.maximo, atributo.formato)}` : '';
-    elemento.textContent = bloqueado ? '🔒 Bloqueado' : formatarAtributo(valor, atributo.formato) + maximo;
+    trocarTexto(elemento, bloqueado ? 'Bloqueado' : atributo.id === 'regeneracao' && !valor ? '—'
+      : formatarAtributo(valor, atributo.formato));
+    // Atributos com teto mostram o máximo entre parênteses (ex.: "48.0% (60%)"); no teto, fica dourado
+    trocarTexto(tetosAtributos[atributo.id], atributo.maximo !== undefined ? `(${atributo.maximo}${atributo.formato === 'porcento' ? '%' : ''})` : '');
     elemento.classList.toggle('no-maximo', atributo.maximo !== undefined && valor >= atributo.maximo);
-    elemento.title = atributo.maximo !== undefined ? `Máximo: ${formatarAtributo(atributo.maximo, atributo.formato)}` : elemento.title;
-    elemento.title = bloqueado ? 'Libera no reino Ascensão Imortal' : '';
     elemento.classList.toggle('atributo-trancado', bloqueado);
-    if (barrasTeto[atributo.id]) barrasTeto[atributo.id].style.width = `${Math.min(100, (valor / atributo.maximo) * 100)}%`;
+    elemento.title = bloqueado ? 'Libera no reino Ascensão Imortal'
+      : atributo.id === 'regeneracao' ? (valor ? 'Por turno (Regeneração da classe)' : 'Só o Refinador Corporal regenera a cada turno') : '';
   }
-  const vidas = estado.reencarnacao.vezes;
-  $('pers-vidas').textContent = `Vida nº ${vidas + 1} · ${vidas} ${vidas === 1 ? 'reencarnação' : 'reencarnações'}`;
+  // Vida na luta de agora (fora da luta, cheia)
+  const luta = lutaAtual();
+  const maxima = luta?.jogador.vitalidade ?? atributos.vitalidade;
+  trocarTexto($('pers-vida'), `${formatarNumero(Math.max(0, luta ? luta.vidaJogador : maxima))} / ${formatarNumero(maxima)}`);
+  const vezes = estado.reencarnacao.vezes;
+  trocarTexto($('pers-vidas'), `${vezes} ${vezes === 1 ? 'vez' : 'vezes'}`);
   atualizarNucleos(estado);
-  $('heroi-vida').textContent = formatarNumero(atributos.vitalidade);
-  $('heroi-ataque').textContent = formatarNumero(atributos.ataque);
-  $('heroi-defesa').textContent = formatarNumero(atributos.defesa);
-  $('heroi-velocidade').textContent = formatarNumero(atributos.velocidade);
   desenharEquipamentoDoHeroi(estado);
   const analise = analisarPoder(atributos);
-  $('pers-poder').textContent = formatarNumero(analise.poder);
-  // A explicação aparece ao passar o mouse (ou segurar o dedo) em cada caixinha
-  $('pers-poder-detalhe').innerHTML =
-    `<span class="parte-poder" title="Dano médio por golpe (Ataque + Crítico)">${icone('ofensa')} Ofensa <b>${formatarNumero(analise.ofensa)}</b></span>` +
-    `<span class="parte-poder" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">${icone('resistencia')} Resistência <b>${formatarNumero(analise.resistencia)}</b></span>`;
+  trocarTexto($('pers-poder'), formatarNumero(analise.poder));
+  trocarTexto($('pers-ofensa'), formatarNumero(analise.ofensa));
+  trocarTexto($('pers-resistencia'), formatarNumero(analise.resistencia));
   // v0.22.1: limite do equipamento pelo reino | v0.26.0: Selo do Mundo Primordial (tem prioridade)
-  const aviso = $('pers-limite');
-  const textoAviso = atributos.selado ? TEXTO_DO_SELO
-    : atributos.equipamentoLimitado ? 'Seus equipamentos são fortes demais para o seu reino: rendem no máximo ' +
-      `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.` : '';
-  aviso.classList.toggle('escondido', !textoAviso);
-  if (aviso.dataset.texto !== textoAviso) {
-    aviso.dataset.texto = textoAviso;
-    aviso.innerHTML = textoAviso ? `${icone('cadeado')} <span>${textoAviso}</span>` : '';
-  }
+  const textoAviso = atributos.selado ? TEXTO_CURTO_DO_SELO + '.'
+    : atributos.equipamentoLimitado ? `Equipamentos limitados pelo reino ${P.reinoAtual(estado).nome}.` : '';
+  $('pers-limite').classList.toggle('escondido', !textoAviso);
+  trocarTexto($('pers-limite-texto'), textoAviso);
+  $('pers-limite').title = atributos.selado ? TEXTO_DO_SELO : 'Seus equipamentos são fortes demais para o seu reino: rendem no máximo ' +
+    `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.`;
+  $('pers-avancar').classList.toggle('escondido', Boolean(atributos.selado));
 }
 
 function atualizarNivel(estado) {
@@ -469,30 +474,29 @@ function atualizarNivel(estado) {
   $('topo-retrato-img').src = `img/ui/retrato_${personagem.sexo}_${classe.id}.png`;   // v0.27.0: retrato no topo
   $('inicio-nome').textContent = personagem.nome;
   $('pers-nome').textContent = personagem.nome;
-  $('pers-classe').innerHTML = `${classe.nome} <span class="pers-classe-sexo">· ${personagem.sexo === 'feminino' ? '♀' : '♂'}</span>`;
-  $('pers-classe-icone').src = `img/icones/classe_${classe.id}.png`;
+  $('pers-classe').innerHTML = `${classe.nome} <span class="pers-sexo">${personagem.sexo === 'feminino' ? '♀' : '♂'}</span>`;
   $('cb-nome-jogador').textContent = personagem.nome;
-  $('pers-classe-cartao').innerHTML = `
-    <div class="classe-topo">${icone('classe_' + classe.id, 'classe-icone')}<div><h3>${classe.nome}</h3><p>${classe.titulo}</p></div></div>
-    <p class="especial-classe"><b>${classe.nomeEspecial}:</b> ${classe.textoEspecial}</p>
-    ${classe.tecnica ? `<p class="especial-classe tecnica-classe">${icone('tecnica')} <span><b>${classe.tecnica.nome}:</b> ${classe.tecnica.texto}</span></p>` : ''}`;
-  $('orbe-passiva').innerHTML = icone('classe_' + classe.id);
+  // v0.29.0: herói da vitrine (img/ui/vitrine_<sexo>_<classe>.png); sem a imagem, fica o sprite de batalha
+  const vitrine = $('pers-vitrine');
+  const caminhoVitrine = `img/ui/vitrine_${personagem.sexo}_${classe.id}.png`;
+  if (vitrine.getAttribute('src') !== caminhoVitrine) {
+    vitrine.onload = () => { vitrine.classList.remove('escondido'); $('sprite-pers').classList.add('escondido'); };
+    vitrine.onerror = () => { vitrine.classList.add('escondido'); $('sprite-pers').classList.remove('escondido'); };
+    vitrine.src = caminhoVitrine;
+  }
+  $('orbe-passiva-img').src = `img/ui/pers_passiva_${classe.id}.png`;
   $('orbe-passiva').dataset.dica = `<b>${classe.nomeEspecial}</b> <small>· passiva</small><p>${classe.textoEspecial}</p>`;
-  $('orbe-tecnica').innerHTML = icone('tecnica');
+  $('orbe-tecnica-img').src = `img/ui/pers_tecnica_${classe.id}.png`;
   $('orbe-tecnica').classList.toggle('escondido', !classe.tecnica);
   if (classe.tecnica) $('orbe-tecnica').dataset.dica = `<b>✦ ${classe.tecnica.nome}</b> <small>· técnica especial</small><p>${classe.tecnica.texto}</p>`;
   const dica = $('dica-habilidade');
   if (!dica.classList.contains('escondido')) dica.innerHTML = $(dica.dataset.orbe)?.dataset.dica ?? '';
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
-  $('moldura-sprite-pers').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;
   $('inicio-faixa-reino').textContent = reino.nome;   // v0.27.0: faixa da tela inicial
   ajustarFonte($('inicio-faixa-reino'), reino.nome, 33, 14);
   $('topo-nivel').textContent = `Nv. ${P.indiceNivel(estado) + 1}`;
   $('inicio-estagio').textContent = P.nomeDoEstagio(estado);
-  $('pers-regiao').textContent = regiao.nome;
-  $('pers-reino').textContent = reino.nome;
-  $('pers-estagio').textContent = P.nomeDoEstagio(estado);
 
   // Descrição do reino no painel Cultivo
   $('cult-reino-nome').textContent = reino.nome;

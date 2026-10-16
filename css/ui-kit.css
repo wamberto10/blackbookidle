@@ -55,8 +55,26 @@
   url('../img/ui/linha_moldura_e.png') left center / auto 100% no-repeat,
   url('../img/ui/linha_moldura_d.png') right center / auto 100% no-repeat,
   url('../img/ui/linha_moldura_m.png') left center / auto 100% repeat-x; }
+.ui-nucleo-card-azul { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 21.5) calc(var(--u) * 22.0) calc(var(--u) * 21.0) calc(var(--u) * 21.0);
+  border-image: url('../img/ui/nucleo_card_azul.png') 43 44 42 42 fill / 1 / 0 stretch; }
+.ui-nucleo-card-roxo { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 22.5) calc(var(--u) * 23.5) calc(var(--u) * 23.0) calc(var(--u) * 23.0);
+  border-image: url('../img/ui/nucleo_card_roxo.png') 45 47 46 46 fill / 1 / 0 stretch; }
+.ui-nucleo-card-verde { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 18.5) calc(var(--u) * 19.0) calc(var(--u) * 18.0) calc(var(--u) * 18.0);
+  border-image: url('../img/ui/nucleo_card_verde.png') 37 38 36 36 fill / 1 / 0 stretch; }
+.ui-nucleo-card-vermelho { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 18.0) calc(var(--u) * 19.0) calc(var(--u) * 18.0) calc(var(--u) * 18.5);
+  border-image: url('../img/ui/nucleo_card_vermelho.png') 36 38 36 37 fill / 1 / 0 stretch; }
 .ui-painel-moldura { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 43.0) calc(var(--u) * 42.2) calc(var(--u) * 43.8) calc(var(--u) * 58.7);
   border-image: url('../img/ui/painel_moldura.png') 52 51 53 71 fill / 1 / 0 stretch; }
+.ui-pers-aviso-barra { background:
+  url('../img/ui/pers_aviso_barra_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/pers_aviso_barra_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/pers_aviso_barra_m.png') left center / auto 100% repeat-x; }
+.ui-pers-placa-nome { background:
+  url('../img/ui/pers_placa_nome_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/pers_placa_nome_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/pers_placa_nome_m.png') left center / auto 100% repeat-x; }
+.ui-pers-poder-faixa { border-style: solid; border-color: transparent; border-width: calc(var(--u) * 45.5) calc(var(--u) * 91.8) calc(var(--u) * 46.3) calc(var(--u) * 91.0);
+  border-image: url('../img/ui/pers_poder_faixa.png') 55 111 56 110 fill / 1 / 0 stretch; }
 .ui-poder-placa { background:
   url('../img/ui/poder_placa_e.png') left center / auto 100% no-repeat,
   url('../img/ui/poder_placa_d.png') right center / auto 100% no-repeat,
