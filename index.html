@@ -106,7 +106,7 @@
           <canvas class="pers-sprite escondido" id="sprite-pers" width="32" height="32"></canvas>
           <div class="pers-coluna" id="heroi-slots-esquerda"></div>
           <div class="pers-coluna pers-coluna-dir" id="heroi-slots-direita"></div>
-          <div class="pers-placa ui-pers-placa-nome"><b id="pers-nome"></b></div>
+          <div class="pers-placa"><b id="pers-nome"></b></div>
           <div class="pers-classe" id="pers-classe"></div>
           <button class="botao-icone pers-orbe" id="orbe-passiva"><span class="pers-orbe-anel"><img id="orbe-passiva-img" alt=""></span><small>Passiva</small></button>
           <button class="botao-icone pers-orbe pers-orbe-dir" id="orbe-tecnica"><span class="pers-orbe-anel"><img id="orbe-tecnica-img" alt=""></span><small>Técnica Especial</small></button>
@@ -114,33 +114,32 @@
         </div>
 
         <div class="pers-poder">
-          <div class="pers-poder-faixa ui-pers-poder-faixa"></div>
-          <div class="pers-lado ui-caixa-comparacao" title="Dano médio por golpe (Ataque + Crítico)">
+          <div class="pers-poder-faixa"></div>
+          <div class="pers-lado" title="Dano médio por golpe (Ataque + Crítico)">
             <img src="img/ui/bb_icone_forca.png" alt=""><span><small>Ofensa</small><b id="pers-ofensa">0</b></span></div>
-          <div class="pers-poder-centro ui-poder-placa"><small>Poder Total</small><b id="pers-poder">0</b></div>
-          <div class="pers-lado pers-lado-dir ui-caixa-comparacao" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">
+          <div class="pers-poder-centro"><img class="pers-poder-espadas" src="img/ui/icone_equipar.png" alt=""><span><small>Poder Total</small><b id="pers-poder">0</b></span></div>
+          <div class="pers-lado pers-lado-dir" title="Vida efetiva (Vitalidade + Defesa + Esquiva)">
             <img src="img/ui/bb_icone_defesa.png" alt=""><span><small>Resistência</small><b id="pers-resistencia">0</b></span></div>
         </div>
 
         <div class="pers-quadro">
-          <div class="pers-moldura ui-painel-moldura"></div>
-          <div class="pers-secao"><span class="ui-secao-titulo">Atributos</span></div>
+          <div class="pers-secao"><span class="pers-secao-nome">Atributos</span></div>
           <div class="pers-atributos" id="lista-atributos"></div>
 
-          <div class="pers-secao"><span class="ui-secao-titulo">Núcleo de Cultivo</span>
+          <div class="pers-secao"><span class="pers-secao-nome">Núcleo de Cultivo</span>
             <span class="pers-pontos" title="Pontos dos Núcleos guardados (Baixo = 1, Médio = 5, Alto = 20). Use no + de cada cartão.">Pontos disponíveis:
               <b id="pers-pontos">0</b><button class="botao-icone pers-mais" id="pers-pontos-ajuda"><img src="img/ui/topo_botao_mais.png" alt="+"></button></span>
           </div>
           <div class="pers-nucleos" id="pers-nucleos"></div>
 
-          <div class="pers-info ui-linha-moldura">
+          <div class="pers-info">
             <span class="pers-info-item"><img src="img/ui/icone_hp.png" alt=""><span>Vida</span><b id="pers-vida">0</b>
               <button class="botao-icone pers-ajuda" data-ajuda="vida"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
             <span class="pers-info-item"><img src="img/icones/reencarnacao.png" alt=""><span>Reencarnações</span><b id="pers-vidas">0</b>
               <button class="botao-icone pers-ajuda" data-ajuda="reencarnacoes"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
           </div>
           <!-- v0.22.1: aparece quando o reino ainda não libera toda a força dos equipamentos (ou no Selo) -->
-          <div class="pers-aviso ui-pers-aviso-barra escondido" id="pers-limite">
+          <div class="pers-aviso escondido" id="pers-limite">
             <img src="img/ui/icone_aviso.png" alt=""><span id="pers-limite-texto"></span>
             <button class="ui ui-botao-escuro" id="pers-avancar">Avançar de Reino</button>
           </div>

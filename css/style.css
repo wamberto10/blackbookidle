@@ -3178,7 +3178,9 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 
 .pers-placa {
   position: absolute; z-index: 4; top: calc(var(--u) * 492); left: calc(var(--u) * 310); width: calc(var(--u) * 320); height: calc(var(--u) * 56);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  /* v0.30.3 (dono): tela de Personagem com bordas finas e simples, como o Black Book */
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 10); background: rgba(14, 11, 22, 0.88);
 }
 .pers-placa b { font-weight: normal; font-size: calc(var(--ut) * 31); color: var(--ui-marfim); text-shadow: 0 2px 2px #000; }
 .pers-classe {
@@ -3192,8 +3194,8 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 }
 .pers-nova .pers-orbe-dir { left: calc(var(--u) * 504); }
 .pers-orbe-anel {
-  width: calc(var(--u) * 100); height: calc(var(--u) * 97); display: flex; align-items: center; justify-content: center;
-  background: url('../img/ui/pers_orbe_moldura.png') center / contain no-repeat;
+  width: calc(var(--u) * 96); height: calc(var(--u) * 96); display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: 50%; background: radial-gradient(circle, rgba(40, 30, 60, 0.95), rgba(10, 8, 16, 0.95));
 }
 .pers-orbe-anel img { width: 66%; height: 66%; object-fit: contain; }
 .pers-orbe small { margin-top: 0; line-height: 1.1; white-space: nowrap; font-size: calc(var(--ut) * 18); color: var(--ui-marfim); text-shadow: 0 1px 2px #000, 0 0 5px #000; }
@@ -3205,10 +3207,14 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 
 /* ---- Ofensa / Poder Total / Resistência ---- */
 .pers-poder { position: relative; z-index: 5; height: calc(var(--u) * 106); }
-.pers-poder-faixa { position: absolute; left: calc(var(--u) * 15); right: calc(var(--u) * 16); top: calc(var(--u) * 6); height: calc(var(--u) * 98); box-sizing: border-box; }
+.pers-poder-faixa {
+  position: absolute; left: calc(var(--u) * 15); right: calc(var(--u) * 16); top: calc(var(--u) * 10); height: calc(var(--u) * 86); box-sizing: border-box;
+  border-top: 1px solid rgba(217, 173, 87, 0.75); border-bottom: 1px solid rgba(217, 173, 87, 0.75); background: rgba(14, 11, 22, 0.9);
+}
 .pers-lado {
   position: absolute; z-index: 1; left: calc(var(--u) * 58); top: calc(var(--u) * 17); width: calc(var(--u) * 224); height: calc(var(--u) * 70);
-  box-sizing: border-box; display: flex; align-items: center; gap: calc(var(--u) * 14); padding: 0 calc(var(--u) * 6);
+  box-sizing: border-box; display: flex; align-items: center; gap: calc(var(--u) * 14); padding: 0 calc(var(--u) * 16);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 10); background: rgba(20, 16, 30, 0.95);
 }
 .pers-lado-dir { left: auto; right: calc(var(--u) * 56); }
 .pers-lado img { width: calc(var(--u) * 44); height: calc(var(--u) * 44); flex: none; }
@@ -3216,21 +3222,25 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .pers-lado small { font-size: calc(var(--ut) * 21); color: #f0d48a; }
 .pers-lado b { font-weight: normal; font-size: calc(var(--ut) * 26); color: #fff; white-space: nowrap; }
 .pers-poder-centro {
-  /* a ponta esquerda da placa (com as espadas) tem 1,5× a altura de largura: o texto fica entre ela e a ponta direita */
-  position: absolute; z-index: 2; left: calc(var(--u) * 278); width: calc(var(--u) * 386); top: calc(var(--u) * 10); height: calc(var(--u) * 86);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 calc(var(--u) * 66) 0 calc(var(--u) * 132); box-sizing: border-box; line-height: 1.05;
+  position: absolute; z-index: 2; left: calc(var(--u) * 296); width: calc(var(--u) * 350); top: calc(var(--u) * 2); height: calc(var(--u) * 102);
+  display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 16); box-sizing: border-box; line-height: 1.05;
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 12); background: rgba(14, 11, 22, 0.97);
+  box-shadow: 0 0 calc(var(--u) * 12) rgba(255, 200, 90, 0.25);
 }
+.pers-poder-espadas { width: calc(var(--u) * 52); height: calc(var(--u) * 52); flex: none; }
+.pers-poder-centro span { display: flex; flex-direction: column; align-items: center; }
 .pers-poder-centro small { font-size: calc(var(--ut) * 28); color: #f3d58a; text-shadow: 0 2px 2px #000; }
 .pers-poder-centro b { font-size: calc(var(--ut) * 38); white-space: nowrap; color: #ffd56a; text-shadow: 0 2px 0 #6b4210, 0 0 8px rgba(255, 190, 70, 0.35); }
 
 /* ---- Quadro: Atributos, Núcleo de Cultivo, Vida/Reencarnações e aviso ---- */
-.pers-quadro { position: relative; isolation: isolate; margin: calc(var(--u) * 4) calc(var(--u) * 11) 0; padding: calc(var(--u) * 6) calc(var(--u) * 24) calc(var(--u) * 20); }
-.pers-moldura { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.pers-secao { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 10); height: calc(var(--u) * 46); margin-left: calc(var(--u) * -12); }
-.pers-secao > .ui-secao-titulo {
-  flex: none; box-sizing: border-box; height: 100%; min-width: calc(var(--u) * 230); padding: 0 calc(var(--u) * 62) 0 calc(var(--u) * 34);
-  display: flex; align-items: center; white-space: nowrap; font-size: calc(var(--ut) * 28); color: #f0d48a; text-shadow: 0 2px 2px #000;
+.pers-quadro {
+  position: relative; margin: calc(var(--u) * 6) calc(var(--u) * 11) 0; padding: calc(var(--u) * 10) calc(var(--u) * 24) calc(var(--u) * 20);
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 14); background: rgba(14, 11, 22, 0.92);
 }
+.pers-secao { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 14); height: calc(var(--u) * 46); }
+.pers-secao-nome { flex: none; white-space: nowrap; font-size: calc(var(--ut) * 28); color: #f0d48a; text-shadow: 0 2px 2px #000; }
+.pers-secao::after { content: ''; order: 1; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(217, 173, 87, 0.85), rgba(217, 173, 87, 0.15)); }
+.pers-secao > .pers-pontos { order: 2; }
 .pers-pontos { display: flex; align-items: center; gap: calc(var(--u) * 8); white-space: nowrap; font-size: calc(var(--ut) * 21); color: #6fe0a0; }
 .pers-pontos b { font-weight: normal; }
 .pers-nova .pers-mais { width: calc(var(--u) * 38); height: calc(var(--u) * 38); min-width: 18px; min-height: 18px; padding: 0; border: none; background: none; cursor: pointer; }
@@ -3256,18 +3266,26 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 
 .pers-nucleos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--u) * 14); margin-top: calc(var(--u) * 6); }
 .pers-nucleo {
-  position: relative; isolation: isolate; box-sizing: border-box; height: calc(var(--u) * 98); min-height: 44px;
-  display: grid; grid-template-columns: calc(var(--u) * 60) minmax(0, 1fr); align-items: center; column-gap: calc(var(--u) * 8);
-  padding: calc(var(--u) * 10) calc(var(--u) * 12) calc(var(--u) * 10) calc(var(--u) * 18);
+  position: relative; box-sizing: border-box; height: calc(var(--u) * 98); min-height: 44px;
+  border: max(1.5px, calc(var(--u) * 2.5)) solid var(--cor-nucleo, #d9ad57); border-radius: calc(var(--u) * 12);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cor-nucleo, #d9ad57) 28%, #0e0b16), #0e0b16 70%);
+  display: grid; grid-template-columns: calc(var(--u) * 52) minmax(0, 1fr); align-items: center; column-gap: calc(var(--u) * 8);
+  padding: calc(var(--u) * 8) calc(var(--u) * 10) calc(var(--u) * 8) calc(var(--u) * 12);
 }
-.pers-nucleo-moldura { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.pers-nucleo-icone { width: calc(var(--u) * 56); height: calc(var(--u) * 56); object-fit: contain; }
-.pers-nucleo-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; padding-right: calc(var(--u) * 30); }
+.pers-nucleo-vermelho { --cor-nucleo: #e0453a; }
+.pers-nucleo-verde { --cor-nucleo: #3fd08a; }
+.pers-nucleo-azul { --cor-nucleo: #4a8aff; }
+.pers-nucleo-roxo { --cor-nucleo: #b050ff; }
+.pers-nucleo-icone { width: calc(var(--u) * 50); height: calc(var(--u) * 50); object-fit: contain; }
+.pers-nucleo-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }   /* o "+" fica embaixo, ao lado do Nv. */
 .pers-nucleo-texto small { font-size: calc(var(--ut) * 18); color: var(--ui-marfim); }
 .pers-nucleo-texto b { font-weight: normal; font-size: calc(var(--ut) * 21); color: var(--ui-marfim); margin-top: calc(var(--u) * 4); }
 .pers-nucleo .pers-mais { position: absolute; right: calc(var(--u) * 12); bottom: calc(var(--u) * 12); }
 
-.pers-info { display: flex; align-items: center; height: calc(var(--u) * 50); min-height: 26px; margin: calc(var(--u) * 16) calc(var(--u) * 4) 0; padding: 0 calc(var(--u) * 22); }
+.pers-info {
+  display: flex; align-items: center; height: calc(var(--u) * 50); min-height: 26px; margin: calc(var(--u) * 16) calc(var(--u) * 4) 0; padding: 0 calc(var(--u) * 22);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 10); background: rgba(20, 16, 30, 0.95);
+}
 .pers-info-item { flex: 1; display: flex; align-items: center; gap: calc(var(--u) * 12); min-width: 0; font-size: calc(var(--ut) * 21); white-space: nowrap; }
 .pers-info-item + .pers-info-item { padding-left: calc(var(--u) * 26); margin-left: calc(var(--u) * 16); border-left: 1px solid rgba(217, 173, 87, 0.45); }
 .pers-info-item img:first-child { width: calc(var(--u) * 30); height: calc(var(--u) * 30); object-fit: contain; }
@@ -3275,7 +3293,10 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .pers-nova .pers-ajuda { width: calc(var(--u) * 32); height: calc(var(--u) * 32); min-width: 16px; min-height: 16px; padding: 0; border: none; background: none; cursor: pointer; }
 .pers-ajuda img { display: block; width: 100%; height: 100%; }
 
-.pers-aviso { display: flex; align-items: center; gap: calc(var(--u) * 14); height: calc(var(--u) * 56); min-height: 30px; margin: calc(var(--u) * 12) calc(var(--u) * -10) 0; padding: 0 calc(var(--u) * 16) 0 calc(var(--u) * 40); }
+.pers-aviso {
+  display: flex; align-items: center; gap: calc(var(--u) * 14); height: calc(var(--u) * 56); min-height: 30px; margin: calc(var(--u) * 12) calc(var(--u) * 4) 0; padding: 0 calc(var(--u) * 12) 0 calc(var(--u) * 18);
+  border: 1px solid #e0453a; border-radius: calc(var(--u) * 10); background: linear-gradient(90deg, rgba(140, 25, 20, 0.55), rgba(40, 10, 14, 0.9));
+}
 .pers-aviso > img { width: calc(var(--u) * 40); height: calc(var(--u) * 40); object-fit: contain; flex: none; }
 .pers-aviso > span { flex: 1; min-width: 0; font-size: calc(var(--ut) * 21); line-height: 1.15; color: #ff9a8a; }
 .pers-nova .pers-aviso button { flex: none; height: calc(var(--u) * 42); min-height: 22px; padding: 0 calc(var(--u) * 20); border: none; cursor: pointer; white-space: nowrap; font-size: calc(var(--ut) * 20); color: #f3d58a; }

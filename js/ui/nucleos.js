@@ -29,9 +29,8 @@ export function montarNucleos(acoes) {
   for (const atributo of ATRIBUTOS_DE_NUCLEO) {
     const visual = CARTAO[atributo];
     const cartao = document.createElement('div');
-    cartao.className = 'pers-nucleo';
-    cartao.innerHTML = `<div class="pers-nucleo-moldura ui-nucleo-card-${visual.cor}"></div>
-      <img class="pers-nucleo-icone" src="img/ui/${visual.icone}.png" alt="">
+    cartao.className = `pers-nucleo pers-nucleo-${visual.cor}`;
+    cartao.innerHTML = `<img class="pers-nucleo-icone" src="img/ui/${visual.icone}.png" alt="">
       <span class="pers-nucleo-texto"><small><span class="pers-nucleo-de">Núcleo de </span>${NOME[atributo].replace(' (HP)', '')}</small><b>Nv. 0</b></span>
       <button class="botao-icone pers-mais" title="Usar um Núcleo neste atributo"><img src="img/ui/topo_botao_mais.png" alt="+"></button>`;
     rotulosPontos[atributo] = cartao.querySelector('b');
