@@ -108,7 +108,7 @@ export function atualizarTelaBlackBook(estado) {
   $('bb-inicio').title = `Mapa ${inicio.indiceMapa + 1} (${inicio.mapa})`;
   $('bb-reencarnar').disabled = !BB.podeReencarnar(estado);
   $('bb-aviso').textContent = !BB.chegouOndeReencarnou(estado)
-    ? `Para reencarnar de novo, vença ${nomeDaFase(BB.faseMinimaParaReencarnar(estado))} (onde você reencarnou da última vez).`
+    ? `Para reencarnar de novo, chegue ao Mapa ${BB.mapaMinimoParaReencarnar(estado) + 1} — ${MAPAS[BB.mapaMinimoParaReencarnar(estado)].nome} (onde você reencarnou da última vez).`
     : !BB.venceuFaseNestaVida(estado)
       ? 'Vença pelo menos 1 fase nova nesta vida para poder reencarnar.'
       : ganho > 0 ? '' : 'Vença pelo menos 1 fase para poder reencarnar.';
@@ -134,7 +134,7 @@ export function atualizarTelaBlackBook(estado) {
   desenharVidas(r);
 }
 
-// Últimas vidas, da mais nova para a mais antiga (como no mockup)
+// As 3 últimas vidas, da mais nova para a mais antiga (o save guarda até 20)
 function desenharVidas(r) {
   const vidas = [...(r.historico ?? [])].reverse();
   const chave = `${r.vezes}|${vidas.length}`;
@@ -146,7 +146,7 @@ function desenharVidas(r) {
       : 'Nenhuma vida registrada ainda. Ao reencarnar, a vida que terminou aparece aqui.'}</p>`);
     return;
   }
-  html($('bb-vidas'), vidas.slice(0, 10).map((vida) => {
+  html($('bb-vidas'), vidas.slice(0, 3).map((vida) => {   // v0.30.2 (dono): só as 3 últimas vidas
     const reino = REINOS[vida.reino];
     const indiceMapa = vida.fase >= 0 ? FASES[vida.fase].mapa : 0;
     const mapa = MAPAS[indiceMapa];

@@ -135,12 +135,25 @@ export function essenciaAoReencarnar(estado) {
 // Só pode reencarnar de novo chegando pelo menos onde reencarnou da última vez
 // (ex.: reencarnou no Mapa 1 · Fase 11 → precisa vencer a Fase 11 do Mapa 1 ou ir além).
 // Decisão do dono. -1 = ainda não precisa chegar em lugar nenhum.
-export function faseMinimaParaReencarnar(estado) {
-  return estado.reencarnacao.faseDaUltima ?? -1;
+// v0.30.2 (dono): a reencarnação libera ao CHEGAR no mapa onde você reencarnou da última vez (ou além) —
+// antes era preciso vencer a mesma fase. "Chegar" = o mapa já está aberto (o chefe do mapa anterior foi vencido).
+// (O mapa sai da conta pelo índice da fase — importar sistemas/mundo.js daqui criaria um ciclo de imports.)
+const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
+const mapaDaFase = (indiceFase) => Math.floor(indiceFase / FASES_POR_MAPA);
+
+// Mapa da última reencarnação (0 = Mapa 1; nunca reencarnou = 0)
+export function mapaMinimoParaReencarnar(estado) {
+  const fase = estado.reencarnacao.faseDaUltima ?? -1;
+  return fase < 0 ? 0 : mapaDaFase(fase);
+}
+
+// Mapa mais longe aberto nesta vida (o da próxima fase a vencer)
+export function mapaAlcancadoNestaVida(estado) {
+  return mapaDaFase(estado.combate.fasesConcluidas + 1);
 }
 
 export function chegouOndeReencarnou(estado) {
-  return estado.combate.fasesConcluidas >= faseMinimaParaReencarnar(estado);
+  return mapaAlcancadoNestaVida(estado) >= mapaMinimoParaReencarnar(estado);
 }
 
 // Vida que começou no Mundo 2 (ou além): precisa vencer pelo menos 1 fase nova antes de

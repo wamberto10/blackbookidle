@@ -8,8 +8,8 @@
 //  - Quando a vida chega a 0, todos que causaram dano recebem a mesma
 //    recompensa (10 Núcleos aleatórios + 1 item Ancestral), e o boss
 //    volta 10 minutos depois.
-//  - A força dele acompanha VOCÊ: tem os atributos do último chefe de mapa
-//    que você já venceu. Assim o dano em % é justo para qualquer jogador.
+//  - A força dele acompanha VOCÊ: tem os atributos do chefe do mapa mais longe
+//    que você já alcançou, em QUALQUER vida (v0.30.2, dono: não enfraquece ao reencarnar).
 //
 // Por enquanto o boss é LOCAL (cada jogador tem o seu, salvo em estado.boss).
 // Tudo que seria "global" (vida, edição, rank, hora de voltar) fica junto em
@@ -64,11 +64,12 @@ export function podeLutar(estado, agora = Date.now()) {
   return bossLiberado(estado) && bossPresente(estado, agora) && !luta && segundosDeDescanso(estado, agora) <= 0;
 }
 
-// Atributos do boss: os do ÚLTIMO CHEFE DE MAPA que você já venceu
-// (ninguém venceu ainda o chefe do Mapa 1 → usa o do Mapa 1)
+// Atributos do boss: os do chefe do MAPA MAIS LONGE que o personagem já alcançou, contando todas as vidas
+// (v0.30.2, dono). Antes era o último chefe vencido NESTA vida — ao reencarnar o boss voltava a ficar fraco.
+// "Alcançou" = o mapa já abriu (o chefe do anterior foi vencido); no começo do jogo, o Mapa 1.
 export function atributosDoBoss(estado) {
-  const chefesVencidos = Math.floor((estado.combate.fasesConcluidas + 1) / CONFIG.combate.fasesPorMapa);
-  const mapa = Math.min(Math.max(0, chefesVencidos - 1), FASES[FASES.length - 1].mapa);
+  const melhorFase = Math.max(estado.combate.fasesConcluidas, estado.reencarnacao.melhorFaseDeTodas ?? -1);
+  const mapa = Math.min(Math.floor((melhorFase + 1) / CONFIG.combate.fasesPorMapa), FASES[FASES.length - 1].mapa);
   const chefe = chefeDoMapa(mapa);
   const inimigo = chefe.inimigoSemSelo ?? chefe.inimigo;   // v0.26.0: sem o Selo do Mundo Primordial
   return {
