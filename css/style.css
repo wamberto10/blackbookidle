@@ -2801,18 +2801,22 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .mochila-nova .melhor { color: #5fe06a; }
 .mochila-nova .pior { color: #ff6250; }
 
-/* ---- Molduras dos itens (cor = raridade) ---- */
-.moldura-comum     { --moldura: url('../img/ui/item_moldura_comum.png'); }
-.moldura-incomum   { --moldura: url('../img/ui/item_moldura_incomum.png'); }
-.moldura-raro      { --moldura: url('../img/ui/item_moldura_raro.png'); }
-.moldura-epico     { --moldura: url('../img/ui/item_moldura_epico.png'); }
-.moldura-lendario  { --moldura: url('../img/ui/item_moldura_lendario.png'); }
-.moldura-ancestral { --moldura: url('../img/ui/item_moldura_ancestral.png'); }
+/* ---- Molduras dos itens: borda fina na cor da raridade + brilho suave no fundo ----
+   v0.28.1 (dono): trocou a moldura dourada enfeitada (img/ui/item_moldura_*) pela borda fina e simples
+   (comparação em docs/layout/comparacao_molduras_itens.png). Cores = RARIDADES em js/dados/equipamentos.js. */
+.moldura-comum     { --cor-raridade: #a8acb4; }
+.moldura-incomum   { --cor-raridade: #4ad04a; }
+.moldura-raro      { --cor-raridade: #4a7aff; }
+.moldura-epico     { --cor-raridade: #b050ff; }
+.moldura-lendario  { --cor-raridade: #ffd84a; }
+.moldura-ancestral { --cor-raridade: #ff6ad5; }
 .moch-moldura, .moch-celula, .moch-det-icone { position: relative; display: block; flex: none; isolation: isolate; }
 .moch-moldura::before, .moch-celula::before, .moch-det-icone::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  border-style: solid; border-color: transparent; border-width: calc(var(--u) * 20);
-  border-image: var(--moldura) 46 fill / 1 / 0 stretch;
+  border: max(2px, calc(var(--u) * 3)) solid var(--cor-raridade); border-radius: calc(var(--u) * 9);
+  background: #14101e;
+  background: radial-gradient(ellipse 62% 70% at 50% 50%, color-mix(in srgb, var(--cor-raridade) 26%, transparent), transparent 75%),
+    color-mix(in srgb, var(--cor-raridade) 13%, #0e0b16);
 }
 .mochila-nova .item-ic {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -2881,7 +2885,7 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .moch-det-moldura { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .moch-det-topo, .moch-det-meio { display: contents; }
 .moch-det-icone { grid-area: icone; width: calc(var(--u) * 145); height: calc(var(--u) * 145); }
-.moch-det-icone::before { border-width: calc(var(--u) * 28); }
+.moch-det-icone::before { border-radius: calc(var(--u) * 12); }
 .moch-det-icone .moch-qtd { left: calc(var(--u) * 10); top: calc(var(--u) * 8); }
 .moch-det-info { grid-area: info; min-width: 0; }
 .moch-det-nome { font-size: max(calc(var(--u) * 31), 13px); line-height: 1.15; text-shadow: 0 2px 2px #000; }
@@ -3002,7 +3006,7 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .moch-grade { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: calc(var(--u) * 20) calc(var(--u) * 24); margin: calc(var(--u) * 20) calc(var(--u) * 43) 0 calc(var(--u) * 45); }
 .moch-grade > p { grid-column: 1 / -1; text-align: center; }
 .mochila-nova .moch-celula { width: 100%; height: auto; aspect-ratio: 152 / 110; padding: 0; margin: 0; border: none; background: none; cursor: pointer; }
-.moch-celula::before { border-width: calc(var(--u) * 24); }
+.moch-celula::before { border-radius: calc(var(--u) * 11); }
 .moch-celula .item-ic { left: 42%; top: 44%; height: 82%; max-width: 72%; }
 .moch-celula .moch-nv { right: calc(var(--u) * 12); bottom: calc(var(--u) * 27); font-size: max(calc(var(--u) * 20), 9px); }
 .moch-celula .moch-estrelas { position: absolute; z-index: 2; left: 0; right: 0; bottom: calc(var(--u) * 7); justify-content: center; pointer-events: none; }
