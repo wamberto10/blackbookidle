@@ -1,16 +1,20 @@
 // =============================================================
-// ui/telaBlackBook.js — aba Black Book (Reencarnação e melhorias)
+// ui/telaBlackBook.js — aba Black Book (Essência da Alma e melhorias)
 //
-// v0.27.1: layout novo, igual ao mockup (docs/layout/layout_blackbook.png): banner, Essência obtida,
-// "O que reinicia / O que permanece" (regras reais), próxima vida, botão Reencarnar, as 7 melhorias
+// v0.27.1: layout novo, igual ao mockup (docs/layout/layout_blackbook.png): banner, cartões, as 7 melhorias
 // em linhas e o registro das últimas vidas (estado.reencarnacao.historico).
+// v0.32.0 (progressão contínua): a reencarnação saiu do jogo. Os cartões mostram a Essência guardada, de onde ela
+// vem (conquistas inéditas, farm da fase atual e VIP) e até onde a jornada chegou; as vidas antigas ficam como legado.
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as BB from '../sistemas/blackbook.js';
 import { liberado } from '../sistemas/desbloqueios.js';
-import { FASES, MAPAS, inicioDaVida } from '../sistemas/mundo.js';
+import { obterFase, mapaDesenhado, mapaDaFronteira } from '../sistemas/mundo.js';
+import { mapaDaFase, mapaVisual, nomeDaPosicao } from '../sistemas/escala.js';
 import { REINOS } from '../dados/reinos.js';
 import { formatarNumero } from '../format.js';
+import { somar, multiplicar, arredondarParaBaixo } from '../numeros.js';
+import { cabe } from '../saldos.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -33,10 +37,12 @@ let vidasDesenhadas = '';
 function html(el, texto) {
   if (el.dataset.html !== texto) { el.dataset.html = texto; el.innerHTML = texto; }
 }
+function texto(el, valor) {
+  if (el.textContent !== valor) el.textContent = valor;
+}
 
 export function montarTelaBlackBook(acoes) {
-  $('bb-reencarnar').addEventListener('click', acoes.aoReencarnar);
-
+  $('bb-ess-vip').parentElement.title = `VIP: +${Math.round(CONFIG.vip.bonusEssencia * 100)}% de Essência no farm`;
   const lista = $('lista-melhorias');
   const melhorias = [...CONFIG.blackbook.melhorias].sort((a, b) => ORDEM.indexOf(a.id) - ORDEM.indexOf(b.id));
   for (const melhoria of melhorias) {
@@ -64,22 +70,24 @@ export function montarTelaBlackBook(acoes) {
   }
 }
 
-// Ex.: índice 13 → "Mapa 2 · Fase 2"
+// Ex.: índice 13 → "Fácil — Mapa 2 · Fase 2" (v0.32.0: posição global)
 function nomeDaFase(indice) {
   if (indice < 0) return 'Nenhuma';
-  const fase = FASES[indice];
-  return `Mapa ${fase.mapa + 1} · Fase ${fase.numero}`;
+  return `${nomeDaPosicao(mapaDaFase(indice))} · Fase ${obterFase(indice).numero}`;
 }
 
 // Ex.: "×1,63" para as compostas | "+4%" para somar 4
 function textoDoEfeito(melhoria, efeito) {
   // v0.17.4: melhorias compostas mostram o multiplicador (×20,6) — "+1.96K%" era confuso
   if (melhoria.composto) {
-    const mult = 1 + efeito;
-    return '×' + (mult < 100 ? mult.toFixed(mult < 10 ? 2 : 1).replace('.', ',') : formatarNumero(mult));
+    const mult = somar(1, efeito);   // número grande (1,05^nível)
+    return '×' + (typeof mult === 'number' && mult < 100 ? mult.toFixed(mult < 10 ? 2 : 1).replace('.', ',') : formatarNumero(mult));
   }
-  if (melhoria.tipo === 'multiplicar') return `+${formatarNumero(Math.round(efeito * 100))}%`;
-  return `+${Number(efeito.toFixed(1))}%`;
+  if (melhoria.tipo === 'multiplicar') {
+    const porcentagem = multiplicar(efeito, 100);
+    return `+${formatarNumero(typeof porcentagem === 'number' ? Math.round(porcentagem) : porcentagem)}%`;
+  }
+  return `+${typeof efeito === 'number' ? Number(efeito.toFixed(1)) : formatarNumero(efeito)}%`;
 }
 
 // Ex.: 1.058.400 s → "12d 6h 0m"
@@ -93,25 +101,25 @@ function duracao(segundos) {
   return `${Math.max(1, m)}m`;
 }
 
+const multiplicador = (x) => '×' + x.toFixed(2).replace('.', ',');
+
 export function atualizarTelaBlackBook(estado) {
   const aberto = liberado(estado, 'blackbook');
   $('blackbook-bloqueado').classList.toggle('escondido', aberto);
   $('blackbook-conteudo').classList.toggle('escondido', !aberto);
   if (!aberto) return;
 
-  // ---- Reencarnação ----
-  const ganho = BB.essenciaAoReencarnar(estado);
-  $('bb-ganho').textContent = formatarNumero(ganho);
-  const inicio = inicioDaVida(estado);
-  $('bb-inicio-mundo').textContent = inicio.mundo;
-  $('bb-inicio').textContent = `${inicio.reino} – ${inicio.estagio}`;
-  $('bb-inicio').title = `Mapa ${inicio.indiceMapa + 1} (${inicio.mapa})`;
-  $('bb-reencarnar').disabled = !BB.podeReencarnar(estado);
-  $('bb-aviso').textContent = !BB.chegouOndeReencarnou(estado)
-    ? `Para reencarnar de novo, chegue ao Mapa ${BB.mapaMinimoParaReencarnar(estado) + 1} — ${MAPAS[BB.mapaMinimoParaReencarnar(estado)].nome} (onde você reencarnou da última vez).`
-    : !BB.venceuFaseNestaVida(estado)
-      ? 'Vença pelo menos 1 fase nova nesta vida para poder reencarnar.'
-      : ganho > 0 ? '' : 'Vença pelo menos 1 fase para poder reencarnar.';
+  // ---- Essência da Alma (v0.32.0) ----
+  const e = estado.estatisticas;
+  const fase = estado.combate.faseAtual;
+  texto($('bb-ganho'), formatarNumero(arredondarParaBaixo(estado.essencia)));
+  texto($('bb-ess-conquistas'), '+' + formatarNumero(e.essenciaConquistas ?? 0));
+  texto($('bb-ess-farm'), `+${formatarNumero(multiplicar(BB.essenciaPorSegundo(estado, fase), 3600))}/h`);
+  texto($('bb-ess-vip'), estado.vip ? multiplicador(1 + CONFIG.vip.bonusEssencia) : '—');
+  // Jornada: mapa mais longe já aberto
+  const fronteira = mapaDaFronteira(estado);
+  texto($('bb-inicio-mundo'), nomeDaPosicao(fronteira));
+  texto($('bb-inicio'), mapaDesenhado(fronteira).nome);
 
   // ---- Melhorias ----
   for (const melhoria of CONFIG.blackbook.melhorias) {
@@ -122,40 +130,37 @@ export function atualizarTelaBlackBook(estado) {
     el.efeito.textContent = `${textoDoEfeito(melhoria, BB.efeitoMelhoria(estado, melhoria.id))} de ${el.visual.alvo}`;
     el.custo.textContent = maximo ? '—' : formatarNumero(custo);
     el.botao.textContent = maximo ? 'Máximo' : 'Melhorar';
-    el.botao.disabled = maximo || estado.essencia < custo;
+    el.botao.disabled = maximo || !cabe(estado, 'essencia', custo);
   }
 
-  // ---- Registro das vidas ----
+  // ---- Resumo e vidas antigas (legado) ----
   const r = estado.reencarnacao;
-  $('bb-vezes').textContent = r.vezes;
-  $('bb-fase').textContent = nomeDaFase(estado.combate.fasesConcluidas);
-  $('bb-recorde').textContent = nomeDaFase(Math.max(r.melhorFaseDeTodas, estado.combate.fasesConcluidas));
-  $('bb-total').textContent = formatarNumero(r.essenciaTotal);
+  texto($('bb-recorde'), nomeDaFase(estado.combate.fasesConcluidas));
+  texto($('bb-total'), formatarNumero(somar(somar(e.essenciaConquistas ?? 0, e.essenciaFarm ?? 0), r.essenciaTotal ?? 0)));
+  $('bb-legado').classList.toggle('escondido', !(r.vezes > 0));
+  texto($('bb-vezes'), String(r.vezes));
   desenharVidas(r);
 }
 
-// As 3 últimas vidas, da mais nova para a mais antiga (o save guarda até 20)
+// As 3 últimas vidas antigas, da mais nova para a mais antiga (o save guardava até 20)
 function desenharVidas(r) {
   const vidas = [...(r.historico ?? [])].reverse();
   const chave = `${r.vezes}|${vidas.length}`;
   if (chave === vidasDesenhadas) return;
   vidasDesenhadas = chave;
   if (vidas.length === 0) {
-    html($('bb-vidas'), `<p class="bb-vidas-vazio">${r.vezes > 0
-      ? 'As vidas anteriores não foram registradas. A partir da próxima reencarnação, cada vida aparece aqui.'
-      : 'Nenhuma vida registrada ainda. Ao reencarnar, a vida que terminou aparece aqui.'}</p>`);
+    html($('bb-vidas'), r.vezes > 0 ? '<p class="bb-vidas-vazio">As vidas anteriores não foram registradas.</p>' : '');
     return;
   }
   html($('bb-vidas'), vidas.slice(0, 3).map((vida) => {   // v0.30.2 (dono): só as 3 últimas vidas
     const reino = REINOS[vida.reino];
-    const indiceMapa = vida.fase >= 0 ? FASES[vida.fase].mapa : 0;
-    const mapa = MAPAS[indiceMapa];
+    const indiceMapa = vida.fase >= 0 ? mapaDaFase(vida.fase) : 0;
     const ultimoReino = vida.reino === REINOS.length - 1;
     return `<div class="bb-vida">
         <span class="bb-vida-num"><b>${vida.numero}</b></span>
-        <img class="bb-vida-mapa" src="img/fundos/mapa${String(indiceMapa + 1).padStart(2, '0')}.jpg" alt="" onerror="this.style.visibility='hidden'">
+        <img class="bb-vida-mapa" src="img/fundos/mapa${String(mapaVisual(indiceMapa) + 1).padStart(2, '0')}.jpg" alt="" onerror="this.style.visibility='hidden'">
         <div class="bb-vida-info"><b>${reino?.nome ?? '—'}</b>
-          <small>${ultimoReino ? 'Alcançou o reino máximo' : `${nomeDaFase(vida.fase)} · ${mapa.nome}`}</small></div>
+          <small>${ultimoReino ? 'Alcançou o reino máximo' : `${nomeDaFase(vida.fase)} · ${mapaDesenhado(indiceMapa).nome}`}</small></div>
         <span class="bb-vida-tempo"><img src="img/ui/bb_icone_relogio.png" alt="">${duracao(vida.segundos)}</span>
         <span class="bb-vida-ess"><img src="img/ui/icone_essencia.png" alt="">${formatarNumero(vida.essencia)}</span>
       </div>`;

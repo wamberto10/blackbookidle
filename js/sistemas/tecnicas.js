@@ -8,6 +8,7 @@
 //   penetracao    → ignora essa fração da Defesa (Mestre da Espada)
 //   congela       → o inimigo perde esse número de ataques (Cultivador Elemental: atordoado pelo fogo)
 // =============================================================
+import { somar, subtrair, multiplicar, minimo, maior } from '../numeros.js';
 
 // v0.15.1 (dono): a técnica sai a cada "aCada" ATAQUES do herói (todo golpe conta, inclusive o 2º
 // do ataque duplo) e o contador ZERA a cada luta — não acumula de uma luta para a outra.
@@ -30,8 +31,8 @@ export function efeitosDaTecnica(luta, tecnica) {
   const efeitos = {};
   if (tecnica.cura) {
     const maxima = luta.jogador.vitalidade;
-    const cura = Math.min(maxima * tecnica.cura, maxima - luta.vidaJogador);
-    if (cura > 0) { luta.vidaJogador += cura; efeitos.cura = cura; }
+    const cura = minimo(multiplicar(maxima, tecnica.cura), subtrair(maxima, luta.vidaJogador));
+    if (maior(cura, 0)) { luta.vidaJogador = somar(luta.vidaJogador, cura); efeitos.cura = cura; }
   }
   if (tecnica.congela) { luta.inimigoCongelado = tecnica.congela; efeitos.congelou = true; }
   return efeitos;

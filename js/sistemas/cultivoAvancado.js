@@ -4,7 +4,7 @@
 //   Reclusão          → o combate das fases para e o Cultivo rende mais (quanto mais tempo, mais fundo)
 //   Iluminação        → um brilho aparece de vez em quando; tocar = Cultivo ×2 por 60 s
 //   Arranjo           → Arranjo de Reunião de Energia: +2% de Cultivo por nível, comprado com Pedras
-//   Fonte Estelar     → no Rei da Origem, refiná-la torna você Mestre Estelar (+15% Cultivo nesta vida)
+//   Fonte Estelar     → no Rei da Origem, refiná-la torna você Mestre Estelar (+15% Cultivo; v0.32.0: para sempre — não há mais vida nova)
 //   Pílulas           → caem dos inimigos: Acúmulo de Qi, Fluxo Celestial e Quebra-Gargalo
 //   (Batismo Mundial e Sentido Divino no Meditar são bônus automáticos: ver progressao.js e atributos.js)
 //
@@ -12,6 +12,9 @@
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as P from './progressao.js';
+import { multiplicar, potencia, arredondarParaCima } from '../numeros.js';
+import { debitar, cabe } from '../saldos.js';
+// v0.33.0: custos do Arranjo e da Fonte Estelar e o Cultivo das pílulas são NÚMEROS GRANDES (js/numeros.js)
 
 // ---- Reclusão ----
 export function reclusaoLiberada(estado) {
@@ -40,13 +43,12 @@ export function receberIluminacao(estado) {
 // ---- Arranjo de Reunião de Energia ----
 export function custoDoArranjo(estado) {
   const A = CONFIG.arranjo;
-  return Math.ceil(A.custoBase * Math.pow(A.crescimentoCusto, estado.arranjo ?? 0));
+  return arredondarParaCima(multiplicar(A.custoBase, potencia(A.crescimentoCusto, estado.arranjo ?? 0)));
 }
 
 export function melhorarArranjo(estado) {
   const custo = custoDoArranjo(estado);
-  if (estado.pedras < custo) return false;
-  estado.pedras -= custo;
+  if (!debitar(estado, 'pedras', custo)) return false;
   estado.arranjo = (estado.arranjo ?? 0) + 1;
   return true;
 }
@@ -58,16 +60,16 @@ export function fonteEstelarLiberada(estado) {
 
 // Custa o mesmo que 1 estágio normal do nível atual (sem o extra do rompimento)
 export function custoDaFonteEstelar(estado) {
-  return Math.ceil(CONFIG.cultivo.custoBase * Math.pow(CONFIG.cultivo.crescimentoCusto, P.indiceNivel(estado)));
+  return arredondarParaCima(multiplicar(CONFIG.cultivo.custoBase, potencia(CONFIG.cultivo.crescimentoCusto, P.indiceNivel(estado))));
 }
 
 export function podeRefinarFonteEstelar(estado) {
-  return fonteEstelarLiberada(estado) && !estado.mestreEstelar && estado.cultivo >= custoDaFonteEstelar(estado);
+  return fonteEstelarLiberada(estado) && !estado.mestreEstelar && cabe(estado, 'cultivo', custoDaFonteEstelar(estado));
 }
 
 export function refinarFonteEstelar(estado) {
   if (!podeRefinarFonteEstelar(estado)) return false;
-  estado.cultivo -= custoDaFonteEstelar(estado);
+  debitar(estado, 'cultivo', custoDaFonteEstelar(estado));
   estado.mestreEstelar = true;
   return true;
 }
@@ -125,7 +127,7 @@ export function usarPilula(estado, id) {
   const tipo = PILULA_POR_ID[id];
   estado.pilulas[id] -= 1;
   if (id === 'acumulo') {
-    const ganho = P.producaoPorSegundo(estado) * tipo.segundosDeCultivo;
+    const ganho = multiplicar(P.producaoPorSegundo(estado), tipo.segundosDeCultivo);
     P.ganharCultivo(estado, ganho);
     return { tipo, ganho };
   }

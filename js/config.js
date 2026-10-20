@@ -8,7 +8,50 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.31.0',
+  versao: '0.33.2',
+
+  // ---- v0.32.0: PROGRESSÃO CONTÍNUA (docs/PROGRESSAO_CONTINUA.md) ----
+  // A campanha não recomeça mais: Fácil → Normal → Difícil → Inferno → Infinito são capítulos seguidos.
+  // Cada dificuldade reaproveita os 96 mapas (e as artes) do Fácil: Normal — Mapa 1 = mapa global 97.
+  // Posição global: mapa global g (0 = Fácil, Mapa 1) · fase global = g × 12 + fase local.
+  progressao: {
+    versaoDoSave: 2,              // save.js converte os saves da progressão antiga (versão 1) uma vez só
+    mapasPorDificuldade: 96,
+    // v0.33.0: o teto de escala (mapaMaximoDeEscala 1600) saiu — com os números grandes (js/numeros.js) inimigos,
+    // itens, custos, recompensas e a Maestria continuam crescendo no Infinito.
+    // O Fácil usa as curvas antigas (combate.dificuldadePorMundo, Pedras ×1,05 por fase, Essência de referência
+    // do blackbook.recompensa). As dificuldades seguintes usam o crescimento POR MAPA desta tabela:
+    //   inimigos   → Vida, Ataque e Defesa dos inimigos (além da Maestria de referência, ver maestria)
+    //   velocidade → Velocidade dos inimigos
+    //   essencia   → Essência de referência (farm e 1ª conquista; ver blackbook.essencia)
+    //   pedras     → Pedras por vitória e custo de melhoria dos itens daquele patamar
+    // O Infinito repete o último valor para sempre (gerado sob demanda, sem lista pronta).
+    // Por que 1,21–1,215: é o ponto de equilíbrio com a economia — o Black Book dá ×1,05 por nível e cada nível
+    // custa ×1,07, então a Essência ×1,268 por mapa compra ~3,5 níveis por mapa (×1,186) e os itens ×1,02 →
+    // ×1,21 por mapa. Acima disso o tempo por mapa cresce (robô: 1,24 = ×1,25 por mundo; 1,27 = ×1,45 por mundo),
+    // abaixo vira cascata. A Normal tem um pouco mais (raridades, estrelas e Núcleos ainda estão subindo).
+    // Ver docs/PROGRESSAO_CONTINUA.md (tabelas do robô e análise de sensibilidade).
+    dificuldades: [
+      { id: 'facil',    nome: 'Fácil',    icone: 'dif_facil' },
+      { id: 'normal',   nome: 'Normal',   icone: 'dif_normal',        inimigos: 1.215, velocidade: 1.075, essencia: 1.268, pedras: 1.25 },
+      { id: 'dificil',  nome: 'Difícil',  icone: 'dif_dificil',       inimigos: 1.218, velocidade: 1.075, essencia: 1.268, pedras: 1.25 },
+      { id: 'inferno',  nome: 'Inferno',  icone: 'dif_muito_dificil', inimigos: 1.216, velocidade: 1.075, essencia: 1.268, pedras: 1.25 },
+      { id: 'infinito', nome: 'Infinito', icone: 'dif_muito_dificil', inimigos: 1.212, velocidade: 1.075, essencia: 1.268, pedras: 1.25 },
+    ],
+  },
+
+  // ---- v0.32.0: Maestria da Criação — o cultivo continua depois do Fruto do Universo ----
+  // Cada nível é como um estágio novo (nível n exige o chefe do mapa global 96 + mapasPorNivel × (n − 1)).
+  // Os inimigos da Normal em diante usam a mesma Maestria como referência (1 nível a cada mapasPorNivel mapas).
+  maestria: {
+    nome: 'Maestria da Criação',
+    mapasPorNivel: 4,
+    ganhoAtributos: 1.25,     // × Ataque, Vitalidade, Defesa e Sentido Divino por nível
+    ganhoVelocidade: 1.05,    // × Velocidade por nível
+    ganhoProducao: 1.3,       // × Cultivo por segundo por nível
+    custoInicial: 2.5,        // custo do nível 1 = custo de avançar no Fruto do Universo × isto
+    crescimentoCusto: 1.577,  // × a cada nível
+  },
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)
   intervaloAutoSave: 10000,
@@ -56,7 +99,9 @@ export const CONFIG = {
   // forcaDosInimigos: 1 = os inimigos selados ficam tão difíceis quanto ficariam sem o selo (sistemas/mundo.js).
   // Robô (Refinador, 4 rodadas): com 1 os mapas selados caíam em minutos (lá dentro os itens rendem o máximo do reino
   // selado) e o Mapa 91 virava uma muralha de 17 h; com 4 (e Mundo 8 = 1,2) cada mapa leva 2–5 h e o mundo ~43 h.
-  selo: { reino: 'elemento_verdadeiro', estagio: 8, forcaDosInimigos: 4 },
+  // v0.32.0: forcaDosInimigos 1 — com os itens em % do cultivo, o Selo já tira do jogador a mesma fração que tira
+  // dos inimigos; com 4 os mapas selados viravam muralhas de 14 h no robô. Só existe no Fácil (Mapas 85–90).
+  selo: { reino: 'elemento_verdadeiro', estagio: 8, forcaDosInimigos: 1 },
   // Pílulas de cultivo: caem dos inimigos a partir do Mapa 2 (chance = base × "pedras" do tipo da fase:
   // comum 0,07%, chefe 1%) e sempre na 1ª vitória contra um chefe de mapa. Ficam ao reencarnar.
   // Robô (Refinador, 6 rodadas): com tudo isto o Mundo 1 vai de 35 h para 28 h e o Mundo 3 de 107 h para 90 h.
@@ -102,6 +147,11 @@ export const CONFIG = {
     blackbook: { reino: 1, estagio: 0 },   // ao completar o Corpo Temperado (depois da 1ª reencarnação, sempre)
   },
 
+  // ---- v0.33.0: gerenciamento automático (sistemas/automacao.js; ligado pelo jogador em Opções) ----
+  // intervaloSegundos: de quanto em quanto tempo DE JOGO a automação roda (mesmos instantes online e offline)
+  // comprasPorExecucao: limite de compras de cada tipo por execução (o resto fica para a próxima — nada se perde)
+  automacao: { intervaloSegundos: 60, comprasPorExecucao: 500 },
+
   // ---- Combate (por turnos) ----
   combate: {
     fasesPorMapa: 12,
@@ -131,7 +181,10 @@ export const CONFIG = {
     // v0.24.0: Mundo 6 = 1,25 também (de novo só Ordens, sem rompimento de reino)
     // v0.25.0: Mundo 7 = 1,25 (robô: ~31 h, igual ao Mundo 6; 1,35 = 73 h; 1,45 = 146 h)
     // v0.26.0: Mundo 8 = 1,2 (robô: ~43 h, mapas de 2–5 h; com 1,25 ~58 h). Ver também CONFIG.selo.
-    dificuldadePorMundo: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25, 1.25, 1.2],
+    // v0.32.0 (progressão contínua, sem reencarnação): recalibrado mundo a mundo pelo robô para ~13 h por mundo
+    // (ferramentas/calibrar-mundos.mjs). Antes: [1.31, 1.31, 1.31, 1.5, 1.25, 1.25, 1.25, 1.2]. O Mundo 3 subiu
+    // (o Black Book juntado no Mundo 2, que é lento pelo cultivo, atravessava o Mundo 3 em ~3 h) e o Mundo 4 desceu.
+    dificuldadePorMundo: [1.31, 1.31, 1.656, 1.263, 1.225, 1.244, 1.263, 1.184],
     // v0.21.2: Velocidade dos inimigos × isto a cada mapa (decide quem ataca primeiro e o ataque duplo). Antes não
     // crescia: no Mundo 2 o jogador já tinha 1,4–3,8× a velocidade dos chefes e no Mundo 3 ~10× (ataque duplo sempre).
     // Com 1,03: Mundo 2 ≈ 1,5–1,9× (o ataque duplo precisa ser conquistado), Mundo 3 ≈ 2–4×. Ritmo igual no robô.
@@ -162,11 +215,11 @@ export const CONFIG = {
     // Atributos % (crítico, esquiva...) crescem um pouco a cada mapa
     crescimentoPorcentoPorMapa: 0.03,  // v0.7.1: era 0.1 (equipamento crescia demais no fim do mundo)
     variacao: 0,                       // v0.9.2: sem variação (atributos fixos; era ±20%)
-    // v0.22.1 (dono): o equipamento rende no máximo 3× a força do seu reino (Ataque, Vitalidade, Defesa e Velocidade).
-    // Os itens ficam ao reencarnar com a força do mapa onde caíram; sem limite, nas vidas seguintes eles carregavam o
-    // personagem e subir de estágio dava ~0% de Poder. Com 3×: todo estágio dá +25% e todo rompimento +150%, e o ritmo
-    // do robô não mudou (Mundo 4 em ~95 h). null = sem limite.
-    limiteDoReino: 3,
+    // v0.32.0 (progressão contínua): Ataque, Vitalidade, Defesa e Velocidade dos itens viraram PORCENTAGEM que
+    // multiplica o cultivo: atributo = base do cultivo × (1 + soma dos % dos itens) × bônus permanentes.
+    // % do item = fração do espaço × força do tier × estrelas × crescimentoPorMapa^(mapa global onde caiu) × 100
+    // (antes era um valor fixo somado à base, limitado a 3× a força do reino — o "limiteDoReino" saiu).
+    crescimentoPorMapa: 1.02,
     bonusPorNivel: 0.05,               // cada nível de melhoria dá +5% em todos os atributos
     custoMelhoriaBase: 4,              // Pedras = base × valor do tier × 1,05^fase × 1,25^nível
     crescimentoCustoMelhoria: 1.25,
@@ -190,7 +243,9 @@ export const CONFIG = {
     // terminava o Mundo 3 ~45% antes. Com 1: VIP 18% (tela fechada) a ~40% (tela aberta 1/4 do tempo) mais rápido.
     cliquesPorSegundo: 1,                 // Meditar automático (só com o jogo aberto na tela)
     pesosExtras: [10, 10, 5, 3, 1],       // somados nos pesos dos tiers (50/25/10/5/1 → 60/35/15/8/2)
-    bonusEssencia: 1.0,                   // +100% de Essência da Alma ao reencarnar
+    // v0.32.0: +25% na Essência do FARM (a das 1ªs conquistas é igual para todos). Era +100% ao reencarnar; com +100%
+    // no farm o VIP ficava 36% mais rápido (robô, tela fechada); com +25%, 18% — a mesma vantagem medida na v0.21.1.
+    bonusEssencia: 0.25,
     atributos: { ataque: 0.25, defesa: 0.25, vitalidade: 0.25 },   // +25% no total (v0.9.15, dono: era +50%)
   },
 
@@ -256,6 +311,18 @@ export const CONFIG = {
     // a Essência explodia (fase 211 → 431 mil; fase 417 → 376 milhões) e na vida seguinte o Black Book sozinho
     // passava 30+ mapas no Corpo Temperado: cultivo e reinos deixavam de importar.
     recompensa: { base: 4, crescimento: 1.03, faseDaVirada: 144, crescimentoDepois: 1.02 },
+    // v0.32.0 (progressão contínua): não existe mais a Essência da reencarnação. A curva acima virou a
+    // "Essência de referência" de cada fase (E) — na Normal em diante ela cresce por progressao.dificuldades[].essencia.
+    //   1ª conquista (uma vez só, para sempre): fracaoPrimeiraConquista × (E da fase − E da fase anterior)
+    //   farm (renovável): E da fase ÷ (horas de referência × 3600) por segundo de luta VENCIDA (pausa + turnos).
+    //   Derrota não paga; fase mais fácil paga menos (E menor); o offline paga o tempo simulado, uma vez só.
+    //   Horas de referência: horasDeReferencia no Fácil; da Normal em diante, a PONTE (v0.33.0):
+    //     min(horasDepoisDoFacil, horasDeReferencia × E(fase) ÷ E0)   (E0 = E do chefe final do Fácil)
+    //   Assim o farm por segundo nunca cai ao entrar na Normal (na v0.32.0 caía ~49%: o denominador pulava de
+    //   12 h para 24 h). Ele fica no nível do chefe do Fácil até E(fase) = 2 × E0 (~fim da Normal 3) e depois
+    //   segue a curva de 24 h.
+    //   (robô: com 10% de 1ª conquista ela virava ~70% da Essência no Inferno e puxava uma cascata; com 3%, ~10–20%)
+    essencia: { horasDeReferencia: 12, horasDepoisDoFacil: 24, fracaoPrimeiraConquista: 0.03 },
 
     // Melhorias compradas com Essência da Alma. Nunca são perdidas.
     //   id         → atributo que melhora ('cultivo' = Cultivo por segundo)

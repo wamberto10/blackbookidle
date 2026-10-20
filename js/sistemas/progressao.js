@@ -7,6 +7,9 @@ import { REINOS, REGIOES } from '../dados/reinos.js';
 import { multiplicadorMelhoria } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
 import { classeDe } from './personagem.js';
+import { multiplicar, maximo, potencia, arredondarParaCima } from '../numeros.js';
+import { creditar, debitar, cabe, instantaneo, variacaoDesde } from '../saldos.js';   // v0.33.2: sem perda de precisão
+// v0.33.0: Cultivo, produção e custos são NÚMEROS GRANDES (js/numeros.js) — nada de + - * / direto neles.
 
 const C = CONFIG.cultivo;
 
@@ -20,14 +23,33 @@ for (const reino of REINOS) {
   contador += reino.estagios.length;
 }
 export const TOTAL_DE_NIVEIS = contador;
+// v0.32.0: nível do Fruto do Universo (último estágio dos reinos). Depois dele vem a Maestria da Criação:
+// cada nível de Maestria soma 1 ao "nível" (indiceNivel), com ganhos e custos próprios (CONFIG.maestria).
+export const NIVEL_DO_FRUTO = TOTAL_DE_NIVEIS - 1;
+const ULTIMO_REINO = REINOS.length - 1;
+const M = CONFIG.maestria;
 
 export function inicioDoReino(indiceReino) {
   return INICIO_DO_REINO[indiceReino];
 }
 
 // ---- Consultas ----
+// Nível global: reinos e estágios (0 a 107) + níveis de Maestria da Criação (108 em diante)
 export function indiceNivel(estado) {
-  return INICIO_DO_REINO[estado.reino] + estado.estagio;
+  return INICIO_DO_REINO[estado.reino] + estado.estagio + (estado.maestria ?? 0);
+}
+
+export function nivelDaMaestria(estado) {
+  return estado.maestria ?? 0;
+}
+
+// Está no Fruto do Universo (último estágio do último reino)? Daí em diante só sobe a Maestria.
+export function noUltimoEstagio(estado) {
+  return estado.reino === ULTIMO_REINO && estado.estagio === REINOS[ULTIMO_REINO].estagios.length - 1;
+}
+
+export function proximoEhMaestria(estado) {
+  return noUltimoEstagio(estado);
 }
 
 export function reinoAtual(estado) {
@@ -38,27 +60,33 @@ export function regiaoAtual(estado) {
   return REGIOES[reinoAtual(estado).regiao];
 }
 
+const nomeDaMaestria = (nivel) => `Maestria ${nivel}`;
+
 export function nomeDoEstagio(estado) {
-  return reinoAtual(estado).estagios[estado.estagio];
+  const maestria = nivelDaMaestria(estado);
+  return maestria > 0 ? nomeDaMaestria(maestria) : reinoAtual(estado).estagios[estado.estagio];
 }
 
 export function nomeDoNivel(estado) {
   return `${reinoAtual(estado).nome} — ${nomeDoEstagio(estado)}`;
 }
 
+// v0.32.0: depois do Fruto do Universo vem a Maestria da Criação (cada nível exige um chefe mais adiante,
+// então quem segura o ritmo é a campanha). v0.33.0: sem limite (o teto de escala do Infinito saiu).
 export function noNivelMaximo(estado) {
-  return indiceNivel(estado) === TOTAL_DE_NIVEIS - 1;
+  return false;
 }
 
-// O próximo avanço é um rompimento de reino? (está no último estágio do reino)
+// O próximo avanço é um rompimento de reino? (está no último estágio de um reino que não é o último)
 export function proximoEhRompimento(estado) {
   const ultimoEstagio = reinoAtual(estado).estagios.length - 1;
-  return estado.estagio === ultimoEstagio && !noNivelMaximo(estado);
+  return estado.estagio === ultimoEstagio && estado.reino < ULTIMO_REINO;
 }
 
 // Nome de onde o jogador vai chegar ao avançar
 export function nomeDoProximoNivel(estado) {
   if (noNivelMaximo(estado)) return '—';
+  if (proximoEhMaestria(estado)) return `${reinoAtual(estado).nome} — ${nomeDaMaestria(nivelDaMaestria(estado) + 1)}`;
   if (proximoEhRompimento(estado)) {
     const proximo = REINOS[estado.reino + 1];
     return `${proximo.nome} — ${proximo.estagios[0]}`;
@@ -66,30 +94,41 @@ export function nomeDoProximoNivel(estado) {
   return `${reinoAtual(estado).nome} — ${reinoAtual(estado).estagios[estado.estagio + 1]}`;
 }
 
+// Mapa global (1 = Fácil, Mapa 1 · 97 = Normal, Mapa 1) cujo chefe libera o nível n da Maestria da Criação
+export function mapaParaMaestria(nivel) {
+  return CONFIG.progressao.mapasPorDificuldade + M.mapasPorNivel * (nivel - 1);
+}
+
 // Requisito de combate para o PRÓXIMO avanço: romper o reino (mapaParaRomper) ou, v0.22.0, subir para um
 // estágio travado (mapaParaEstagio — o Céu Aberto atravessa vários mundos: 4ª Ordem só depois do Mapa 48).
-// Devolve null se não houver requisito, ou { mapa, cumprido, rompimento }.
+// v0.32.0: o próximo nível de Maestria exige o chefe de mapaParaMaestria (mapa GLOBAL).
+// Devolve null se não houver requisito, ou { mapa, cumprido, rompimento, maestria } (mapa = número global, 1 em diante).
 export function requisitoDoRompimento(estado) {
   if (noNivelMaximo(estado)) return null;
+  const maestria = proximoEhMaestria(estado);
   const rompimento = proximoEhRompimento(estado);
   const reino = reinoAtual(estado);
-  const mapa = rompimento ? reino.mapaParaRomper : reino.mapaParaEstagio?.[estado.estagio + 1];
+  const mapa = maestria ? mapaParaMaestria(nivelDaMaestria(estado) + 1)
+    : rompimento ? reino.mapaParaRomper : reino.mapaParaEstagio?.[estado.estagio + 1];
   if (!mapa) return null;
   const ultimaFaseDoMapa = mapa * CONFIG.combate.fasesPorMapa - 1;
-  return { mapa, cumprido: estado.combate.fasesConcluidas >= ultimaFaseDoMapa, rompimento };
+  return { mapa, cumprido: estado.combate.fasesConcluidas >= ultimaFaseDoMapa, rompimento, maestria };
 }
 
 // ---- Fórmulas ----
 // Produção "pura" em um nível (sem bônus). Também usada para calcular recompensas de combate.
+// v0.32.0: acima do Fruto do Universo (Maestria, e as fases da Normal em diante) cresce por CONFIG.maestria.
 export function producaoNoNivel(nivel, indiceReino) {
-  return C.producaoBase * Math.pow(C.crescimentoProducao, nivel) * Math.pow(C.bonusPorReino, indiceReino);
+  const maestria = Math.max(0, nivel - NIVEL_DO_FRUTO);
+  return multiplicar(multiplicar(multiplicar(C.producaoBase, potencia(C.crescimentoProducao, nivel - maestria)),
+    potencia(C.bonusPorReino, indiceReino)), potencia(M.ganhoProducao, maestria));
 }
 
 export function producaoPorSegundo(estado) {
   const bonusDosItens = 1 + bonusEquipamentos(estado).cultivo / 100;   // ex.: Berloque +5% Cultivo
   const bonusDaClasse = 1 + (classeDe(estado).multiplicar.cultivo ?? 0);   // (nenhuma classe usa hoje)
-  return producaoNoNivel(indiceNivel(estado), estado.reino) * multiplicadorMelhoria(estado, 'cultivo') * bonusDosItens * bonusDaClasse *
-    bonusDoCaminho(estado);
+  return multiplicar(multiplicar(producaoNoNivel(indiceNivel(estado), estado.reino), multiplicadorMelhoria(estado, 'cultivo')),
+    bonusDosItens * bonusDaClasse * bonusDoCaminho(estado));
 }
 
 // ---- v0.21.0: bônus do cultivo vindos da lore (as ações ficam em sistemas/cultivoAvancado.js) ----
@@ -133,22 +172,27 @@ export function temSentidoDivino(estado) {
 }
 
 export function custoParaAvancar(estado) {
-  let custo = C.custoBase * Math.pow(C.crescimentoCusto, indiceNivel(estado));
+  // v0.32.0: Maestria da Criação — custo próprio, a partir do custo de avançar no Fruto do Universo
+  if (proximoEhMaestria(estado)) {
+    return arredondarParaCima(multiplicar(multiplicar(C.custoBase * Math.pow(C.crescimentoCusto, NIVEL_DO_FRUTO), M.custoInicial),
+      potencia(M.crescimentoCusto, nivelDaMaestria(estado))));
+  }
+  let custo = multiplicar(C.custoBase, potencia(C.crescimentoCusto, indiceNivel(estado)));
   // v0.21.0: a Pílula Quebra-Gargalo deixa o próximo rompimento mais barato
-  if (proximoEhRompimento(estado)) custo *= C.multiplicadorRompimento * (1 - (estado.efeitos?.rompimento ?? 0));
-  return Math.ceil(custo);
+  if (proximoEhRompimento(estado)) custo = multiplicar(custo, C.multiplicadorRompimento * (1 - (estado.efeitos?.rompimento ?? 0)));
+  return arredondarParaCima(custo);
 }
 
 export function ganhoDaMeditacao(estado) {
   // v0.21.0: o Sentido Divino guia a meditação (+50%)
   const sentido = temSentidoDivino(estado) ? 1 + CONFIG.meditacaoComSentido : 1;
-  return Math.max(C.meditacaoMinima, producaoPorSegundo(estado) * C.segundosPorMeditacao * sentido);
+  return maximo(C.meditacaoMinima, multiplicar(producaoPorSegundo(estado), C.segundosPorMeditacao * sentido));
 }
 
 // ---- Ações ----
 export function ganharCultivo(estado, quantidade) {
-  estado.cultivo += quantidade;
-  estado.cultivoTotal += quantidade;
+  creditar(estado, 'cultivo', quantidade);
+  creditar(estado, 'cultivoTotal', quantidade);
 }
 
 export function meditar(estado) {
@@ -162,7 +206,7 @@ export function podeAvancar(estado) {
   if (noNivelMaximo(estado)) return false;
   const requisito = requisitoDoRompimento(estado);
   if (requisito && !requisito.cumprido) return false;
-  return estado.cultivo >= custoParaAvancar(estado);
+  return cabe(estado, 'cultivo', custoParaAvancar(estado));
 }
 
 // Avança um estágio (ou rompe o reino). Devolve um "evento" descrevendo
@@ -171,9 +215,12 @@ export function avancar(estado) {
   if (!podeAvancar(estado)) return null;
 
   const rompimento = proximoEhRompimento(estado);
-  estado.cultivo -= custoParaAvancar(estado);
+  const maestria = proximoEhMaestria(estado);
+  debitar(estado, 'cultivo', custoParaAvancar(estado));
 
-  if (rompimento) {
+  if (maestria) {
+    estado.maestria = nivelDaMaestria(estado) + 1;   // v0.32.0: Maestria da Criação
+  } else if (rompimento) {
     estado.reino += 1;
     estado.estagio = 0;
     estado.estatisticas.rompimentos += 1;
@@ -187,16 +234,26 @@ export function avancar(estado) {
     tipo: rompimento ? 'rompimento' : 'estagio',
     nome: nomeDoNivel(estado),
     reino,
-    marco: reino.marcos?.[estado.estagio] ?? null,
+    maestria,
+    marco: maestria ? (estado.maestria === 1 ? `Você começou a ${M.nome}: o cultivo continua além do Fruto do Universo.` : null)
+      : reino.marcos?.[estado.estagio] ?? null,
     batismo: rompimento && batismosMundiais(estado) > 0,   // v0.21.0: este rompimento trouxe um Batismo Mundial
   };
+}
+
+// O próximo avanço pode ser feito sozinho? (opções do jogador; ver atualizar)
+export function avancoAutomaticoPermitido(estado) {
+  const auto = estado.automacao?.cultivo ?? {};
+  if (proximoEhRompimento(estado)) return Boolean(estado.vip || auto.reinos);
+  if (proximoEhMaestria(estado)) return Boolean(auto.maestria);
+  return Boolean(estado.opcoes.autoAvancar);
 }
 
 // ---- Passagem do tempo ----
 // Chamado várias vezes por segundo. "segundos" = tempo desde a última chamada.
 // aoEvento é uma função opcional chamada a cada avanço automático.
 export function atualizar(estado, segundos, aoEvento) {
-  ganharCultivo(estado, producaoPorSegundo(estado) * segundos);
+  ganharCultivo(estado, multiplicar(producaoPorSegundo(estado), segundos));
   estado.estatisticas.tempoJogado += segundos;
   // v0.21.0: tempo da Reclusão e dos efeitos (Iluminação, Pílula do Fluxo) — conta também com o jogo fechado
   if (estado.reclusao?.ativa) estado.reclusao.segundos += segundos;
@@ -206,12 +263,9 @@ export function atualizar(estado, segundos, aoEvento) {
     if (e.fluxo > 0) e.fluxo = Math.max(0, e.fluxo - segundos);
   }
 
-  // Avanço automático (opção "auto"): só estágios. Rompimentos são manuais...
-  // ...a não ser com o VIP (v0.9.13, dono): aí o rompimento é automático assim que
-  // os requisitos (cultivo + chefe do mapa) forem cumpridos.
-  while (podeAvancar(estado)) {
-    const rompimento = proximoEhRompimento(estado);
-    if (rompimento ? !estado.vip : !estado.opcoes.autoAvancar) break;
+  // Avanço automático: estágios com a opção "auto" (opcoes.autoAvancar). Rompimentos de reino: com o VIP
+  // (v0.9.13, dono) ou com a automação "romper reinos" (v0.33.0). Maestria: automação "subir Maestria" (v0.33.0).
+  while (podeAvancar(estado) && avancoAutomaticoPermitido(estado)) {
     const evento = avancar(estado);
     if (aoEvento) aoEvento(evento);
   }
@@ -220,7 +274,7 @@ export function atualizar(estado, segundos, aoEvento) {
 // Simula o tempo offline em pequenos pedaços, para que estágios
 // avançados automaticamente aumentem a produção durante a simulação.
 export function simularOffline(estado, segundos) {
-  const cultivoAntes = estado.cultivoTotal;
+  const cultivoAntes = instantaneo(estado, 'cultivoTotal');
   const eventos = [];
   const passos = Math.min(2000, Math.max(1, Math.ceil(segundos)));
   const tamanhoDoPasso = segundos / passos;
@@ -229,5 +283,5 @@ export function simularOffline(estado, segundos) {
     atualizar(estado, tamanhoDoPasso, (evento) => eventos.push(evento));
   }
 
-  return { ganho: estado.cultivoTotal - cultivoAntes, eventos };
+  return { ganho: variacaoDesde(estado, 'cultivoTotal', cultivoAntes), eventos };
 }

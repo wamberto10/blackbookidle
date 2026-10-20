@@ -26,8 +26,10 @@ export const CLASSES = [
     efeitoCritico: 'impacto_critico',
     // v0.15.3 (dono): técnica especial no 4º ATAQUE (o contador zera a cada luta), ×3 de dano
     // em todas as classes = +50% de dano em média ((1 + 1 + 1 + 3) ÷ 4). (v0.15.1: a cada 3, ×1,9 = +30%.)
-    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 4, multiplicador: 3, cura: 0.08, efeito: 'tec_sangue_dourado',
-      texto: 'A cada 4 ataques, um soco de 300% de dano que recupera 8% da Vitalidade.' },
+    // ×5 só no Corporal (as outras seguem ×3). Comparações isoladas de ×3/×4/×5 e sementes reproduzíveis em
+    // docs/PROGRESSAO_CONTINUA.md e docs/RESULTADOS_v0.33.1.md. Defesa, Vitalidade e Regeneração preservadas.
+    tecnica: { nome: 'Punho do Sangue Dourado', aCada: 4, multiplicador: 5, cura: 0.08, efeito: 'tec_sangue_dourado',
+      texto: 'A cada 4 ataques, um soco de 500% de dano que recupera 8% da Vitalidade.' },
   },
   {
     id: 'arma',

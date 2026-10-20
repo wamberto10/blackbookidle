@@ -1,34 +1,42 @@
 // =============================================================
 // sistemas/mundo.js — MAPAS E FASES
-// Transforma os dados dos mundos (dados/mundo1.js, mundo2.js...) em uma lista única de fases
-// (Mundo 1 = fases 0–143, Mundo 2 = 144–287), calculando a força de cada inimigo e suas recompensas.
+// Transforma os dados dos mundos (dados/mundo1.js, mundo2.js...) nos 96 mapas DESENHADOS e nas 1152 fases do
+// Fácil (Mundo 1 = fases 0–143, Mundo 2 = 144–287...), calculando a força de cada inimigo e suas recompensas.
+// v0.32.0 (progressão contínua): depois do Fácil vêm Normal, Difícil, Inferno e Infinito reaproveitando os mesmos
+// 96 mapas (escala.js: mapa global, mapa visual e fase local). Essas fases são geradas SOB DEMANDA (obterFase),
+// com inimigos e recompensas do patamar global — nunca existe uma lista infinita pronta.
 // =============================================================
 import { CONFIG } from '../config.js';
 import { MUNDOS } from '../dados/mundos.js';
 import { REINOS } from '../dados/reinos.js';
 import { TIPOS_DE_FASE, ESTRUTURA_DO_MAPA } from '../dados/fases.js';
-import { inicioDoReino, producaoNoNivel, batismosMundiais } from './progressao.js';
-import { atributosBase, calcularAtributos, SELO } from './atributos.js';
-import { definirInicioDaVida } from './blackbook.js';
-
-const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
+import { inicioDoReino, producaoNoNivel, batismosMundiais, NIVEL_DO_FRUTO } from './progressao.js';
+import { atributosBase, SELO } from './atributos.js';
+import { FASES_POR_MAPA, MAPAS_POR_DIFICULDADE, FASES_DO_FACIL, DIFICULDADES, mapaDaFase, faseLocal, mapaVisual,
+  dificuldadeDoMapa, primeiroMapaDaDificuldade, somaLog, fatorDePedras } from './escala.js';
+import { multiplicar, razao, deLn, arredondarParaCima } from '../numeros.js';
+// v0.33.0: a força dos inimigos e as recompensas são NÚMEROS GRANDES (js/numeros.js) — no Infinito passam de 1e308
 
 // Mundos jogáveis (com mapas). Os mapas de todos eles ficam numa lista só:
 // Mundo 1 = Mapas 1–12 (índices 0–11), Mundo 2 = Mapas 13–24 (índices 12–23)...
+// v0.32.0: MAPAS = os 96 mapas desenhados (índice = mapa VISUAL). Para um mapa global, use mapaDesenhado(g).
 export const MUNDOS_JOGAVEIS = MUNDOS.filter(m => m.mapas.length > 0);
 export const MUNDO = MUNDOS[0];   // Mundo Inicial (mensagem de boas-vindas)
 export const MAPAS = [];
 MUNDOS_JOGAVEIS.forEach((mundo, indiceMundo) => {
   for (const mapa of mundo.mapas) { mapa.mundo = indiceMundo; MAPAS.push(mapa); }
 });
-export const FASES = []; // lista com todas as fases de todos os mundos, em ordem
+export const MUNDOS_POR_DIFICULDADE = MUNDOS_JOGAVEIS.length;   // 8
+const MAPAS_POR_MUNDO = MAPAS_POR_DIFICULDADE / MUNDOS_POR_DIFICULDADE;   // 12
+const FASES_POR_MUNDO = MAPAS_POR_MUNDO * FASES_POR_MAPA;               // 144
+export const FASES = []; // as 1152 fases do Fácil (fases globais 0–1151), em ordem. As outras: obterFase(indice)
 
 // Dificuldade acumulada de cada mapa: cada mapa multiplica pela dificuldade do SEU mundo
 // (v0.21.2: CONFIG.combate.dificuldadePorMundo; antes era 1,31 por mapa em todos os mundos)
-const dificuldadeDoMapa = [];
+const dificuldadeDoMapaFacil = [];
 MAPAS.forEach((mapa, indiceMapa) => {
   const porMapa = CONFIG.combate.dificuldadePorMundo?.[mapa.mundo] ?? CONFIG.combate.dificuldadePorMapa;
-  dificuldadeDoMapa.push(indiceMapa === 0 ? 1 : dificuldadeDoMapa[indiceMapa - 1] * porMapa);
+  dificuldadeDoMapaFacil.push(indiceMapa === 0 ? 1 : dificuldadeDoMapaFacil[indiceMapa - 1] * porMapa);
 });
 
 // v0.26.0: força de um jogador "comum" num nível (base × bônus de reino só do jogador × Batismos).
@@ -37,7 +45,7 @@ function forcaDoJogador(nivel, reino) {
   const A = CONFIG.atributos;
   const base = atributosBase(nivel, reino);
   const batismo = 1 + batismosMundiais({ reino }) * CONFIG.batismo.bonusPorBatismo;
-  return { ataque: base.ataque * Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, reino) * batismo, velocidade: base.velocidade };
+  return { ataque: multiplicar(base.ataque, Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, reino) * batismo), velocidade: base.velocidade };
 }
 const FORCA_SELADA = forcaDoJogador(SELO.nivel, SELO.reino);
 
@@ -66,61 +74,147 @@ MAPAS.forEach((mapa, indiceMapa) => {
       progresso * CONFIG.combate.fracaoDoReino * (fim - inicio);
     const referencia = atributosBase(nivelReferencia, mapa.reino);
     // Cada mapa é um pouco mais difícil que o anterior (ver config: dificuldadePorMapa / dificuldadePorMundo)
-    const dificuldade = dificuldadeDoMapa[indiceMapa];
+    const dificuldade = dificuldadeDoMapaFacil[indiceMapa];
     const inimigo = {
       nome: dados.inimigo,
       forma: dados.forma,
-      vida: referencia.ataque * tipo.vida * dificuldade,
-      ataque: referencia.ataque * tipo.ataque * dificuldade,
-      defesa: referencia.ataque * tipo.defesa * dificuldade,
+      vida: multiplicar(referencia.ataque, tipo.vida * dificuldade),
+      ataque: multiplicar(referencia.ataque, tipo.ataque * dificuldade),
+      defesa: multiplicar(referencia.ataque, tipo.defesa * dificuldade),
       // v0.21.2: a Velocidade também cresce um pouco por mapa (antes não crescia: no Mundo 3 o jogador
       // ficava ~10× mais rápido que os chefes e o ataque duplo valia sempre)
-      velocidade: referencia.velocidade * tipo.velocidade * Math.pow(CONFIG.combate.velocidadePorMapa ?? 1, indiceMapa),
-      sentidoDivino: referencia.sentidoDivino * dificuldade,   // para a Supressão de Alma
+      velocidade: multiplicar(referencia.velocidade, tipo.velocidade * Math.pow(CONFIG.combate.velocidadePorMapa ?? 1, indiceMapa)),
+      sentidoDivino: multiplicar(referencia.sentidoDivino, dificuldade),   // para a Supressão de Alma
     };
     // v0.26.0: mapa selado — o inimigo perde a mesma fração de força que o Selo tira de um jogador deste nível
     // (× CONFIG.selo.forcaDosInimigos). O inimigo "sem selo" fica guardado para o boss do evento.
     let selado = inimigo;
     if (mapa.selado) {
       const livre = forcaDoJogador(nivelReferencia, mapa.reino);
-      const fator = (FORCA_SELADA.ataque / livre.ataque) * CONFIG.selo.forcaDosInimigos;
+      const fator = razao(FORCA_SELADA.ataque, livre.ataque) * CONFIG.selo.forcaDosInimigos;
       selado = {
         ...inimigo,
-        vida: inimigo.vida * fator,
-        ataque: inimigo.ataque * fator,
-        defesa: inimigo.defesa * fator,
-        velocidade: inimigo.velocidade * (FORCA_SELADA.velocidade / livre.velocidade),
-        sentidoDivino: inimigo.sentidoDivino * fator,
+        vida: multiplicar(inimigo.vida, fator),
+        ataque: multiplicar(inimigo.ataque, fator),
+        defesa: multiplicar(inimigo.defesa, fator),
+        velocidade: multiplicar(inimigo.velocidade, razao(FORCA_SELADA.velocidade, livre.velocidade)),
+        sentidoDivino: multiplicar(inimigo.sentidoDivino, fator),
       };
     }
 
     FASES.push({
       indice,
-      mapa: indiceMapa,
-      mundo: mapa.mundo,
+      mapa: indiceMapa,          // mapa GLOBAL (no Fácil é igual ao visual)
+      mapaVisual: indiceMapa,    // v0.32.0: qual dos 96 mapas desenhados (nome, arte e inimigos)
+      dificuldade: 0,            // v0.32.0: índice em CONFIG.progressao.dificuldades (0 = Fácil)
+      mundo: mapa.mundo,         // mundo GLOBAL (Fácil 0–7, Normal 8–15...)
+      mundoVisual: mapa.mundo,
       numero: indiceNoMapa + 1,
       // última fase de um mundo (o chefe que abre o próximo mundo)
-      ultimaDoMundo: indiceNoMapa === FASES_POR_MAPA - 1 && MAPAS[indiceMapa + 1]?.mundo !== mapa.mundo,
+      ultimaDoMundo: indiceNoMapa === FASES_POR_MAPA - 1 && (indiceMapa + 1) % MAPAS_POR_MUNDO === 0,
       local: dados.local,
       chaveTipo,
       tipo,
       nivel: nivelReferencia,   // v0.21.1: nível de cultivo da fase (inimigo fraco demais dá menos Cultivo)
       reino: mapa.reino,
-      referencia,   // atributos de um cultivador comum neste ponto (base dos itens que caem aqui)
+      referencia,   // atributos de um cultivador comum neste ponto
       selado: Boolean(mapa.selado),   // v0.26.0: Selo do Mundo Primordial
       inimigo: selado,
       inimigoSemSelo: inimigo,
       recompensa: {
-        cultivo: producaoNoNivel(nivelReferencia, mapa.reino) * tipo.cultivo,
-        pedras: Math.ceil(tipo.pedras * Math.pow(CONFIG.combate.crescimentoPedras, indice) * CONFIG.combate.multiplicadorPedras),
+        cultivo: multiplicar(producaoNoNivel(nivelReferencia, mapa.reino), tipo.cultivo),
+        pedras: arredondarParaCima(multiplicar(fatorDePedras(indice), tipo.pedras * CONFIG.combate.multiplicadorPedras)),
       },
     });
   });
 });
 
+// =============================================================
+// v0.32.0: FASES DEPOIS DO FÁCIL (geradas sob demanda)
+// Mesmo mapa desenhado, mesmos inimigos e tipos de fase; força e recompensas do patamar GLOBAL:
+//  - nível de referência: Fruto do Universo + 1 nível de Maestria a cada CONFIG.maestria.mapasPorNivel mapas
+//  - dificuldade: continua do último mapa do Fácil, × progressao.dificuldades[].inimigos por mapa
+//  - Pedras: escala.fatorDePedras (mais suave que no Fácil); Essência: escala.lnEssenciaDeReferencia
+// O Selo do Mundo Primordial NÃO se repete (é uma exceção só do Fácil).
+// =============================================================
+const ULTIMO_MAPA_DO_FACIL = MAPAS_POR_DIFICULDADE - 1;
+// (em ln: a dificuldade e a velocidade dos inimigos passam de 1e308 no Infinito)
+const LN_DIFICULDADE_NO_FIM_DO_FACIL = Math.log(dificuldadeDoMapaFacil[ULTIMO_MAPA_DO_FACIL]);
+const LN_VELOCIDADE_NO_FIM_DO_FACIL = ULTIMO_MAPA_DO_FACIL * Math.log(CONFIG.combate.velocidadePorMapa ?? 1);
+const REINO_FINAL = REINOS.length - 1;
+const geradas = new Map();
+const LIMITE_DO_CACHE = 6000;   // fases guardadas na memória (se passar, começa de novo — elas são recalculáveis)
+
+function gerarFase(indice) {
+  const g = mapaDaFase(indice);
+  const indiceNoMapa = faseLocal(indice);
+  const visual = mapaVisual(g);
+  const mapa = MAPAS[visual];
+  const dados = mapa.fases[indiceNoMapa];
+  const chaveTipo = ESTRUTURA_DO_MAPA[indiceNoMapa];
+  const tipo = TIPOS_DE_FASE[chaveTipo];
+  const depoisDoFacil = g - ULTIMO_MAPA_DO_FACIL;   // 1 = Normal, Mapa 1
+  // v0.33.0: sem teto — a referência (Fruto + Maestria) e a dificuldade continuam crescendo no Infinito
+  const nivel = NIVEL_DO_FRUTO + (g + indiceNoMapa / FASES_POR_MAPA - MAPAS_POR_DIFICULDADE) / CONFIG.maestria.mapasPorNivel;
+  const referencia = atributosBase(nivel, REINO_FINAL);
+  const dificuldade = deLn(LN_DIFICULDADE_NO_FIM_DO_FACIL + somaLog('inimigos', depoisDoFacil));
+  const velocidade = deLn(LN_VELOCIDADE_NO_FIM_DO_FACIL + somaLog('velocidade', depoisDoFacil));
+  const forca = multiplicar(referencia.ataque, dificuldade);
+  const inimigo = {
+    nome: dados.inimigo,
+    forma: dados.forma,
+    vida: multiplicar(forca, tipo.vida),
+    ataque: multiplicar(forca, tipo.ataque),
+    defesa: multiplicar(forca, tipo.defesa),
+    velocidade: multiplicar(multiplicar(referencia.velocidade, velocidade), tipo.velocidade),
+    sentidoDivino: multiplicar(referencia.sentidoDivino, dificuldade),
+  };
+  return {
+    indice,
+    mapa: g,
+    mapaVisual: visual,
+    dificuldade: dificuldadeDoMapa(g),
+    mundo: Math.floor(g / MAPAS_POR_MUNDO),
+    mundoVisual: mapa.mundo,
+    numero: indiceNoMapa + 1,
+    ultimaDoMundo: indiceNoMapa === FASES_POR_MAPA - 1 && (g + 1) % MAPAS_POR_MUNDO === 0,
+    local: dados.local,
+    chaveTipo,
+    tipo,
+    nivel,
+    reino: REINO_FINAL,
+    referencia,
+    selado: false,
+    inimigo,
+    inimigoSemSelo: inimigo,
+    recompensa: {
+      cultivo: multiplicar(producaoNoNivel(nivel, REINO_FINAL), tipo.cultivo),
+      pedras: arredondarParaCima(multiplicar(fatorDePedras(indice), tipo.pedras * CONFIG.combate.multiplicadorPedras)),
+    },
+  };
+}
+
+// Fase global → dados da fase (Fácil: a lista pronta; depois: gerada uma vez e guardada)
+export function obterFase(indice) {
+  if (indice < FASES_DO_FACIL) return FASES[Math.max(0, indice)];
+  let fase = geradas.get(indice);
+  if (!fase) {
+    if (geradas.size >= LIMITE_DO_CACHE) geradas.clear();
+    fase = gerarFase(indice);
+    geradas.set(indice, fase);
+  }
+  return fase;
+}
+
+// Mapa desenhado (nome, ícone, cena, descrição) de um mapa global
+export function mapaDesenhado(mapaGlobal) {
+  return MAPAS[mapaVisual(mapaGlobal)];
+}
+
 // ---- Consultas ----
+// v0.32.0: sem fim — a próxima fase depois da maior vencida sempre existe (o Infinito não acaba)
 export function faseLiberada(estado, indice) {
-  return indice >= 0 && indice < FASES.length && indice <= estado.combate.fasesConcluidas + 1;
+  return indice >= 0 && indice <= estado.combate.fasesConcluidas + 1;
 }
 
 export function mapaLiberado(estado, indiceMapa) {
@@ -134,75 +228,68 @@ export function fasesVencidasNoMapa(estado, indiceMapa) {
 }
 
 export function chefeDoMapa(indiceMapa) {
-  return FASES[indiceMapa * FASES_POR_MAPA + FASES_POR_MAPA - 1];
+  return obterFase(indiceMapa * FASES_POR_MAPA + FASES_POR_MAPA - 1);
+}
+
+// Mapa global mais longe já aberto (o da próxima fase a vencer)
+export function mapaDaFronteira(estado) {
+  return mapaDaFase(estado.combate.fasesConcluidas + 1);
+}
+
+// ---- Dificuldades (v0.32.0) ----
+// Liberada = venceu o chefe final da dificuldade anterior (Normal: o Mapa 96 do Fácil)
+export function dificuldadeLiberada(estado, indiceDificuldade) {
+  return indiceDificuldade === 0 ||
+    estado.combate.fasesConcluidas >= primeiroMapaDaDificuldade(indiceDificuldade) * FASES_POR_MAPA - 1;
 }
 
 // ---- Mundos ----
-// Índice da primeira e da última fase de um mundo (0 = Mundo 1)
+// Mundo GLOBAL: 0–7 = Fácil, 8–15 = Normal... (o desenho é o do mundo índice % 8)
 export function primeiraFaseDoMundo(indiceMundo) {
-  return FASES.findIndex(fase => fase.mundo === indiceMundo);
+  return indiceMundo * FASES_POR_MUNDO;
 }
 export function ultimaFaseDoMundo(indiceMundo) {
-  return FASES.findLastIndex(fase => fase.mundo === indiceMundo);
-}
-export function mundoDoMapa(indiceMapa) {
-  return MUNDOS_JOGAVEIS[MAPAS[indiceMapa].mundo];
-}
-export function mapasDoMundo(indiceMundo) {
-  return MAPAS.map((mapa, indice) => indice).filter(indice => MAPAS[indice].mundo === indiceMundo);
+  return indiceMundo * FASES_POR_MUNDO + FASES_POR_MUNDO - 1;
 }
 
-// O jogador já venceu o chefe final do mundo NESTA vida? (0 = Mundo 1)
+// Dados do mundo global: o mundo desenhado + "dificuldade" (nome dela; o Fácil fica igual, sem o campo) e o texto final
+// com o nome da dificuldade na frente. Ex.: dadosDoMundo(8) = Mundo Inicial, dificuldade 'Normal'.
+const mundosGlobais = new Map();
+export function dadosDoMundo(indiceMundo) {
+  const desenhado = MUNDOS_JOGAVEIS[indiceMundo % MUNDOS_POR_DIFICULDADE];
+  const d = dificuldadeDoMapa(indiceMundo * MAPAS_POR_MUNDO);
+  if (d === 0) return desenhado;
+  let mundo = mundosGlobais.get(indiceMundo);
+  if (!mundo) {
+    const prefixo = DIFICULDADES[d].nome;
+    mundo = {
+      ...desenhado,
+      dificuldade: prefixo,
+      final: {
+        titulo: `${prefixo} — ${desenhado.final?.titulo ?? desenhado.nome}`,
+        texto: `Você venceu de novo o ${desenhado.nome}, agora na dificuldade ${prefixo}. ` +
+          'Seu cultivo, seus itens e o Black Book seguem com você para o próximo mundo.',
+      },
+    };
+    mundosGlobais.set(indiceMundo, mundo);
+  }
+  return mundo;
+}
+export function mundoDoMapa(indiceMapa) {
+  return dadosDoMundo(Math.floor(indiceMapa / MAPAS_POR_MUNDO));
+}
+export function mapasDoMundo(indiceMundo) {
+  return Array.from({ length: MAPAS_POR_MUNDO }, (_, i) => indiceMundo * MAPAS_POR_MUNDO + i);
+}
+
+// O jogador já venceu o chefe final do mundo? (0 = Mundo 1 do Fácil)
 export function mundoConcluido(estado, indiceMundo = 0) {
   return estado.combate.fasesConcluidas >= ultimaFaseDoMundo(indiceMundo);
 }
 
-// Já venceu o chefe final do mundo em QUALQUER vida? (decide onde começa a vida nova)
+// Já venceu o chefe final do mundo? Saves antigos: conta também o recorde das vidas antigas (a migração da
+// v0.32.0 já leva esse recorde para fasesConcluidas). Num mundo zerado, todos os inimigos comuns fogem.
 export function mundoJaZerado(estado, indiceMundo = 0) {
-  const melhor = Math.max(estado.combate.fasesConcluidas, estado.reencarnacao.melhorFaseDeTodas);
+  const melhor = Math.max(estado.combate.fasesConcluidas, estado.reencarnacao?.melhorFaseDeTodas ?? -1);
   return melhor >= ultimaFaseDoMundo(indiceMundo);
 }
-
-// ---- Onde começa cada vida nova (reencarnação) ----
-// Mundo onde a próxima vida começa.
-// v0.11.2 (dono): TODA vida recomeça no Mundo 1 (Mapa 1, Corpo Temperado); o Mundo 2 só é
-// alcançado zerando o Mundo 1 de novo. (Na v0.10.0 quem já tinha zerado o Mundo 1 recomeçava
-// no Santo, Mapa 13 — o dono achou que o cultivo "pulava" para o Santo.)
-// Para voltar à regra antiga: devolver o mundo mais avançado já zerado + 1 (ver mundoJaZerado).
-export function mundoDeInicio(estado) {
-  return 0;
-}
-
-// Texto de onde a próxima vida começa. Ex.: "Santo — 1º Estágio, no Mapa 13 (Fronteira de Tong Xuan)"
-export function textoDoInicioDaVida(estado) {
-  const inicio = inicioDaVida(estado);
-  return `${inicio.reino} — ${inicio.estagio}, no Mapa ${inicio.indiceMapa + 1} (${inicio.mapa})`;
-}
-
-// v0.27.1: as partes do começo da próxima vida (cartão "Próxima vida começa em" do Black Book)
-export function inicioDaVida(estado) {
-  const indiceMapa = FASES[primeiraFaseDoMundo(mundoDeInicio(estado))].mapa;
-  const mapa = MAPAS[indiceMapa];
-  const reino = REINOS[indiceMapa === 0 ? 0 : mapa.reino];
-  const estagio = indiceMapa === 0 ? 0 : (mapa.inicioNoReino ?? 0);
-  return { mundo: mundoDoMapa(indiceMapa).nome, reino: reino.nome, estagio: reino.estagios[estagio], indiceMapa, mapa: mapa.nome };
-}
-
-// Coloca a vida nova no começo do mundo certo: reino e estágio do 1º mapa dele
-// (Mundo 2 = Santo, 1º estágio) e as fases dos mundos anteriores já vencidas.
-// (O Mundo 1 continua começando do Corpo Temperado, 1º estágio, como sempre.)
-function comecarVidaNova(novo, anterior) {
-  // "A alma se lembra" (v0.12.0): o Sentido Divino é força da alma, não do corpo — guarda o maior já alcançado
-  novo.reencarnacao.sentidoDivinoMaximo = Math.max(anterior.reencarnacao.sentidoDivinoMaximo ?? 0,
-    calcularAtributos(anterior, { selado: false }).sentidoDivino);
-  const indiceMundo = mundoDeInicio(anterior);
-  if (indiceMundo === 0) return;
-  const primeira = primeiraFaseDoMundo(indiceMundo);
-  const mapa = MAPAS[FASES[primeira].mapa];
-  novo.reino = mapa.reino;
-  novo.estagio = mapa.inicioNoReino ?? 0;
-  novo.combate.fasesConcluidas = primeira - 1;
-  novo.combate.faseAtual = primeira;
-  novo.combate.inicioDaVida = primeira - 1;
-}
-definirInicioDaVida(comecarVidaNova);

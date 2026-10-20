@@ -8,7 +8,11 @@
 import { CONFIG } from '../config.js';
 import * as BOSS from '../sistemas/boss.js';
 import { REINOS } from '../dados/reinos.js';
-import { MAPAS } from '../sistemas/mundo.js';
+import { mapaDesenhado } from '../sistemas/mundo.js';
+import { multiplicar, razao } from '../numeros.js';
+// v0.33.0: a luta do boss roda normalizada — dano real = dano × evento.escala (só para mostrar)
+const danoReal = (evento) => multiplicar(evento.dano, evento.escala ?? 1);
+import { nomeDaPosicao } from '../sistemas/escala.js';
 import { formatarNumero, formatarTempo } from '../format.js';
 import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito, icone } from './sprite.js';
 import { SPRITES } from '../dados/sprites.js';
@@ -71,7 +75,7 @@ export function atualizarTelaBoss(estado) {
   $('tela-boss').classList.toggle('lutando', !!luta);
   const boss = BOSS.atributosDoBoss(estado);
   const b = estado.boss;
-  $('boss-edicao').textContent = `Aparição nº ${b.edicao} · força do chefe do Mapa ${boss.mapa + 1} (${MAPAS[boss.mapa].nome})`;
+  $('boss-edicao').textContent = `Aparição nº ${b.edicao} · força do chefe do ${nomeDaPosicao(boss.mapa)} (${mapaDesenhado(boss.mapa).nome})`;
   $('boss-vida').style.width = `${b.vida * 100}%`;
   $('boss-vida-texto').textContent = presente ? `Vida: ${porcento(b.vida)}` : 'Derrotado!';
   $('boss-arena').classList.toggle('boss-ausente', !presente);
@@ -85,7 +89,7 @@ export function atualizarTelaBoss(estado) {
   }
 
   if (luta) {
-    $('boss-minha-vida').style.width = `${Math.max(0, luta.vidaJogador / luta.jogador.vitalidade) * 100}%`;
+    $('boss-minha-vida').style.width = `${Math.min(1, Math.max(0, razao(luta.vidaJogador, luta.jogador.vitalidade))) * 100}%`;
     $('boss-tempo').textContent = `⏳ ${Math.max(0, Math.ceil(B.duracaoLuta - luta.tempo))}s · seu dano: ${porcento(luta.danoNestaLuta)}`;
   } else {
     $('boss-tempo').textContent = presente ? '' : `O boss volta em ${formatarTempo(BOSS.segundosParaVoltar(estado, agora))}`;
@@ -154,7 +158,7 @@ export function mostrarGolpeBoss(evento) {
           animar($('boss-sprite'), 'boss-atingido');
         }
         const prefixo = evento.tecnica ? '' : evento.elemental ? 'EXPLOSÃO!\n' : evento.critico ? 'CRÍTICO!\n' : '';
-        numero('boss-numeros-boss', prefixo + formatarNumero(evento.dano), forte ? 'critico' : '');
+        numero('boss-numeros-boss', prefixo + formatarNumero(danoReal(evento)), forte ? 'critico' : '');
       }, 120);
     }, evento.duplo && !evento.segundo ? 200 : INTERVALO);
   } else if (evento.tipo === 'carregando') {
@@ -183,7 +187,7 @@ export function mostrarGolpeBoss(evento) {
         } else {
           animar($('boss-jogador'), 'boss-atingido');
           mostrarQuadro($('boss-jogador'), 4, 340);
-          numero('boss-numeros-jogador', '-' + formatarNumero(evento.dano), 'contra forte');
+          numero('boss-numeros-jogador', '-' + formatarNumero(danoReal(evento)), 'contra forte');
         }
       }, 300);
     }, 700);
@@ -200,7 +204,7 @@ export function mostrarGolpeBoss(evento) {
         }
         tocarEfeito('jogador', 'corte_lunar');
         animar($('boss-jogador'), 'boss-atingido');
-        numero('boss-numeros-jogador', '-' + formatarNumero(evento.dano), 'contra');
+        numero('boss-numeros-jogador', '-' + formatarNumero(danoReal(evento)), 'contra');
       }, 130);
     });
   } else if (evento.tipo === 'cura') {

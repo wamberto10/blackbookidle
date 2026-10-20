@@ -6,12 +6,17 @@
 //  2. Sorteia o ESPAÇO entre os 10 (todos caem em qualquer mapa).
 //  3. Sorteia o GRAU (★1 a ★5): quase sempre ★1, às vezes ★2 a ★4.
 //  4. Os atributos são FIXOS por tipo de item (dados/equipamentos.js):
-//     base do mapa onde caiu × força do tier × estrelas. Nada aleatório.
+//     fração do espaço × força do tier × estrelas × patamar do mapa GLOBAL onde caiu. Nada aleatório.
+//     v0.32.0: Ataque, Vitalidade, Defesa e Velocidade viraram % que MULTIPLICA o cultivo (atributos.js).
 // =============================================================
 import { CONFIG } from '../config.js';
 import { SLOTS, RARIDADES, ATRIBUTOS_EM_PORCENTO } from '../dados/equipamentos.js';
 import { calcularAtributos, poderTotal } from './atributos.js';
-import { FASES, chefeDoMapa } from './mundo.js';
+import { obterFase } from './mundo.js';
+import { mapaDaFase, fatorDoItem } from './escala.js';
+import { somar, subtrair, multiplicar, comparar, maior, menorOuIgual, arredondarParaBaixo } from '../numeros.js';
+import { creditar, debitar, cabe } from '../saldos.js';   // v0.33.2: Pedras sem perda de precisão
+// v0.33.0: Pedras, investimento, custos e ganhos de Poder são NÚMEROS GRANDES (js/numeros.js)
 import { indiceRaridade, nivelMaximo, custoMelhoria, pedrasAoDesmanchar, grauDe, proximoDaMescla } from './itens.js';
 
 const EQ = CONFIG.equipamentos;
@@ -40,29 +45,31 @@ export function espacosLiberados(indiceMapa) {
 }
 
 // v0.9.2 (dono): atributos FIXOS. Nada é sorteado: o valor depende só do tipo do item,
-// do tier, das estrelas e do MAPA onde caiu. Todos os itens de um mapa usam a mesma
-// base (a do chefe do mapa) — assim, dentro do mapa, tier maior sempre ganha.
-function valorDoAtributo(atributo, fator, fase, forca) {
+// do tier, das estrelas e do MAPA onde caiu — dentro do mapa, tier maior sempre ganha.
+// v0.32.0: Ataque, Vitalidade, Defesa e Velocidade = fração × 100 × força × crescimentoPorMapa^(mapa global) em %
+// (antes: fração × atributos do chefe do mapa, um valor fixo somado à base). Os outros continuam em pontos de %.
+function valorDoAtributo(atributo, fator, mapaGlobal, forca) {
   if (ATRIBUTOS_EM_PORCENTO.includes(atributo)) {
-    return fator * (1 + EQ.crescimentoPorcentoPorMapa * fase.mapa) * forca;
+    return fator * (1 + EQ.crescimentoPorcentoPorMapa * mapaGlobal) * forca;
   }
-  return chefeDoMapa(fase.mapa).referencia[atributo] * fator * forca;
+  return multiplicar(fatorDoItem(mapaGlobal), 100 * fator * forca);
 }
 
-// Atributos (no nível 0) de um item com este tipo, tier, estrelas e fase
+// Atributos (no nível 0) de um item com este tipo, tier, estrelas e fase GLOBAL
 export function atributosFixos(slotId, raridadeId, grau, indiceFase) {
   const slot = SLOTS.find(s => s.id === slotId);
   const raridade = RARIDADES.find(r => r.id === raridadeId);
   const forca = raridade.forca * (1 + EQ.bonusPorGrau * (grau - 1));
-  const fase = FASES[Math.min(Math.max(0, indiceFase), FASES.length - 1)];
+  const mapaGlobal = mapaDaFase(Math.max(0, indiceFase));
   const atributos = {};
   for (const [atributo, fator] of Object.entries(slot.principal)) {
-    atributos[atributo] = valorDoAtributo(atributo, fator, fase, forca);
+    atributos[atributo] = valorDoAtributo(atributo, fator, mapaGlobal, forca);
   }
   return atributos;
 }
 
-// Saves antigos: refaz os atributos de um item com a regra fixa (mantém tipo, tier, estrelas, nível e fase)
+// Refaz os atributos de um item com a regra atual (mantém tipo, tier, estrelas, nível, fase, investimento e trava).
+// v0.32.0: save.js chama em todo carregamento — assim um rebalanceamento vale também para os itens já guardados.
 export function recalcularItem(item) {
   if (!item) return item;
   return { ...item, atributos: atributosFixos(item.slot, item.raridade, grauDe(item), item.fase) };
@@ -90,28 +97,27 @@ export function gerarItem(estado, fase, slotFixo = null, raridadeFixa = null, gr
 }
 
 // ---- Comparação ----
-// v0.22.1: as comparações usam a força CHEIA dos itens (sem o limite do reino) — senão dois itens fortes
-// pareceriam iguais num reino baixo e o mais fraco poderia ficar vestido
-const SEM_LIMITE = { semLimite: true };
+// v0.32.0: sem o limite do reino, a comparação usa os atributos de verdade (fora do Selo: o item fica para depois)
+const SEM_SELO = { selado: false };
 
 // Quanto o Poder Total muda se este item for vestido no lugar do atual
 export function ganhoDePoder(estado, item) {
-  const antes = poderTotal(calcularAtributos(estado, SEM_LIMITE));
+  const antes = poderTotal(calcularAtributos(estado, SEM_SELO));
   const comItem = { ...estado, equipados: { ...estado.equipados, [item.slot]: item } };
-  return poderTotal(calcularAtributos(comItem, SEM_LIMITE)) - antes;
+  return subtrair(poderTotal(calcularAtributos(comItem, SEM_SELO)), antes);   // pode ser negativo
 }
 
 // Poder do item: quanto ele soma ao seu Poder Total sozinho (vestido vs. espaço vazio)
 export function poderDoItem(estado, item) {
   const vazio = { ...estado, equipados: { ...estado.equipados, [item.slot]: null } };
   const comItem = { ...estado, equipados: { ...estado.equipados, [item.slot]: item } };
-  return poderTotal(calcularAtributos(comItem, SEM_LIMITE)) - poderTotal(calcularAtributos(vazio, SEM_LIMITE));
+  return subtrair(poderTotal(calcularAtributos(comItem, SEM_SELO)), poderTotal(calcularAtributos(vazio, SEM_SELO)));
 }
 
 // ---- Receber um item (drop) ----
 // Devolve { item, destino: 'equipado' | 'mochila' | 'desmanchado', pedras }
 export function receberItem(estado, item) {
-  if (estado.opcoes.autoEquipar && ganhoDePoder(estado, item) > 0) {
+  if (estado.opcoes.autoEquipar && maior(ganhoDePoder(estado, item), 0)) {
     const antigo = estado.equipados[item.slot];
     estado.equipados[item.slot] = item;
     if (antigo) guardarOuDesmanchar(estado, antigo);
@@ -127,7 +133,7 @@ function guardarOuDesmanchar(estado, item) {
   }
   // Mochila cheia: o item vira Pedras Espirituais
   const pedras = pedrasAoDesmanchar(item);
-  estado.pedras += pedras;
+  creditar(estado, 'pedras', pedras);
   return { item, destino: 'desmanchado', pedras };
 }
 
@@ -159,15 +165,15 @@ export function organizarMochila(estado) {
     if (!itens.length) return;
     for (const i of itens) auto.ids.add(i.id);
     estado.mochila = estado.mochila.filter(i => !auto.ids.has(i.id));
-    estado.pedras += pedras;
+    creditar(estado, 'pedras', pedras);
     auto.desmanchados += itens.length;
-    auto.pedras += pedras;
+    auto.pedras = somar(auto.pedras, pedras);
   };
   desmancharAgora();
   if (estado.opcoes.mesclaAuto && temAlgoParaMesclar(estado)) {
     const r = mesclarTudo(estado);
     auto.mesclas += r.mesclas;
-    auto.pedras += r.pedras;
+    auto.pedras = somar(auto.pedras, r.pedras);
     desmancharAgora();
   }
   return auto;
@@ -203,15 +209,15 @@ export function remover(estado, slotId) {
 }
 
 export function podeMelhorar(estado, item) {
-  return item.nivel < nivelMaximo(item) && estado.pedras >= custoMelhoria(item);
+  return item.nivel < nivelMaximo(item) && cabe(estado, 'pedras', custoMelhoria(item));
 }
 
 export function melhorar(estado, id) {
   const item = buscarItem(estado, id);
   if (!item || !podeMelhorar(estado, item)) return false;
   const custo = custoMelhoria(item);
-  estado.pedras -= custo;
-  item.investido += custo;
+  if (!debitar(estado, 'pedras', custo)) return false;
+  item.investido = somar(item.investido, custo);
   item.nivel += 1;
   return true;
 }
@@ -221,7 +227,7 @@ export function desmanchar(estado, id) {
   if (indice < 0 || estado.mochila[indice].travado) return 0;   // v0.27.1: travado não desmancha
   const [item] = estado.mochila.splice(indice, 1);
   const pedras = pedrasAoDesmanchar(item);
-  estado.pedras += pedras;
+  creditar(estado, 'pedras', pedras);
   return pedras;
 }
 
@@ -258,14 +264,14 @@ export function buscarPilha(estado, slotId, raridadeId, grau) {
 
 // O item da pilha que mais aumentaria o Poder Total (é o que "Equipar" veste)
 export function melhorDaPilha(estado, pilha) {
-  return pilha.itens.reduce((melhor, item) => (ganhoDePoder(estado, item) > ganhoDePoder(estado, melhor) ? item : melhor));
+  return pilha.itens.reduce((melhor, item) => (comparar(ganhoDePoder(estado, item), ganhoDePoder(estado, melhor)) > 0 ? item : melhor));
 }
 
 // O item mais fraco da pilha (é o que "Desmanchar" usa). v0.27.1: itens travados ficam de fora (null = todos travados)
 export function maisFracoDaPilha(estado, pilha) {
   const livres = pilha.itens.filter(livre);
   if (!livres.length) return null;
-  return livres.reduce((fraco, item) => (ganhoDePoder(estado, item) < ganhoDePoder(estado, fraco) ? item : fraco));
+  return livres.reduce((fraco, item) => (comparar(ganhoDePoder(estado, item), ganhoDePoder(estado, fraco)) < 0 ? item : fraco));
 }
 
 // v0.27.1: item TRAVADO (cadeado da Mochila) não é desmanchado nem gasto em mesclas — por botão, em massa ou no automático
@@ -288,13 +294,13 @@ export function mesclar(estado, slotId, raridadeId, grau) {
   estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
 
   // Parte das Pedras gastas melhorando os itens volta (EQ.devolucaoAoDesmanchar: 75%)
-  const pedras = Math.floor(escolhidos.reduce((soma, i) => soma + i.investido, 0) * EQ.devolucaoAoDesmanchar);
-  estado.pedras += pedras;
+  const pedras = arredondarParaBaixo(multiplicar(escolhidos.reduce((soma, i) => somar(soma, i.investido), 0), EQ.devolucaoAoDesmanchar));
+  creditar(estado, 'pedras', pedras);
 
   const proximo = proximoDaMescla(raridadeId, grau);
-  const novo = gerarItem(estado, FASES[melhor.fase], SLOTS.find(s => s.id === slotId), proximo.raridade, proximo.grau);
+  const novo = gerarItem(estado, obterFase(melhor.fase), SLOTS.find(s => s.id === slotId), proximo.raridade, proximo.grau);
   const resultado = receberItem(estado, novo);
-  return { ...resultado, pedras: resultado.pedras + pedras };
+  return { ...resultado, pedras: somar(resultado.pedras, pedras) };
 }
 
 // Existe alguma pilha na mochila que já dá para mesclar?
@@ -316,7 +322,7 @@ export function mesclarTudo(estado) {
       while (podeMesclar(estado, pilha.slot, pilha.raridade, pilha.grau)) {
         const resultado = mesclar(estado, pilha.slot, pilha.raridade, pilha.grau);
         mesclas += 1;
-        pedras += resultado.pedras;
+        pedras = somar(pedras, resultado.pedras);
         novos.push(resultado.item);
         mudou = true;
       }
@@ -331,10 +337,10 @@ export function mesclarTudo(estado) {
 // Desmancha a pilha inteira
 export function desmancharPilha(estado, slotId, raridadeId, grau) {
   const itens = itensDaPilha(estado, slotId, raridadeId, grau).filter(livre);
-  const pedras = itens.reduce((soma, i) => soma + pedrasAoDesmanchar(i), 0);
+  const pedras = itens.reduce((soma, i) => somar(soma, pedrasAoDesmanchar(i)), 0);
   const ids = new Set(itens.map(i => i.id));
   estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
-  estado.pedras += pedras;
+  creditar(estado, 'pedras', pedras);
   return { pedras, quantidade: itens.length };
 }
 // Quanto o Poder Total mudaria se ESTE item fosse melhorado até o nível máximo dele e vestido.
@@ -353,7 +359,7 @@ function versaoMaxima(item) {
 // (Item que ainda pode ficar melhor mesclando ou melhorando NÃO é obsoleto.)
 export function ehObsoleto(estado, item) {
   if (!estado.equipados[item.slot]) return false;   // espaço vazio: qualquer item serve
-  return ganhoDePoder(estado, versaoMaxima(item)) <= 0;
+  return menorOuIgual(ganhoDePoder(estado, versaoMaxima(item)), 0);
 }
 
 // v0.27.1: trava/destrava itens (o cadeado da Mochila)
@@ -366,14 +372,14 @@ export function travar(estado, ids, travado) {
 
 export function obsoletos(estado) {
   const itens = estado.mochila.filter(item => livre(item) && ehObsoleto(estado, item));
-  return { itens, pedras: itens.reduce((soma, i) => soma + pedrasAoDesmanchar(i), 0) };
+  return { itens, pedras: itens.reduce((soma, i) => somar(soma, pedrasAoDesmanchar(i)), 0) };
 }
 
 export function desmancharObsoletos(estado) {
   const { itens, pedras } = obsoletos(estado);
   const ids = new Set(itens.map(i => i.id));
   estado.mochila = estado.mochila.filter(i => !ids.has(i.id));
-  estado.pedras += pedras;
+  creditar(estado, 'pedras', pedras);
   return { pedras, quantidade: itens.length };
 }
 
@@ -383,10 +389,10 @@ export function desmancharAteTier(estado, indiceMaximo) {
   let quantidade = 0;
   estado.mochila = estado.mochila.filter((item) => {
     if (indiceRaridade(item) > indiceMaximo || !livre(item)) return true;
-    pedras += pedrasAoDesmanchar(item);
+    pedras = somar(pedras, pedrasAoDesmanchar(item));
     quantidade += 1;
     return false;
   });
-  estado.pedras += pedras;
+  creditar(estado, 'pedras', pedras);
   return { pedras, quantidade };
 }

@@ -3,11 +3,18 @@
 //
 // Formato de um item salvo:
 //   { id, slot: 'elmo', raridade: 'raro', grau: 3, fase: 13, nivel: 2, investido: 40,
-//     atributos: { vitalidade: 120, defesa: 80, critico: 1.2 } }
-// "atributos" guarda os valores do nível 0; cada nível soma +5% (config).
+//     atributos: { vitalidade: 9.2, defesa: 13.8, critico: 1.2 } }
+// "fase" = fase GLOBAL onde caiu (v0.32.0: 1152 em diante = Normal, Difícil...) — define o patamar do item.
+// "atributos" guarda os valores do nível 0; cada nível soma +5% (config). v0.32.0: TODOS são porcentagem:
+// Ataque, Vitalidade, Defesa e Velocidade multiplicam o cultivo (+13,8% Defesa); os outros somam pontos de %.
 // =============================================================
 import { CONFIG } from '../config.js';
 import { SLOTS, RARIDADES } from '../dados/equipamentos.js';
+import { fatorDePedras } from './escala.js';
+import { somar, multiplicar, arredondarParaCima } from '../numeros.js';
+// v0.33.0: % de Ataque/Vitalidade/Defesa/Velocidade dos itens, custos, Pedras e investimento são NÚMEROS GRANDES
+// (js/numeros.js) — no Infinito passam de 1e308. Crítico, Dano Crítico, Esquiva e Cultivo (%) são números comuns.
+const ATRIBUTOS_GRANDES = new Set(['ataque', 'vitalidade', 'defesa', 'velocidade']);
 
 const EQ = CONFIG.equipamentos;
 
@@ -47,7 +54,9 @@ function valorDoItem(item) {
 export function atributosDoItem(item) {
   const multiplicador = 1 + EQ.bonusPorNivel * item.nivel;
   const resultado = {};
-  for (const chave in item.atributos) resultado[chave] = item.atributos[chave] * multiplicador;
+  for (const chave in item.atributos) {
+    resultado[chave] = ATRIBUTOS_GRANDES.has(chave) ? multiplicar(item.atributos[chave], multiplicador) : item.atributos[chave] * multiplicador;
+  }
   return resultado;
 }
 
@@ -58,7 +67,7 @@ export function bonusEquipamentos(estado) {
     const item = estado.equipados[slot];
     if (!item) continue;
     const atributos = atributosDoItem(item);
-    for (const chave in atributos) total[chave] += atributos[chave];
+    for (const chave in atributos) total[chave] = ATRIBUTOS_GRANDES.has(chave) ? somar(total[chave], atributos[chave]) : total[chave] + atributos[chave];
   }
   return total;
 }
@@ -68,14 +77,15 @@ export function nivelMaximo(item) {
   return RARIDADE_POR_ID[item.raridade].nivelMaximo;
 }
 
+// v0.32.0: a escala de Pedras do patamar do item (escala.js: 1,05 por fase no Fácil, mais suave depois)
 export function custoMelhoria(item) {
   const valor = valorDoItem(item);
-  return Math.ceil(EQ.custoMelhoriaBase * valor * Math.pow(CONFIG.combate.crescimentoPedras, item.fase) *
-    Math.pow(EQ.crescimentoCustoMelhoria, item.nivel));
+  return arredondarParaCima(multiplicar(fatorDePedras(item.fase),
+    EQ.custoMelhoriaBase * valor * Math.pow(EQ.crescimentoCustoMelhoria, item.nivel)));
 }
 
 export function pedrasAoDesmanchar(item) {
   const valor = valorDoItem(item);
-  const base = EQ.pedrasAoDesmancharBase * valor * Math.pow(CONFIG.combate.crescimentoPedras, item.fase);
-  return Math.ceil(base + item.investido * EQ.devolucaoAoDesmanchar);
+  const base = multiplicar(fatorDePedras(item.fase), EQ.pedrasAoDesmancharBase * valor);
+  return arredondarParaCima(somar(base, multiplicar(item.investido, EQ.devolucaoAoDesmanchar)));
 }

@@ -9,15 +9,16 @@
 //    recompensa (10 Núcleos aleatórios + 1 item Ancestral), e o boss
 //    volta 10 minutos depois.
 //  - A força dele acompanha VOCÊ: tem os atributos do chefe do mapa mais longe
-//    que você já alcançou, em QUALQUER vida (v0.30.2, dono: não enfraquece ao reencarnar).
+//    que você já alcançou (v0.30.2, dono). v0.32.0: mapa GLOBAL — segue para a Normal, Difícil... e o Infinito.
 //
 // Por enquanto o boss é LOCAL (cada jogador tem o seu, salvo em estado.boss).
 // Tudo que seria "global" (vida, edição, rank, hora de voltar) fica junto em
 // estado.boss para poder ir para um servidor no futuro.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { FASES, chefeDoMapa } from './mundo.js';
-import { calcularAtributos, dano as calcularDano, golpesPorTurno } from './atributos.js';
+import { obterFase, chefeDoMapa, mapaDaFronteira } from './mundo.js';
+import { calcularAtributos, dano as calcularDano, golpesPorTurno, normalizarLuta } from './atributos.js';
+import { somar, subtrair, multiplicar, razao, minimo, maiorOuIgual, menorOuIgual } from '../numeros.js';
 import { classeDe } from './personagem.js';
 import { gerarItem, receberItem } from './equipamentos.js';
 import { TIPOS_DE_NUCLEO } from './nucleos.js';
@@ -64,12 +65,11 @@ export function podeLutar(estado, agora = Date.now()) {
   return bossLiberado(estado) && bossPresente(estado, agora) && !luta && segundosDeDescanso(estado, agora) <= 0;
 }
 
-// Atributos do boss: os do chefe do MAPA MAIS LONGE que o personagem já alcançou, contando todas as vidas
-// (v0.30.2, dono). Antes era o último chefe vencido NESTA vida — ao reencarnar o boss voltava a ficar fraco.
+// Atributos do boss: os do chefe do MAPA MAIS LONGE que o personagem já alcançou (v0.30.2, dono).
 // "Alcançou" = o mapa já abriu (o chefe do anterior foi vencido); no começo do jogo, o Mapa 1.
+// v0.32.0: mapa global, sem parar no Mapa 96 (a migração já levou o recorde das vidas antigas para a fronteira).
 export function atributosDoBoss(estado) {
-  const melhorFase = Math.max(estado.combate.fasesConcluidas, estado.reencarnacao.melhorFaseDeTodas ?? -1);
-  const mapa = Math.min(Math.floor((melhorFase + 1) / CONFIG.combate.fasesPorMapa), FASES[FASES.length - 1].mapa);
+  const mapa = mapaDaFronteira(estado);
   const chefe = chefeDoMapa(mapa);
   const inimigo = chefe.inimigoSemSelo ?? chefe.inimigo;   // v0.26.0: sem o Selo do Mundo Primordial
   return {
@@ -77,10 +77,11 @@ export function atributosDoBoss(estado) {
     forma: 'humano',
     mapa,
     faseDoChefe: chefe.indice,
-    vidaTotal: inimigo.vida * B.vidaEmChefes,
-    ataque: inimigo.ataque * B.ataque,
-    defesa: inimigo.defesa * B.defesa,
-    velocidade: inimigo.velocidade * B.velocidade,
+    // números grandes (js/numeros.js); a luta normaliza (comecarLuta)
+    vidaTotal: multiplicar(inimigo.vida, B.vidaEmChefes),
+    ataque: multiplicar(inimigo.ataque, B.ataque),
+    defesa: multiplicar(inimigo.defesa, B.defesa),
+    velocidade: multiplicar(inimigo.velocidade, B.velocidade),
   };
 }
 
@@ -113,15 +114,20 @@ export function lutaDoBoss() {
 export function comecarLuta(estado) {
   if (!podeLutar(estado)) return false;
   // v0.26.0: o boss do evento fica fora do Mundo Primordial — luta sem o Selo (e usa o chefe "sem selo")
-  const jogador = calcularAtributos(estado, { selado: false });
-  const boss = atributosDoBoss(estado);
+  // v0.33.0: herói e boss normalizados pela mesma escala (números comuns na luta; atributos.normalizarLuta)
+  const real = atributosDoBoss(estado);
+  const n = normalizarLuta(calcularAtributos(estado, { selado: false }),
+    { vida: real.vidaTotal, ataque: real.ataque, defesa: real.defesa, velocidade: real.velocidade });
+  const jogador = n.jogador;
+  const boss = { ...real, vidaTotal: n.inimigo.vida, ataque: n.inimigo.ataque, defesa: n.inimigo.defesa, velocidade: n.inimigo.velocidade };
   luta = {
+    ...n.escalas,
     jogador,
     boss,
     classe: classeDe(estado),
     golpesDoJogador: 0,
     vidaJogador: jogador.vitalidade,
-    jogadorPrimeiro: jogador.velocidade >= boss.velocidade,
+    jogadorPrimeiro: maiorOuIgual(jogador.velocidade, boss.velocidade),
     relogio: 0,
     tempo: 0,
     turno: 0,
@@ -160,7 +166,7 @@ function passo(estado, dt, aoEvento) {
         if (atacante === 'jogador') golpeDoJogador(estado, aoEvento, golpes > 1 ? { duplo: true, segundo: g === 1 } : {});
         else golpeDoBoss(aoEvento);
         if (estado.boss.vida <= 0) { derrotarBoss(estado, aoEvento); return; }
-        if (luta.vidaJogador <= 0) { terminar(estado, aoEvento, 'derrotado'); return; }
+        if (menorOuIgual(luta.vidaJogador, 0)) { terminar(estado, aoEvento, 'derrotado'); return; }
       }
     }
     regenerar(aoEvento);
@@ -174,21 +180,22 @@ function golpeDoJogador(estado, aoEvento, extra) {
   const especial = luta.classe.especial;
   luta.golpesDoJogador += 1;
   const tecnica = tecnicaDoGolpe(luta);
-  const defesa = boss.defesa * (1 - penetracaoDoGolpe(luta, tecnica));
+  const defesa = multiplicar(boss.defesa, 1 - penetracaoDoGolpe(luta, tecnica));
   const critico = Math.random() * 100 < jogador.critico;
   let dano = calcularDano(jogador.ataque, defesa);
-  if (critico) dano *= jogador.danoCritico / 100;
-  if (tecnica) dano *= tecnica.multiplicador;
+  if (critico) dano = multiplicar(dano, jogador.danoCritico / 100);
+  if (tecnica) dano = multiplicar(dano, tecnica.multiplicador);
   const elemental = !!especial.explosaoACada && luta.golpesDoJogador % especial.explosaoACada === 0;
-  if (elemental) dano *= 1 + especial.bonusExplosao;
+  if (elemental) dano = multiplicar(dano, 1 + especial.bonusExplosao);
 
-  const fracao = Math.min(estado.boss.vida, dano / boss.vidaTotal);
+  // A vida/rank do evento são frações limitadas a [0,1], não magnitudes de HP.
+  const fracao = Math.min(estado.boss.vida, razao(dano, boss.vidaTotal));
   estado.boss.vida -= fracao;
   if (estado.boss.vida < 1e-12) estado.boss.vida = 0;
   luta.danoNestaLuta += fracao;
   somarDano(estado, fracao);
   const efeitos = tecnica ? efeitosDaTecnica(luta, tecnica) : null;
-  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', dano, critico, elemental, tecnica, efeitos, numero: luta.golpesDoJogador, ...extra });
+  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'inimigo', escala: luta.escala, dano, critico, elemental, tecnica, efeitos, numero: luta.golpesDoJogador, ...extra });
 }
 
 // Ciclo de B.especial.aCada turnos: golpes normais, 1 turno concentrando e a técnica especial
@@ -208,17 +215,17 @@ function golpeDoBoss(aoEvento) {
     if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', esquiva: true, especial });
     return;
   }
-  const dano = calcularDano(luta.boss.ataque, luta.jogador.defesa) * (especial ? B.especial.multiplicador : 1);
-  luta.vidaJogador -= dano;
-  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', dano, especial });
+  const dano = multiplicar(calcularDano(luta.boss.ataque, luta.jogador.defesa), especial ? B.especial.multiplicador : 1);
+  luta.vidaJogador = subtrair(luta.vidaJogador, dano);
+  if (aoEvento) aoEvento({ tipo: 'golpe', alvo: 'jogador', escala: luta.escala, dano, especial });
 }
 
 function regenerar(aoEvento) {
   const porcentagem = luta.classe.especial.regeneracao;
-  if (!porcentagem || luta.vidaJogador >= luta.jogador.vitalidade) return;
-  const cura = Math.min(luta.jogador.vitalidade * porcentagem, luta.jogador.vitalidade - luta.vidaJogador);
-  luta.vidaJogador += cura;
-  if (aoEvento) aoEvento({ tipo: 'cura', alvo: 'jogador', valor: cura });
+  if (!porcentagem || maiorOuIgual(luta.vidaJogador, luta.jogador.vitalidade)) return;
+  const cura = minimo(multiplicar(luta.jogador.vitalidade, porcentagem), subtrair(luta.jogador.vitalidade, luta.vidaJogador));
+  luta.vidaJogador = somar(luta.vidaJogador, cura);
+  if (aoEvento) aoEvento({ tipo: 'cura', alvo: 'jogador', escala: luta.escala, valor: cura });
 }
 
 function terminar(estado, aoEvento, motivo) {
@@ -245,11 +252,9 @@ function derrotarBoss(estado, aoEvento) {
 // Sorteia 10 Núcleos (chances proporcionais às do drop normal) e 1 item Ancestral
 // Fase base do item Ancestral: o chefe do mapa SEGUINTE ao mapa em que você está.
 // v0.14.2 (dono): antes era o mapa do último chefe vencido; agora o item é melhor que um
-// Lendário de 1 mapa à frente (sem passar do último mapa do jogo).
+// Lendário de 1 mapa à frente. v0.32.0: mapa global (Normal, Difícil... sem parar no Mapa 96).
 export function faseDoItemAncestral(estado) {
-  const faseAtual = Math.min(estado.combate.fasesConcluidas + 1, FASES.length - 1);
-  const mapa = Math.min(FASES[faseAtual].mapa + 1, FASES[FASES.length - 1].mapa);
-  return chefeDoMapa(mapa).indice;
+  return chefeDoMapa(mapaDaFronteira(estado) + 1).indice;
 }
 
 export function darRecompensa(estado) {
@@ -262,7 +267,7 @@ export function darRecompensa(estado) {
     estado.nucleos[tipo.id] = (estado.nucleos[tipo.id] ?? 0) + 1;
   }
   // Item Ancestral do mapa seguinte ao seu (base = chefe daquele mapa), espaço aleatório, ★1
-  const item = gerarItem(estado, FASES[faseDoItemAncestral(estado)], null, RARIDADE_POR_ID.ancestral, 1);
+  const item = gerarItem(estado, obterFase(faseDoItemAncestral(estado)), null, RARIDADE_POR_ID.ancestral, 1);
   const destino = receberItem(estado, item);
   return { nucleos, item: destino };
 }

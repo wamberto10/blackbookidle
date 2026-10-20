@@ -8,6 +8,7 @@
 import { APARENCIAS, APARENCIA_PADRAO } from '../dados/aparencias.js';
 import { PERSONAGEM_PADRAO } from '../dados/classes.js';
 import { SPRITES } from '../dados/sprites.js';
+import { mapaVisual } from '../sistemas/escala.js';
 
 const TAMANHO = 32;          // cada quadro tem 32×32 pixels
 const TEMPO_DO_QUADRO = 550; // milissegundos entre um quadro e outro
@@ -154,10 +155,11 @@ export function icone(nome, classe = '') {
   return `<img class="icone-px ${classe}" src="img/icones/${nome}.png" alt="">`;
 }
 
-// Ícone de cada mapa: mapa01.png ... mapa12.png
+// Ícone de cada mapa: mapa01.png ... mapa96.png. v0.32.0: recebe o mapa GLOBAL — a Normal em diante usa o
+// ícone do mapa desenhado (global % 96), nunca um arquivo mapa97.png que não existe
 export function iconeDoMapa(indiceMapa, classe = '') {
   // v0.18.0: mapa novo ainda sem ícone de IA → mostra o ícone da aba Mapa (em vez de imagem quebrada)
-  return `<img class="icone-px ${classe}" src="img/icones/mapa${String(indiceMapa + 1).padStart(2, '0')}.png" alt=""` +
+  return `<img class="icone-px ${classe}" src="img/icones/mapa${String(mapaVisual(indiceMapa) + 1).padStart(2, '0')}.png" alt=""` +
     ` onerror="this.onerror=null;this.src='img/icones/aba_mapa.png'">`;
 }
 

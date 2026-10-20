@@ -11,14 +11,18 @@ import * as EQ from './sistemas/equipamentos.js';
 import * as NU from './sistemas/nucleos.js';
 import * as BOSS from './sistemas/boss.js';
 import * as CA from './sistemas/cultivoAvancado.js';
+import * as MOTOR from './sistemas/motor.js';
+import { somar, subtrair, maior } from './numeros.js';
+import { instantaneo, variacaoDesde, saldo } from './saldos.js';
 import { mostrarGolpeBoss, animarDerrotaDoBoss } from './ui/telaBoss.js';
 import { acabouDeLiberar } from './sistemas/desbloqueios.js';
 import { criarPersonagem, precisaCriarPersonagem, precisaTrocarClasse } from './sistemas/personagem.js';
 import { CLASSE_POR_ID } from './dados/classes.js';
 import { montarTelaCriacao, abrirCriacao } from './ui/telaCriacao.js';
 import { nomeDoItem, RARIDADE_POR_ID, indiceRaridade } from './sistemas/itens.js';
-import { MUNDO, MAPAS, FASES, faseLiberada, textoDoInicioDaVida } from './sistemas/mundo.js';
-import { salvar, carregar, apagarSave, segundosOffline } from './save.js';
+import { MUNDO, MAPAS, faseLiberada, mapaDesenhado } from './sistemas/mundo.js';
+import { DIFICULDADES, MAPAS_POR_DIFICULDADE, FASES_POR_MAPA, dificuldadeDoMapa, nomeDaPosicao } from './sistemas/escala.js';
+import { salvar as gravarEstado, carregar, apagarSave, segundosOffline } from './save.js';
 import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar, mostrarGanhoMeditacao } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
 import { focarMapaDaFase } from './ui/telaMapa.js';
@@ -33,46 +37,118 @@ let estado = carregar() ?? criarEstadoInicial();
 // apagada, outro app aberto...): nos dois casos o tempo passa pela mesma simulação,
 // com o limite de CONFIG.maxHorasOffline, e o resumo aparece quando você volta.
 let resumoFora = null;
+let processandoFora = false;
+let falhaNoProgresso = false;
+// Salvar usa o instante real já aceito pelo relógio, inclusive durante uma recuperação em lotes.
+// Assim, fechar entre dois lotes não descarta o tempo real gasto processando a recuperação.
+let ultimoTick = Date.now();
+function salvar(estadoAtual) { return gravarEstado(estadoAtual, ultimoTick); }
 
-const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0,
-  desmanchados: 0, mesclas: 0, pedrasMochila: 0, mundoConcluido: null });   // v0.26.0: Mochila automática
+const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, essencia: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0,
+  desmanchados: 0, mesclas: 0, pedrasMochila: 0, mundoConcluido: null, dificuldade: null,   // v0.26.0: Mochila automática
+  // v0.33.0: o que a automação fez enquanto você estava fora
+  auto: { blackbook: 0, essenciaGasta: 0, arranjo: 0, pedrasArranjo: 0, itens: 0, pedrasItens: 0, nucleos: 0, pilulas: 0, retomadas: 0, fonteEstelar: false } });
+
+// v0.33.0: soma um relatório da automação (sistemas/automacao.js) no resumo
+function somarAutomacao(total, r) {
+  total.blackbook += r.blackbook;
+  total.essenciaGasta = somar(total.essenciaGasta, r.essenciaGasta);
+  total.arranjo += r.arranjo;
+  total.pedrasArranjo = somar(total.pedrasArranjo, r.pedrasArranjo);
+  total.itens += r.itens;
+  total.pedrasItens = somar(total.pedrasItens, r.pedrasItens);
+  total.nucleos += r.nucleos;
+  total.pilulas += r.pilulas.acumulo + r.pilulas.fluxo + r.pilulas.rompimento;
+  if (r.retomou) total.retomadas += 1;
+  if (r.fonteEstelar) total.fonteEstelar = true;
+}
+
+// Texto curto do que a automação fez (resumo offline e registro do combate)
+function textoDaAutomacao(t) {
+  const partes = [];
+  if (t.blackbook) partes.push(`+${t.blackbook} nível(is) no Black Book (−${formatarNumero(t.essenciaGasta)} ✨)`);
+  if (t.arranjo) partes.push(`Arranjo +${t.arranjo} (−${formatarNumero(t.pedrasArranjo)} 💎)`);
+  if (t.itens) partes.push(`${t.itens} melhoria(s) de item (−${formatarNumero(t.pedrasItens)} 💎)`);
+  if (t.nucleos) partes.push(`${t.nucleos} núcleo(s) usados`);
+  const pilulas = typeof t.pilulas === 'number' ? t.pilulas : t.pilulas.acumulo + t.pilulas.fluxo + t.pilulas.rompimento;
+  if (pilulas) partes.push(`${pilulas} pílula(s) usada(s)`);
+  if (t.fonteEstelar) partes.push('Fonte Estelar refinada');
+  const retomadas = t.retomadas ?? (t.retomou ? 1 : 0);
+  if (retomadas) partes.push(`avanço do combate religado ${retomadas}×`);
+  return partes.join(', ');
+}
 
 // Aba escondida, mas o navegador continua rodando o jogo (computador: outra aba aberta).
 // O tempo passa normalmente, só que sem animações nem avisos — tudo vai para o resumo
 // que aparece quando você volta. (v0.9.8: antes o resumo só contava pausas de mais de
 // 10 s, então 10 minutos em outra aba apareciam como "53 segundos".)
-function passoEscondido(segundos) {
+// v0.33.0: o tempo passa pelo motor (sistemas/motor.js) — os mesmos passos de 1 s do jogo aberto, com a automação
+// nos mesmos instantes
+async function passoEscondido(segundos, aoLote) {
   const r = resumoFora ??= novoResumo();
   BOSS.abandonarLuta(estado, aoEventoBoss);   // a luta contra o boss só acontece com o jogo na tela
-  const antes = estado.cultivoTotal;
-  P.atualizar(estado, segundos, (evento) => { r.estagios += 1; aoAvancarNivel(evento); });
-  C.atualizarCombate(estado, segundos, (evento) => {
-    if (evento.tipo !== 'vitoria') return;
-    r.vitorias += 1;
-    r.pedras += evento.pedras;
-    if (evento.primeira) r.fasesNovas += 1;
-    if (evento.drop) r.itens += 1;
-    if (evento.drop?.auto) {
-      r.desmanchados += evento.drop.auto.desmanchados;
-      r.mesclas += evento.drop.auto.mesclas;
-      r.pedrasMochila += evento.drop.auto.pedras;
-    }
-    if (evento.nucleo) r.nucleos += 1;
-    if (evento.pilula) r.pilulas += 1;
-    if (evento.ultimaDoMundo) r.mundoConcluido = evento.ultimaDoMundo;
-  });
-  r.cultivo += estado.cultivoTotal - antes;
-  r.tempo += segundos;
+  const antes = instantaneo(estado, 'cultivoTotal');
+  const passos = await MOTOR.avancarEmLotes(estado, segundos, {
+    aoAvancarNivel: () => { r.estagios += 1; },
+    aoAutomacao: (relatorio) => somarAutomacao(r.auto, relatorio),
+    aoEventoCombate: (evento) => {
+      if (evento.tipo !== 'vitoria') return;
+      r.vitorias += 1;
+      r.pedras = somar(r.pedras, evento.pedras);
+      r.essencia = somar(r.essencia, evento.essencia.total);   // v0.32.0: Essência do farm e das 1ªs conquistas
+      if (evento.primeira) r.fasesNovas += 1;
+      if (evento.drop) r.itens += 1;
+      if (evento.drop?.auto) {
+        r.desmanchados += evento.drop.auto.desmanchados;
+        r.mesclas += evento.drop.auto.mesclas;
+        r.pedrasMochila = somar(r.pedrasMochila, evento.drop.auto.pedras);
+      }
+      if (evento.nucleo) r.nucleos += 1;
+      if (evento.pilula) r.pilulas += 1;
+      if (evento.ultimaDoMundo) r.mundoConcluido = evento.ultimaDoMundo;
+      const liberou = dificuldadeLiberadaPor(evento);
+      if (liberou) r.dificuldade = liberou;
+    },
+  }, { aoLote });
+  r.cultivo = somar(r.cultivo, variacaoDesde(estado, 'cultivoTotal', antes));
+  r.tempo += passos * MOTOR.PASSO;
 }
 
-// Tempo fora (jogo fechado ou congelado em segundo plano): simula cultivo e lutas JUNTOS,
-// em pedaços de até 5 s — igual ao jogo aberto. (v0.9.17: antes simulava todo o cultivo e
-// depois todas as lutas; os estágios ganhos com o cultivo das lutas não aumentavam a
-// produção durante o tempo fora, e o offline rendia 5–15% menos que jogando.)
-function somarTempoFora(segundos) {
-  const tempo = Math.min(segundos, CONFIG.maxHorasOffline * 3600);
-  const pedacos = Math.min(20000, Math.max(1, Math.ceil(tempo / 5)));
-  for (let i = 0; i < pedacos; i++) passoEscondido(tempo / pedacos);
+// Tempo fora (jogo fechado ou congelado em segundo plano): cultivo, lutas e automação juntos, passo a passo
+// (v0.33.0: pelo motor, em passos de 1 s — igual ao jogo aberto). No máximo CONFIG.maxHorasOffline.
+async function somarTempoFora(segundos, exibirResumo = true) {
+  if (processandoFora) return;
+  processandoFora = true;
+  const trabalhoLongo = segundos + estado.relogio.resto >= 250;
+  const jogo = document.getElementById('jogo');
+  const bloqueadoAntes = jogo?.inert ?? false;
+  const aviso = document.createElement('div');
+  aviso.id = 'progresso-offline';
+  aviso.className = 'offline-processando';
+  aviso.setAttribute('role', 'status');
+  aviso.innerHTML = '<div><strong>Recuperando sua jornada…</strong><progress max="100" value="0" aria-label="Progresso recuperado"></progress><span>0%</span></div>';
+  if (jogo && trabalhoLongo) jogo.inert = true;
+  if (trabalhoLongo) document.body.appendChild(aviso);
+  try {
+    await passoEscondido(Math.min(Math.max(0, segundos), CONFIG.maxHorasOffline * 3600), ({ passos, total }) => {
+      const porcentagem = total ? Math.round(passos / total * 100) : 100;
+      aviso.querySelector('progress').value = porcentagem;
+      aviso.querySelector('span').textContent = `${porcentagem}%`;
+    });
+    if (exibirResumo && !document.hidden) mostrarResumoFora();
+    if (exibirResumo) salvar(estado);
+    atualizarInterface(estado);
+  } catch (erro) {
+    // O restante aceito continua em relogio.resto e será retomado no próximo carregamento.
+    salvar(estado);
+    falhaNoProgresso = true;
+    console.error('Não foi possível concluir o progresso offline.', erro);
+    mostrarModal('Progresso interrompido', 'O progresso já concluído foi salvo. Reabra o jogo para continuar o tempo restante.');
+  } finally {
+    aviso.remove();
+    if (jogo) jogo.inert = bloqueadoAntes;
+    processandoFora = false;
+  }
 }
 
 function mostrarResumoFora() {
@@ -83,24 +159,40 @@ function mostrarResumoFora() {
   let texto = `Você esteve fora por ${formatarTempo(r.tempo)}: +${formatarNumero(r.cultivo)} Cultivo`;
   if (r.estagios > 0) texto += `, ${r.estagios} estágio(s)`;
   if (r.vitorias > 0) texto += `, ${r.vitorias} vitória(s), +${formatarNumero(r.pedras)} 💎`;
+  if (maior(r.essencia, 0)) texto += `, +${formatarNumero(r.essencia)} ✨ Essência`;
   if (r.fasesNovas > 0) texto += `, ${r.fasesNovas} fase(s) nova(s)`;
   if (r.itens > 0) texto += `, ${r.itens} item(ns)`;
   // v0.26.0: o que a Mochila automática fez
   if (r.desmanchados > 0) texto += ` (${r.desmanchados} obsoleto(s) desmanchado(s)`;
   if (r.mesclas > 0) texto += `${r.desmanchados > 0 ? ',' : ' ('} ${r.mesclas} mescla(s)`;
-  if (r.desmanchados > 0 || r.mesclas > 0) texto += `${r.pedrasMochila > 0 ? `: +${formatarNumero(r.pedrasMochila)} 💎` : ''})`;
+  if (r.desmanchados > 0 || r.mesclas > 0) texto += `${maior(r.pedrasMochila, 0) ? `: +${formatarNumero(r.pedrasMochila)} 💎` : ''})`;
   if (r.nucleos > 0) texto += `, ${r.nucleos} núcleo(s)`;
   if (r.pilulas > 0) texto += `, ${r.pilulas} pílula(s)`;
+  const auto = textoDaAutomacao(r.auto);   // v0.33.0
+  if (auto) texto += `. 🤖 Automação: ${auto}`;
   mostrarMensagem(texto + '.');
-  if (r.mundoConcluido) mostrarModal(r.mundoConcluido.final.titulo, r.mundoConcluido.final.texto);
+  if (r.dificuldade) avisarDificuldade(r.dificuldade);
+  else if (r.mundoConcluido) mostrarModal(r.mundoConcluido.final.titulo, r.mundoConcluido.final.texto);
   salvar(estado);
 }
 
-const tempoFora = segundosOffline(estado);
-if (tempoFora > 5) {
-  somarTempoFora(tempoFora);
-  mostrarResumoFora();
+// v0.32.0: venceu pela 1ª vez o chefe final de uma dificuldade → a próxima (Normal, Difícil...) foi liberada
+function dificuldadeLiberadaPor(evento) {
+  const fase = evento.fase;
+  if (!evento.primeira || fase.numero !== FASES_POR_MAPA || (fase.mapa + 1) % MAPAS_POR_DIFICULDADE !== 0) return null;
+  const proxima = dificuldadeDoMapa(fase.mapa + 1);
+  return proxima > fase.dificuldade ? DIFICULDADES[proxima] : null;
 }
+
+function avisarDificuldade(dificuldade) {
+  mostrarModal(`🔓 Dificuldade ${dificuldade.nome} liberada!`,
+    `Você venceu o último chefe da dificuldade anterior. A jornada continua na ${dificuldade.nome}: ` +
+    'os mesmos 96 mapas, agora com inimigos, recompensas e itens de um patamar acima.\n\n' +
+    'Seu cultivo, seus equipamentos, as Pedras, a Essência e o Black Book continuam com você — nada recomeça. ' +
+    'Os mapas anteriores continuam abertos para farmar (escolha a dificuldade na aba Mapa).');
+}
+
+const tempoFora = segundosOffline(estado, ultimoTick);
 
 // ---- O que fazer quando o jogador avança no cultivo (manual ou automático) ----
 function aoAvancarNivel(evento) {
@@ -121,6 +213,8 @@ function aoAvancarNivel(evento) {
     mostrarMensagem(`⚡ ROMPIMENTO! ${evento.nome}. ${evento.reino.desbloqueio}${batismo}`);
   } else if (evento.marco) {
     mostrarMensagem(`✨ ${evento.nome}. ${evento.marco}`);
+  } else if (evento.maestria) {
+    mostrarMensagem(`🌳 ${evento.nome}! Ataque, Vitalidade e Defesa ×${CONFIG.maestria.ganhoAtributos}.`);
   } else {
     mostrarMensagem(`⬆️ ${evento.nome}`);
   }
@@ -161,7 +255,7 @@ function aoEventoCombate(evento) {
     const fase = evento.fase;
     registrarBatalha(
       `${evento.suprimido ? `💨 ${fase.inimigo.nome} fugiu (Supressão de Alma)` : `✔ ${fase.inimigo.nome} derrotado`}: ` +
-      `+${formatarNumero(evento.cultivo)} Cultivo, +${formatarNumero(evento.pedras)} 💎` +
+      `+${formatarNumero(evento.cultivo)} Cultivo, +${formatarNumero(evento.pedras)} 💎, +${formatarNumero(evento.essencia.total)} ✨` +
       (evento.primeira ? ' (primeira vitória!)' : ''), 'vitoria');
     if (evento.drop) avisarDrop(evento.drop);
     if (evento.nucleo) {
@@ -178,26 +272,29 @@ function aoEventoCombate(evento) {
 
     // Chefe de mapa vencido pela primeira vez
     if (evento.primeira && fase.numero === 12) {
-      let texto = `🏆 Mapa concluído: ${MAPAS[fase.mapa].nome}!`;
+      let texto = `🏆 Mapa concluído: ${mapaDesenhado(fase.mapa).nome} (${nomeDaPosicao(fase.mapa)})!`;
       const requisito = P.requisitoDoRompimento(estado);
       // v0.21.0 (dono): dizia "Agora você pode romper" mesmo quando ainda faltava Cultivo
       if (requisito && requisito.mapa === fase.mapa + 1) {
-        const falta = P.custoParaAvancar(estado) - estado.cultivo;
-        const acao = requisito.rompimento ? 'romper o reino' : 'avançar de estágio';   // v0.22.0: trava de estágio
-        texto += falta > 0
-          ? ` Gargalo superado! Faltam ${formatarNumero(Math.ceil(falta))} de Cultivo para ${acao}.`
+        const falta = subtrair(P.custoParaAvancar(estado), saldo(estado, 'cultivo'));
+        const acao = requisito.rompimento ? 'romper o reino' : requisito.maestria ? 'subir a Maestria' : 'avançar de estágio';   // v0.22.0: trava de estágio
+        texto += maior(falta, 0)
+          ? ` Gargalo superado! Faltam ${formatarNumero(falta)} de Cultivo para ${acao}.`
           : ` Agora você pode ${acao}!`;
       }
       mostrarMensagem(texto);
       salvar(estado);
     }
-    if (evento.ultimaDoMundo) mostrarModal(evento.ultimaDoMundo.final.titulo, evento.ultimaDoMundo.final.texto);
+    const dificuldade = dificuldadeLiberadaPor(evento);
+    if (dificuldade) avisarDificuldade(dificuldade);
+    else if (evento.ultimaDoMundo) mostrarModal(evento.ultimaDoMundo.final.titulo, evento.ultimaDoMundo.final.texto);
   } else if (evento.tipo === 'derrota') {
     animarDerrota();
     const motivo = evento.motivo === 'tempo' ? 'o tempo acabou' : 'você foi derrotado';
     registrarBatalha(`✖ Contra ${evento.fase.inimigo.nome}: ${motivo}.`, 'derrota');
+    // v0.32.0: sem reencarnação — a força vem do cultivo, dos itens e do Black Book (Essência do farm)
     mostrarMensagem('Derrota! Você recuou uma fase e o avanço automático foi desligado. ' +
-      'Fortaleça-se, ou reencarne no 📕 Black Book para ganhar Essência da Alma.');
+      'Farme as fases anteriores para juntar Essência, Pedras e itens; fortaleça o cultivo, os equipamentos e o 📕 Black Book.');
   }
 }
 
@@ -262,7 +359,7 @@ montarInterface({
   aoMelhorarItem: (id) => { if (EQ.melhorar(estado, id)) depoisDeMexerNosItens(); },
   aoDesmancharItem: (id) => {
     const pedras = EQ.desmanchar(estado, id);
-    if (pedras > 0) {
+    if (maior(pedras, 0)) {
       mostrarMensagem(`Item desmanchado: +${formatarNumero(pedras)} 💎`);
       depoisDeMexerNosItens();
     }
@@ -297,7 +394,7 @@ montarInterface({
     const partes = [];
     if (r.desmanchados > 0) partes.push(`${r.desmanchados} obsoleto(s) desmanchado(s)`);
     if (r.mesclas > 0) partes.push(`${r.mesclas} mescla(s)`);
-    if (partes.length) mostrarMensagem(`🎒 Mochila organizada: ${partes.join(', ')}${r.pedras > 0 ? ` (+${formatarNumero(r.pedras)} 💎)` : ''}.`);
+    if (partes.length) mostrarMensagem(`🎒 Mochila organizada: ${partes.join(', ')}${maior(r.pedras, 0) ? ` (+${formatarNumero(r.pedras)} 💎)` : ''}.`);
     depoisDeMexerNosItens();
   },
 
@@ -317,7 +414,7 @@ montarInterface({
     const melhores = resultado.melhores
       .sort((a, b) => (indiceRaridade(b) * 10 + (b.grau ?? 1)) - (indiceRaridade(a) * 10 + (a.grau ?? 1)))
       .slice(0, 3).map(nomeDoItem).join(', ');
-    const pedras = resultado.pedras > 0 ? ` (+${formatarNumero(resultado.pedras)} 💎 devolvidas)` : '';
+    const pedras = maior(resultado.pedras, 0) ? ` (+${formatarNumero(resultado.pedras)} 💎 devolvidas)` : '';
     mostrarMensagem(`✨ ${resultado.mesclas} mescla(s) feitas! Melhores: ${melhores}${pedras}`);
     depoisDeMexerNosItens();
   },
@@ -350,29 +447,6 @@ montarInterface({
       atualizarInterface(estado);
     }
   },
-  aoReencarnar: () => {
-    const ganho = BB.essenciaAoReencarnar(estado);
-    if (!BB.podeReencarnar(estado)) return;
-    const certeza = confirm(
-      'Reencarnar agora?\n\n' +
-      `Você vai recomeçar em ${textoDoInicioDaVida(estado)}, perdendo o Cultivo, o reino ` +
-      'e as fases desta vida.\n\n' +
-      `Você recebe: ${formatarNumero(ganho)} Essência da Alma ✨\n` +
-      'A Essência, as melhorias do Black Book, seus equipamentos, a mochila e as Pedras Espirituais ficam para sempre.');
-    if (!certeza) return;
-
-    BOSS.abandonarLuta(estado, aoEventoBoss);   // a luta do boss é da vida antiga
-    const resultado = BB.reencarnar(estado);
-    estado = resultado.estado;
-    C.reiniciarLuta();
-    salvar(estado);
-    animarRompimento();
-    atualizarInterface(estado);
-    mostrarModal('📕 Reencarnação',
-      'Sua vida anterior chegou ao fim, mas sua alma se lembra de tudo.\n\n' +
-      `O Black Book recebeu ${formatarNumero(resultado.ganho)} de Essência da Alma ✨.\n\n` +
-      'Use-a nas melhorias permanentes do Black Book e vá mais longe nesta nova vida.');
-  },
   aoLutarBoss: () => {
     if (BOSS.comecarLuta(estado)) atualizarInterface(estado);
   },
@@ -403,17 +477,17 @@ montarInterface({
       mostrarMensagem(`🔯 Arranjo de Reunião de Energia nível ${estado.arranjo}: Cultivo +${Math.round(P.bonusDoArranjo(estado) * 100)}%.`);
       salvar(estado);
     } else {
-      mostrarMensagem(`Faltam ${formatarNumero(Math.ceil(CA.custoDoArranjo(estado) - estado.pedras))} Pedras Espirituais para melhorar o Arranjo.`);
+      mostrarMensagem(`Faltam ${formatarNumero(subtrair(CA.custoDoArranjo(estado), saldo(estado, 'pedras')))} Pedras Espirituais para melhorar o Arranjo.`);
     }
     atualizarInterface(estado);
   },
   aoRefinarFonteEstelar: () => {
     if (CA.refinarFonteEstelar(estado)) {
       animarRompimento();
-      mostrarMensagem(`🌟 Você refinou a Fonte Estelar e se tornou um Mestre Estelar! Cultivo +${Math.round(CONFIG.mestreEstelar.bonusCultivo * 100)}% nesta vida.`);
+      mostrarMensagem(`🌟 Você refinou a Fonte Estelar e se tornou um Mestre Estelar! Cultivo +${Math.round(CONFIG.mestreEstelar.bonusCultivo * 100)}% para sempre.`);
       salvar(estado);
     } else if (!estado.mestreEstelar) {
-      mostrarMensagem(`Faltam ${formatarNumero(Math.ceil(CA.custoDaFonteEstelar(estado) - estado.cultivo))} de Cultivo para refinar a Fonte Estelar.`);
+      mostrarMensagem(`Faltam ${formatarNumero(subtrair(CA.custoDaFonteEstelar(estado), saldo(estado, 'cultivo')))} de Cultivo para refinar a Fonte Estelar.`);
     }
     atualizarInterface(estado);
   },
@@ -433,8 +507,7 @@ montarInterface({
     const requisito = P.requisitoDoRompimento(estado);
     if (!requisito || requisito.cumprido) return;
     const chefe = requisito.mapa * CONFIG.combate.fasesPorMapa - 1;
-    if (chefe >= FASES.length) { mostrarMensagem(motivoParaNaoAvancar(estado)); return; }
-    const alvo = faseLiberada(estado, chefe) ? chefe : Math.min(estado.combate.fasesConcluidas + 1, FASES.length - 1);
+    const alvo = faseLiberada(estado, chefe) ? chefe : estado.combate.fasesConcluidas + 1;
     focarMapaDaFase(alvo);
     trocarAba('mapa');
     atualizarInterface(estado);
@@ -455,12 +528,19 @@ montarInterface({
     C.irParaFase(estado, estado.combate.faseAtual + direcao);
     atualizarInterface(estado);
   },
+  // v0.33.0: tela de Opções → gerenciamento automático (muda e salva na hora)
+  aoConfigurarAutomacao: (mudar) => {
+    mudar(estado);
+    salvar(estado);
+    atualizarInterface(estado);
+  },
   aoMudarAutoCombate: (ligado) => {
     estado.combate.autoAvancar = ligado;
+    estado.combate.derrota = null;   // v0.33.0: escolha do jogador — a retomada automática não desfaz
   },
   aoSalvar: () => {
-    salvar(estado);
-    mostrarMensagem('Jogo salvo!');
+    const resultado = salvar(estado);
+    mostrarMensagem(resultado?.sucesso === false ? 'Não foi possível salvar. Sua cópia original foi preservada; verifique o espaço disponível no navegador.' : 'Jogo salvo!');
   },
   aoResetar: () => {
     if (!confirm('Tem certeza? Todo o progresso será apagado.')) return;
@@ -491,7 +571,17 @@ if (precisaCriarPersonagem(estado)) abrirCriacao();
 else if (precisaTrocarClasse(estado)) abrirCriacao(estado.personagem);   // v0.27.2: a classe dele saiu do jogo
 
 // 4) Loop do jogo: roda 10 vezes por segundo, usando o tempo REAL que passou
-let ultimoTick = Date.now();
+
+// v0.33.0: com o jogo na tela, o que a automação faz vai para o registro do combate (sem encher de avisos)
+function aoAutomacaoNaTela(relatorio) {
+  const texto = textoDaAutomacao(relatorio);
+  if (texto) registrarBatalha(`🤖 ${texto}`, 'automacao');
+  salvar(estado);
+}
+const OUVINTES_NA_TELA = {
+  aoAvancarNivel, aoEventoCombate, aoAutomacao: aoAutomacaoNaTela,
+  combatePausado: () => Boolean(BOSS.lutaDoBoss()),
+};
 
 // Mais que isso entre um passo e outro = o jogo ficou parado (segundo plano no celular,
 // aba escondida...). Esse tempo vai para a simulação offline em vez do passo normal
@@ -499,19 +589,18 @@ let ultimoTick = Date.now();
 const PAUSA_LONGA = 10;
 let cliquesVip = 0;   // fração de clique acumulada do Meditar automático do VIP
 
-setInterval(() => {
+setInterval(async () => {
+  if (processandoFora || falhaNoProgresso) return;
   const agora = Date.now();
   const segundos = (agora - ultimoTick) / 1000;
   ultimoTick = agora;
 
   if (segundos > PAUSA_LONGA) {
-    somarTempoFora(segundos);
-    if (!document.hidden) mostrarResumoFora();
-    atualizarInterface(estado);
+    await somarTempoFora(segundos);
     return;
   }
   if (document.hidden) {
-    passoEscondido(segundos);
+    await somarTempoFora(segundos, false);
     return;
   }
 
@@ -521,13 +610,13 @@ setInterval(() => {
     while (cliquesVip >= 1) { P.meditar(estado); cliquesVip -= 1; }
   }
 
-  P.atualizar(estado, segundos, aoAvancarNivel);
   // Evento de Boss: enquanto você luta contra o boss, o combate das fases fica em pausa
   BOSS.atualizarBoss(estado);
   // "Atacar sozinho" (tela do boss): começa a luta assim que puder — com o jogo aberto na tela
   if (estado.opcoes.bossAuto && BOSS.podeLutar(estado)) BOSS.comecarLuta(estado);
   if (BOSS.lutaDoBoss()) BOSS.atualizarLutaDoBoss(estado, segundos, aoEventoBoss);
-  else C.atualizarCombate(estado, segundos, aoEventoCombate);
+  // v0.33.0: cultivo, combate das fases e automação andam pelo motor, em passos de 1 s de jogo
+  MOTOR.avancar(estado, segundos, OUVINTES_NA_TELA);
   atualizarInterface(estado);
 }, 100);
 
@@ -535,7 +624,7 @@ setInterval(() => {
 setInterval(() => salvar(estado), CONFIG.intervaloAutoSave);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) salvar(estado);
-  else mostrarResumoFora();   // voltou para o jogo: mostra o que aconteceu enquanto estava em segundo plano
+  else if (!processandoFora) mostrarResumoFora();
 });
 window.addEventListener('beforeunload', () => salvar(estado));
 
@@ -543,6 +632,38 @@ window.addEventListener('beforeunload', () => salvar(estado));
 iniciarSite(() => salvar(estado));
 
 atualizarInterface(estado);
+
+// v0.32.0: aviso único da progressão contínua (save convertido em save.js)
+if (estado.avisoProgressao) {
+  const m = estado.avisoProgressao;
+  delete estado.avisoProgressao;
+  salvar(estado);
+  const recorde = m.recorde >= 0 ? `Sua maior conquista foi preservada: ${nomeDaPosicao(Math.floor(m.recorde / FASES_POR_MAPA))}, ` +
+    `fase ${m.recorde % FASES_POR_MAPA + 1}. ` : '';
+  mostrarModal('🌌 A jornada agora é contínua!',
+    'A reencarnação que recomeçava o cultivo e os mapas saiu do jogo. Agora você nunca volta ao começo:\n\n' +
+    '• Depois do Fácil vêm Normal, Difícil, Inferno e Infinito, com os mesmos mapas num patamar acima.\n' +
+    '• Depois do Fruto do Universo, o cultivo continua na Maestria da Criação.\n' +
+    '• A Essência da Alma vem das conquistas inéditas e do farm (tempo de luta vencida).\n' +
+    '• Os equipamentos multiplicam o seu cultivo (Ataque, Vitalidade, Defesa e Velocidade em %), sem o limite do reino.\n\n' +
+    recorde + (m.nivelDepois > m.nivelAntes ? 'Seu cultivo subiu para o nível comprovado nas vidas anteriores. ' : '') +
+    'Itens, Pedras, Essência, Black Book, Núcleos, Arranjo e pílulas foram mantidos' +
+    (m.reencarnacoes > 0 ? `; o registro das suas ${m.reencarnacoes} reencarnações fica no Black Book como legado.` : '.'));
+}
+
+// v0.33.0: valores inválidos encontrados no save (não somem em silêncio: aviso + cópia de segurança)
+if (estado.avisoNumeros) {
+  const lista = estado.avisoNumeros.map(i => `• ${i.campo}: ${i.valor}`).join('\n');
+  const copia = estado.avisoNumerosCopia;
+  delete estado.avisoNumeros;
+  delete estado.avisoNumerosCopia;
+  salvar(estado);
+  mostrarModal('⚠️ Valores inválidos no save',
+    'Alguns números do seu save estavam inválidos e foram trocados por 0:\n\n' + lista +
+    (copia?.sucesso
+      ? `\n\nO save imediatamente anterior ao reparo foi preservado no navegador (${copia.chave}).`
+      : '\n\nNão foi possível criar a cópia de segurança. O save original permanece intacto e não será substituído enquanto a cópia não puder ser criada. Verifique o espaço disponível no navegador.'));
+}
 
 // v0.14.0: aviso único da reformulação do Black Book (save convertido em save.js)
 if (estado.essenciaDevolvidaBB !== undefined) {
@@ -554,4 +675,10 @@ if (estado.essenciaDevolvidaBB !== undefined) {
     '(cada nível vale sempre o mesmo, em vez de valer cada vez menos).\n\n' +
     'Seus níveis foram convertidos sem perder força' +
     (devolvida > 0 ? ` e o Black Book devolveu ${formatarNumero(devolvida)} ✨ Essência da Alma — use nas melhorias!` : '.'));
+}
+
+// Só começa depois de montar controles/avisos. Um lote interrompido já está no relógio salvo;
+// o novo tempo fora é acrescentado uma vez, limitado separadamente ao teto offline.
+if (tempoFora > 5 || estado.relogio.resto >= MOTOR.PASSO) {
+  await somarTempoFora(tempoFora);
 }

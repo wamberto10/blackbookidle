@@ -8,14 +8,16 @@
 // - Embaixo: ações, automáticos, filtros e a grade. Itens iguais (mesmo tipo, tier e grau ★) ficam EMPILHADOS.
 // =============================================================
 import { CONFIG } from '../config.js';
-import { SLOTS, RARIDADES, ATRIBUTOS_EM_PORCENTO } from '../dados/equipamentos.js';
+import { SLOTS, RARIDADES } from '../dados/equipamentos.js';
 import { liberado } from '../sistemas/desbloqueios.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
 import * as P from '../sistemas/progressao.js';
-import { FASES, MAPAS } from '../sistemas/mundo.js';
+import { obterFase, mapaDesenhado } from '../sistemas/mundo.js';
+import { mapaDaFase, nomeDaPosicao } from '../sistemas/escala.js';
 import * as EQ from '../sistemas/equipamentos.js';
 import { RARIDADE_POR_ID, SLOT_POR_ID, nomeDoItem, atributosDoItem, nivelMaximo, custoMelhoria, pedrasAoDesmanchar, grauDe, estrelas, proximoDaMescla } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
+import { subtrair, multiplicar, maior, maiorOuIgual, menorOuIgual, maximo, ehZero } from '../numeros.js';
 import { personagemDe, classeDe } from '../sistemas/personagem.js';
 import { desenharPersonagem, icone, iconeEquipamento } from './sprite.js';
 
@@ -59,7 +61,8 @@ let reinoDesenhado = null;
 
 const imgUi = (nome, classe = '') => `<img class="${classe}" src="img/ui/${nome}.png" alt="">`;
 const iconeItem = (slotId, classe = 'item-ic') => imgUi(`item_${slotId}`, classe);
-const nivelDoItem = (item) => FASES[item.fase].mapa + 1;   // "Nv." do item = mapa onde caiu (define a força dele)
+// "Nv." do item = mapa GLOBAL onde caiu (define a força dele). v0.32.0: Nv.97 = Normal, Mapa 1
+const nivelDoItem = (item) => mapaDaFase(item.fase) + 1;
 const estrelasImg = (grau) => Array.from({ length: CONFIG.equipamentos.graus },
   (_, i) => imgUi(i < grau ? 'icone_estrela' : 'icone_estrela_vazia', 'moch-estrela')).join('');
 
@@ -100,14 +103,19 @@ function selecionar(alvo) {
   }
 }
 
-// Valor de um atributo como texto: "1.250" ou "12.0%"
+// Valor de um atributo como texto: "12.0%" ou "1.85K%".
+// v0.32.0: todos os atributos dos itens são %: Ataque, HP, Defesa e Velocidade multiplicam o cultivo
+// (+30% ATQ = Ataque do cultivo × 1,3, somando os itens); Crítico, Dano Crítico, Esquiva e Cultivo somam pontos.
 function textoDoValor(atributo, valor) {
-  return ATRIBUTOS_EM_PORCENTO.includes(atributo) ? `${valor.toFixed(1)}%` : formatarNumero(valor);
+  return typeof valor === 'number' && valor < 1000 ? `${valor.toFixed(1)}%` : `${formatarNumero(valor)}%`;
 }
 
+const absoluto = (valor) => maior(valor, 0) ? valor : multiplicar(valor, -1);
+const diferencaPequena = (diferenca, novo, atual) =>
+  menorOuIgual(absoluto(diferenca), multiplicar(maximo(absoluto(novo), absoluto(atual)), 0.005));
+
 function ondeCaiu(item) {
-  const fase = FASES[item.fase];
-  return `Mapa ${fase.mapa + 1}, Fase ${fase.numero}`;
+  return `${nomeDaPosicao(mapaDaFase(item.fase))}, Fase ${obterFase(item.fase).numero}`;
 }
 
 export function atualizarTelaMochila(estado) {
@@ -153,7 +161,7 @@ export function atualizarTelaMochila(estado) {
     estado.mochila.map(i => `${i.id}${i.travado ? 't' : ''}`).join(','),
     JSON.stringify(selecionado),
     vestidoAberto ? EQ.podeMelhorar(estado, vestidoAberto) : '',
-    FASES[estado.combate.faseAtual].mapa,
+    mapaDaFase(estado.combate.faseAtual),
     filtroTipo,
     `${estado.opcoes.mesclaAuto}${estado.opcoes.desmancheAuto}`,   // v0.26.1: mostra/esconde os botões manuais
   ].join('|');
@@ -171,7 +179,7 @@ export function atualizarTelaMochila(estado) {
   $('desmanchar-obsoletos').disabled = quantosObsoletos === 0;
 
   // Espaços com algo melhor guardado na mochila (bolinha vermelha no espaço, como no mockup)
-  const melhoraveis = new Set(EQ.pilhas(estado).filter(p => EQ.ganhoDePoder(estado, EQ.melhorDaPilha(estado, p)) > 0).map(p => p.slot));
+  const melhoraveis = new Set(EQ.pilhas(estado).filter(p => maior(EQ.ganhoDePoder(estado, EQ.melhorDaPilha(estado, p)), 0)).map(p => p.slot));
   desenharEspacos(estado, melhoraveis);
   desenharDetalhe(estado);
   desenharFiltros(estado);
@@ -181,7 +189,7 @@ export function atualizarTelaMochila(estado) {
 
 // ---- Os 10 espaços ao redor do personagem ----
 function desenharEspacos(estado, melhoraveis) {
-  const mapaAtual = FASES[estado.combate.faseAtual].mapa;
+  const mapaAtual = mapaDaFase(estado.combate.faseAtual);
   for (const lado of ['esquerda', 'direita']) {
     const coluna = $(`slots-${lado}`);
     coluna.innerHTML = '';
@@ -250,8 +258,8 @@ function desenharGrade(estado) {
     if (mesmoSelecionado(selecionado, alvo)) botao.classList.add('selecionado');
     // Seta verde: o melhor item da pilha já aumentaria o Poder Total; amarela: aumentaria se melhorado ao máximo
     const melhorItem = EQ.melhorDaPilha(estado, pilha);
-    const melhor = EQ.ganhoDePoder(estado, melhorItem) > 0;
-    const potencial = !melhor && EQ.ganhoNoNivelMaximo(estado, melhorItem) > 0;
+    const melhor = maior(EQ.ganhoDePoder(estado, melhorItem), 0);
+    const potencial = !melhor && maior(EQ.ganhoNoNivelMaximo(estado, melhorItem), 0);
     const podeMesclar = EQ.podeMesclar(estado, pilha.slot, pilha.raridade, pilha.grau);
     botao.innerHTML = `${iconeItem(pilha.slot)}
       ${pilha.itens.length > 1 ? `<span class="moch-qtd${podeMesclar ? ' pode-mesclar' : ''}">×${pilha.itens.length}</span>` : ''}
@@ -280,12 +288,13 @@ function listaDeAtributos(item, vestido) {
     const v = novo[a] ?? 0;
     let dif = '';
     if (atual) {
-      const d = v - (atual[a] ?? 0);
-      const quase = Math.abs(d) <= Math.max(Math.abs(v), Math.abs(atual[a] ?? 0)) * 0.005;
-      if (!quase) dif = `<em class="${d > 0 ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${d > 0 ? '' : ' baixo'}`)}(${d > 0 ? '+' : '−'}${textoDoValor(a, Math.abs(d))})</em>`;
+      const d = subtrair(v, atual[a] ?? 0);
+      const quase = diferencaPequena(d, v, atual[a] ?? 0);
+      const melhora = maior(d, 0);
+      if (!quase) dif = `<em class="${melhora ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${melhora ? '' : ' baixo'}`)}(${melhora ? '+' : '−'}${textoDoValor(a, absoluto(d))})</em>`;
     }
     const info = ATRIB[a] ?? { nome: a, icone: 'icone_atq' };
-    return `<li>${imgUi(info.icone, 'moch-stat-ic')}<span>${info.nome}</span><b>${v ? textoDoValor(a, v) : '—'}</b>${dif}</li>`;
+    return `<li>${imgUi(info.icone, 'moch-stat-ic')}<span>${info.nome}</span><b>${!ehZero(v) ? textoDoValor(a, v) : '—'}</b>${dif}</li>`;
   }).join('');
 }
 
@@ -293,20 +302,21 @@ function listaDeAtributos(item, vestido) {
 function caixaDeComparacao(estado, item, vestido, ganho) {
   if (!vestido) {
     return `<div class="moch-comparacao ui-caixa-comparacao"><div class="moch-comp-titulo">Espaço vazio:</div>
-      <div class="melhor">Poder Total +${formatarNumero(Math.abs(ganho))}</div></div>`;
+      <div class="melhor">Poder Total +${formatarNumero(absoluto(ganho))}</div></div>`;
   }
   const novo = atributosDoItem(item);
   const atual = atributosDoItem(vestido);
   const linhas = [...new Set([...Object.keys(novo), ...Object.keys(atual)])].map((a) => {
-    const d = (novo[a] ?? 0) - (atual[a] ?? 0);
-    if (Math.abs(d) <= Math.max(Math.abs(novo[a] ?? 0), Math.abs(atual[a] ?? 0)) * 0.005) return '';
+    const d = subtrair(novo[a] ?? 0, atual[a] ?? 0);
+    if (diferencaPequena(d, novo[a] ?? 0, atual[a] ?? 0)) return '';
+    const melhora = maior(d, 0);
     const info = ATRIB[a] ?? { nome: a };
-    return `<li class="${d > 0 ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${d > 0 ? '' : ' baixo'}`)}<span>${info.nome}</span><b>${d > 0 ? '+' : '−'}${textoDoValor(a, Math.abs(d))}</b></li>`;
+    return `<li class="${melhora ? 'melhor' : 'pior'}">${imgUi('icone_seta_verde', `moch-seta-p${melhora ? '' : ' baixo'}`)}<span>${info.nome}</span><b>${melhora ? '+' : '−'}${textoDoValor(a, absoluto(d))}</b></li>`;
   }).join('');
   return `<div class="moch-comparacao ui-caixa-comparacao">
       <div class="moch-comp-titulo">Comparado com atual:</div>
       <ul>${linhas || '<li class="igual"><span>Atributos iguais</span></li>'}</ul>
-      <div class="moch-comp-poder ${ganho > 0 ? 'melhor' : 'pior'}">Poder ${ganho >= 0 ? '+' : '−'}${formatarNumero(Math.abs(ganho))}</div>
+      <div class="moch-comp-poder ${maior(ganho, 0) ? 'melhor' : 'pior'}">Poder ${maiorOuIgual(ganho, 0) ? '+' : '−'}${formatarNumero(absoluto(ganho))}</div>
     </div>`;
 }
 
@@ -411,7 +421,7 @@ function desenharDetalhePilha(estado, caixa) {
 
 // ---- Chances de drop no mapa atual ----
 function desenharChances(estado) {
-  const indiceMapa = FASES[estado.combate.faseAtual].mapa;
+  const indiceMapa = mapaDaFase(estado.combate.faseAtual);
   const pesos = EQ.pesosDosTiers(indiceMapa, 'comum', estado.vip);
   const total = pesos.reduce((a, b) => a + b, 0);
   const tiers = RARIDADES.map((r, i) => r.exclusivo ? '' :
@@ -419,7 +429,7 @@ function desenharChances(estado) {
   const espacos = EQ.espacosLiberados(indiceMapa).map(s => iconeEquipamento(s.id, 'comum', 'icone-chance')).join('');
   const proximo = SLOTS.filter(s => s.mapaMinimo > indiceMapa + 1).sort((a, b) => a.mapaMinimo - b.mapaMinimo)[0];
   $('chances-drop').innerHTML = `
-    <p class="pequeno">${MAPAS[indiceMapa].nome} — quando um item cai, o tier é sorteado assim
+    <p class="pequeno">${mapaDesenhado(indiceMapa).nome} (${nomeDaPosicao(indiceMapa)}) — quando um item cai, o tier é sorteado assim
       (chefes aumentam as chances de Raro ou melhor):</p>
     <div class="lista-chances">${tiers}</div>
     <p class="pequeno">Grau ao cair: ${CONFIG.equipamentos.pesosGrauAoCair

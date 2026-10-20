@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#0a080e">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/ui-kit.css">
+  <link rel="stylesheet" href="css/offline.css">
 </head>
 <body>
   <!-- ===== Moldura do jogo: tudo fica dentro dela (tamanho de celular em pé) ===== -->
@@ -99,7 +100,7 @@
     <div class="painel-corpo">
       <!-- v0.29.0 (layout novo — docs/layout/layout_personagem.png): herói da vitrine sobre o cenário (só da cintura
            para cima: as pernas ficam por trás da placa, das orbes e da faixa do Poder), 10 espaços de equipamento,
-           Ofensa / Poder Total / Resistência, atributos, Núcleo de Cultivo, Vida / Reencarnações e o aviso do limite -->
+           Ofensa / Poder Total / Resistência, atributos, Núcleo de Cultivo, Vida / Jornada (v0.32.0) e o aviso do Selo -->
       <div class="pers-nova">
         <div class="pers-palco">
           <img class="pers-vitrine" id="pers-vitrine" alt="">
@@ -135,10 +136,10 @@
           <div class="pers-info">
             <span class="pers-info-item"><img src="img/ui/icone_hp.png" alt=""><span>Vida</span><b id="pers-vida">0</b>
               <button class="botao-icone pers-ajuda" data-ajuda="vida"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
-            <span class="pers-info-item"><img src="img/icones/reencarnacao.png" alt=""><span>Reencarnações</span><b id="pers-vidas">0</b>
-              <button class="botao-icone pers-ajuda" data-ajuda="reencarnacoes"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
+            <span class="pers-info-item"><img src="img/icones/aba_mapa.png" alt=""><span>Jornada</span><b id="pers-vidas">—</b>
+              <button class="botao-icone pers-ajuda" data-ajuda="jornada"><img src="img/ui/botao_ajuda.png" alt="?"></button></span>
           </div>
-          <!-- v0.22.1: aparece quando o reino ainda não libera toda a força dos equipamentos (ou no Selo) -->
+          <!-- v0.26.0: aparece no Selo do Mundo Primordial (v0.32.0: o limite do equipamento pelo reino saiu) -->
           <div class="pers-aviso escondido" id="pers-limite">
             <img src="img/ui/icone_aviso.png" alt=""><span id="pers-limite-texto"></span>
             <button class="ui ui-botao-escuro" id="pers-avancar">Avançar de Reino</button>
@@ -149,7 +150,8 @@
           <summary>Dicas</summary>
           <p class="pequeno"><img class="icone-px" src="img/icones/nucleo_medio.png" alt=""> Núcleos caem dos inimigos a partir do Mapa 3. Toque no <b>+</b> de um cartão do Núcleo de Cultivo para usar: cada ponto dá +1% para sempre.</p>
           <p class="pequeno"><img class="icone-px" src="img/icones/atr_velocidade.png" alt=""> Velocidade decide quem ataca primeiro em cada turno. Com o <b>dobro</b> da Velocidade do inimigo, você ataca <b>2 vezes</b> por turno (⚡×2 no combate).</p>
-          <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma ganha ao reencarnar.</p>
+          <p class="pequeno"><img class="icone-px" src="img/icones/livro.png" alt=""> Melhore seus atributos para sempre no <b>Black Book</b>, com a Essência da Alma das conquistas inéditas e do farm.</p>
+          <p class="pequeno"><img class="icone-px" src="img/icones/aba_mochila.png" alt=""> Os equipamentos <b>multiplicam</b> o seu cultivo: +30% de Ataque num item = Ataque do cultivo × 1,3 (somando os itens). Subir de estágio continua valendo +25%.</p>
         </details>
       </div>
     </div>
@@ -180,7 +182,7 @@
         </div>
         <label class="chave-auto cult-chave">
           <input type="checkbox" id="opcao-auto"><span class="chave"></span>
-          <span>Avançar estágios sozinho <small>(rompimentos de reino são manuais; com o <img class="icone-px" src="img/icones/vip.png" alt=""> VIP, automáticos)</small></span>
+          <span>Avançar estágios sozinho <small>(configure rompimentos de reino e Maestria em Opções; o VIP já rompe reinos automaticamente)</small></span>
         </label>
       </div>
 
@@ -377,8 +379,9 @@
             <img class="icone-px" src="img/ui/icone_seta_verde.png" alt="▲"> = melhor que o vestido · <img class="icone-px moch-seta-amarela" src="img/ui/icone_seta_verde.png" alt="⬆"> = fica melhor se melhorar até o nível máximo · <img class="icone-px" src="img/ui/botao_cadeado.png" alt="🔒"> = travado (não é desmanchado nem mesclado).<br>
             <b>Automático</b>: a cada item que cai, a mochila veste o melhor, mescla as pilhas de 3 iguais e desmancha os
             obsoletos (os que nem no ★5 e no nível máximo ganhariam do vestido) — cada um tem sua chave lá em cima.<br>
-            <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos.
-            Ao reencarnar, os equipamentos, a mochila e as Pedras ficam.
+            <img class="icone-px" src="img/icones/pedra.png" alt=""> Pedras Espirituais melhoram o nível dos itens vestidos (+5% por nível).<br>
+            Ataque, Vitalidade, Defesa e Velocidade dos itens são <b>%</b> que multiplicam o seu cultivo. <b>Nv.</b> = mapa global
+            onde o item caiu (Nv.97 = Normal, Mapa 1): quanto mais longe, mais forte.
           </p>
         </details>
         <details class="recolhivel">
@@ -444,66 +447,58 @@
       <div class="bloqueado" id="blackbook-bloqueado">
         <img class="icone-px" src="img/icones/livro.png" alt=""> O Black Book será liberado quando você completar o <b>Corpo Temperado</b>.
       </div>
-      <!-- v0.27.1 (layout novo — docs/layout/layout_blackbook.png): banner, reencarnação, melhorias e registro das vidas -->
+      <!-- v0.27.1 (layout novo — docs/layout/layout_blackbook.png): banner, cartões, melhorias e registro das vidas
+           v0.32.0: a reencarnação saiu — os cartões mostram a Essência e a jornada; as vidas antigas ficam como legado -->
       <div id="blackbook-conteudo" class="escondido bb-novo">
         <div class="bb-banner">
           <div class="bb-banner-texto">
             <h2 class="bb-titulo">Black Book</h2>
-            <p class="bb-lema">Múltiplas vidas, um único caminho.</p>
+            <p class="bb-lema">Uma jornada sem fim, um único caminho.</p>
             <p class="bb-lema2">O que se perde é passageiro.<br>O que se grava aqui é eterno.</p>
           </div>
         </div>
 
-        <div class="bb-secao"><span>Reencarnação</span></div>
+        <div class="bb-secao"><span>Essência da Alma</span></div>
         <div class="bb-reenc">
           <div class="bb-card bb-essencia" id="bb-essencia-card">
-            <div class="bb-card-titulo">Essência da Alma obtida</div>
+            <div class="bb-card-titulo">Essência guardada</div>
             <div class="bb-essencia-valor"><img src="img/ui/icone_essencia.png" alt=""><b id="bb-ganho">0</b></div>
-            <p>Quanto mais longe você for, mais Essência da Alma receberá.</p>
+            <p>Ganhe nas conquistas inéditas e no farm. Gaste nas melhorias abaixo.</p>
           </div>
-          <div class="bb-card bb-lista bb-lista-vermelha" title="Também acabam: Reclusão, Iluminação, Pílula do Fluxo e a Fonte Estelar refinada">
-            <div class="bb-lista-titulo"><img src="img/ui/bb_icone_reiniciar.png" alt=""> O que reinicia</div>
+          <div class="bb-card bb-lista bb-lista-verde bb-ganhos" title="A Essência do farm é paga por segundo de luta VENCIDA, no patamar da fase. Derrota não paga.">
+            <div class="bb-lista-titulo"><img src="img/ui/bb_icone_lotus.png" alt=""> Como ganhar Essência</div>
             <ul>
-              <li><img src="img/ui/icone_cultivo.png" alt=""><span>Cultivo</span><em>Zera</em></li>
-              <li><img src="img/ui/aba_icone_cultivo.png" alt=""><span>Reino</span><em>Volta</em></li>
-              <li><img src="img/ui/bb_icone_estrela.png" alt=""><span>Fases</span><em>Recomeçam</em></li>
-              <li><img src="img/icones/iluminacao.png" alt=""><span>Efeitos</span><em>Acabam</em></li>
+              <li title="1ª vitória em cada fase — uma vez só, para sempre"><img src="img/ui/bb_icone_estrela.png" alt=""><span>Conquistas inéditas</span><em id="bb-ess-conquistas">0</em></li>
+              <li title="Lutando na fase atual (fase mais fácil rende menos)"><img src="img/ui/aba_icone_combate.png" alt=""><span>Farm na fase atual</span><em id="bb-ess-farm">0</em></li>
+              <li title="VIP: o farm rende o dobro"><img src="img/ui/icone_essencia.png" alt=""><span>VIP no farm</span><em id="bb-ess-vip">—</em></li>
             </ul>
           </div>
-          <div class="bb-card bb-lista bb-lista-verde" title="Também ficam: o personagem, a Essência da Alma, o Arranjo, o VIP e o Evento de Boss">
-            <div class="bb-lista-titulo"><img src="img/ui/bb_icone_permanece.png" alt=""> O que permanece</div>
-            <ul>
-              <li><img src="img/ui/bb_icone_lotus.png" alt=""><span>Melhorias do Black Book</span></li>
-              <li><img src="img/ui/aba_icone_mochila.png" alt=""><span>Itens da Mochila</span></li>
-              <li><img src="img/ui/icone_pedras.png" alt=""><span>Pedras Espirituais</span></li>
-              <li><img src="img/ui/bb_icone_nucleo.png" alt=""><span>Núcleos e Pílulas</span></li>
-            </ul>
-          </div>
-          <div class="bb-card bb-proxima">
-            <div class="bb-card-titulo">Próxima vida começa em</div>
+          <div class="bb-card bb-proxima bb-jornada">
+            <div class="bb-card-titulo">Sua jornada</div>
             <img src="img/ui/bb_icone_montanha.png" alt="">
             <div class="bb-proxima-texto"><b id="bb-inicio-mundo"></b><small id="bb-inicio"></small></div>
           </div>
-          <div class="bb-reencarnar-caixa">
-            <button id="bb-reencarnar" class="ui ui-botao-reencarnar">Reencarnar</button>
-            <p class="bb-aviso" id="bb-aviso"></p>
-          </div>
+          <p class="bb-continua">Nada recomeça: cultivo, reino, mapas, itens, Pedras e Black Book seguem com você.
+            Mais longe = mais Essência por segundo de farm.</p>
         </div>
 
         <div class="bb-secao"><span>Melhorias permanentes</span></div>
         <div class="bb-melhorias" id="lista-melhorias"></div>
 
-        <div class="bb-secao"><span>Registro das vidas</span></div>
-        <div class="bb-vidas" id="bb-vidas"></div>
-        <p class="bb-resumo">Reencarnações: <b id="bb-vezes">0</b> · Mais longe nesta vida: <b id="bb-fase"></b> ·
-          Em todas: <b id="bb-recorde"></b> · Essência ganha no total: <b id="bb-total">0</b></p>
+        <p class="bb-resumo">Mais longe: <b id="bb-recorde"></b> · Essência ganha no total: <b id="bb-total">0</b></p>
+        <div id="bb-legado" class="escondido">
+          <div class="bb-secao"><span>Vidas antigas (legado)</span></div>
+          <div class="bb-vidas" id="bb-vidas"></div>
+          <p class="bb-resumo">Reencarnações antes da jornada contínua: <b id="bb-vezes">0</b></p>
+        </div>
 
         <details class="recolhivel"><summary>ⓘ Como funciona</summary>
-          <p class="pequeno">"Toda vida chega ao fim. O que a alma conquistou, o Black Book guarda."<br>
-            Quando uma fase ficar difícil demais, reencarne: o Cultivo, o reino e as fases recomeçam, mas você recebe
-            Essência da Alma de acordo com a fase mais distante que venceu. O personagem, os equipamentos, a mochila,
-            as Pedras, os Núcleos, as Pílulas, o Arranjo e o VIP ficam. Use a Essência aqui para fortalecer seus
-            atributos para sempre e chegar mais longe na próxima vida.</p>
+          <p class="pequeno">"O que a alma conquistou, o Black Book guarda."<br>
+            A jornada é contínua: Fácil → Normal → Difícil → Inferno → Infinito, sem voltar ao começo.
+            A Essência da Alma vem de duas fontes: cada <b>fase vencida pela 1ª vez</b> (uma vez só, para sempre) e o
+            <b>farm</b> — cada segundo de luta vencida rende Essência do patamar daquela fase (fases mais fáceis rendem
+            menos; derrota não rende). Preso numa fase difícil? Farme a anterior, a mais difícil que você vence com
+            folga: ela paga quase o mesmo por segundo. Use a Essência aqui para fortalecer seus atributos para sempre.</p>
         </details>
       </div>
     </div>
@@ -521,6 +516,8 @@
         </div>
         <p class="pequeno dica">Versão <span id="versao"></span></p>
       </div>
+      <!-- v0.33.0: gerenciamento automático (js/ui/telaAutomacao.js) -->
+      <div class="cartao auto-cartao" id="automacao"></div>
     </div>
   </section>
 

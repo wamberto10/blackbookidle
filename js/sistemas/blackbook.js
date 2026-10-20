@@ -1,16 +1,18 @@
 // =============================================================
-// sistemas/blackbook.js — REENCARNAÇÃO E MELHORIAS PERMANENTES
+// sistemas/blackbook.js — ESSÊNCIA DA ALMA E MELHORIAS PERMANENTES
 //
-// Ciclo:
-//  1. O jogador avança até travar numa fase difícil demais.
-//  2. Reencarna: TODO o progresso da vida recomeça do zero
-//     (Cultivo, reino, estágio, fases do mapa e Pedras Espirituais).
-//  3. Recebe Essência da Alma conforme quantas fases venceu nesta vida.
-//  4. Gasta a Essência no Black Book em melhorias de atributos que
-//     NUNCA são perdidas, e chega mais longe na próxima vida.
+// v0.32.0 (progressão contínua): a reencarnação que recomeçava cultivo e campanha saiu do jogo.
+// A Essência da Alma agora vem DURANTE a jornada:
+//  - 1ª conquista de cada fase (uma vez só, para sempre — trocar de dificuldade ou repetir não renova);
+//  - farm: cada segundo de luta VENCIDA rende Essência do patamar daquela fase (fase mais fácil = menos).
+// Ela é gasta no Black Book em melhorias de atributos que NUNCA são perdidas.
+// As reencarnações de saves antigos ficam guardadas como legado (estado.reencarnacao.historico).
 // =============================================================
 import { CONFIG } from '../config.js';
-import { criarEstadoInicial } from '../estado.js';
+import { lnEssenciaDeReferencia, dificuldadeDoMapa, mapaDaFase, FASES_DO_FACIL } from './escala.js';
+import { somar, subtrair, multiplicar, potencia, deLn, arredondarParaCima } from '../numeros.js';
+import { creditar, debitar } from '../saldos.js';   // v0.33.2: toda compra é cobrada, todo ganho conta
+// v0.33.0: Essência, custos e os multiplicadores compostos (1,05^nível) são NÚMEROS GRANDES (js/numeros.js)
 
 const BB = CONFIG.blackbook;
 
@@ -19,6 +21,10 @@ function buscar(id) {
 }
 
 // ---- Melhorias ----
+export function existe(id) {
+  return Boolean(buscar(id));
+}
+
 export function nivelMelhoria(estado, id) {
   return estado.blackbook[id] ?? 0;
 }
@@ -30,9 +36,9 @@ export function custoMelhoria(estado, id) {
 // Custo do nível n → n+1. v0.17.2: com "custoAlto", a partir do nível X o custo cresce mais devagar.
 export function custoNoNivel(melhoria, n) {
   const alto = melhoria.custoAlto;
-  if (!alto || n <= alto.aPartirDoNivel) return Math.ceil(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, n));
-  return Math.ceil(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, alto.aPartirDoNivel)
-    * Math.pow(alto.crescimento, n - alto.aPartirDoNivel));
+  if (!alto || n <= alto.aPartirDoNivel) return arredondarParaCima(multiplicar(melhoria.custoBase, potencia(melhoria.crescimentoCusto, n)));
+  return arredondarParaCima(multiplicar(melhoria.custoBase * Math.pow(melhoria.crescimentoCusto, alto.aPartirDoNivel),
+    potencia(alto.crescimento, n - alto.aPartirDoNivel)));
 }
 
 // true = a melhoria já está no nível máximo (só algumas têm limite)
@@ -44,8 +50,7 @@ export function noMaximo(estado, id) {
 export function comprarMelhoria(estado, id) {
   if (noMaximo(estado, id)) return false;
   const custo = custoMelhoria(estado, id);
-  if (estado.essencia < custo) return false;
-  estado.essencia -= custo;
+  if (!debitar(estado, 'essencia', custo)) return false;
   estado.blackbook[id] = nivelMelhoria(estado, id) + 1;
   return true;
 }
@@ -57,7 +62,7 @@ export function efeitoMelhoria(estado, id) {
   const melhoria = buscar(id);
   if (!melhoria) return 0;
   const nivel = nivelMelhoria(estado, id);
-  return melhoria.composto ? Math.pow(1 + melhoria.bonus, nivel) - 1 : nivel * melhoria.bonus;
+  return melhoria.composto ? subtrair(potencia(1 + melhoria.bonus, nivel), 1) : nivel * melhoria.bonus;   // composto: número grande
 }
 
 // v0.14.0: converte os níveis de saves antigos (bônus somado, regra "antes" do config) para o
@@ -72,11 +77,11 @@ export function converterMelhoriasCompostas(estado) {
     const novo = Math.ceil(Math.log(multiplicador) / Math.log(1 + m.bonus) - 1e-9);
     const gastoAntes = somaDeCustos(m.custoBase, m.antes.crescimentoCusto, 0, velho);
     let custoAgora = 0;
-    for (let n = 0; n < novo; n++) custoAgora += custoNoNivel(m, n);
+    for (let n = 0; n < novo; n++) custoAgora += custoNoNivel(m, n);   // (saves antigos: níveis baixos, números comuns)
     estado.blackbook[m.id] = novo;
     devolvida += Math.max(0, gastoAntes - custoAgora);
   }
-  estado.essencia += devolvida;
+  creditar(estado, 'essencia', devolvida);
   return devolvida;
 }
 
@@ -107,119 +112,57 @@ export function corrigirMelhoriasAntigas(estado) {
       estado.blackbook[melhoria.id] = melhoria.nivelMaximo;
     }
   }
-  estado.essencia += reembolso;
+  creditar(estado, 'essencia', reembolso);
   return reembolso;
 }
 
-// Para melhorias do tipo 'multiplicar': nível 3 de +10% → 1.3
+// Para melhorias do tipo 'multiplicar': nível 3 de +10% → 1.3. Composta: (1 + bônus)^nível — número grande.
 export function multiplicadorMelhoria(estado, id) {
+  const melhoria = buscar(id);
+  if (melhoria?.composto) return potencia(1 + melhoria.bonus, nivelMelhoria(estado, id));
   return 1 + efeitoMelhoria(estado, id);
 }
 
-// ---- Reencarnação ----
-export function fasesVencidasNestaVida(estado) {
-  return estado.combate.fasesConcluidas + 1;
+// ---- Essência da Alma (v0.32.0) ----
+const ES = BB.essencia;
+
+// Essência de referência da fase (E). Ver escala.lnEssenciaDeReferencia e CONFIG.blackbook.essencia.
+export function essenciaDeReferencia(indiceFase) {
+  return deLn(lnEssenciaDeReferencia(indiceFase));
 }
 
-export function essenciaAoReencarnar(estado) {
-  const fases = fasesVencidasNestaVida(estado);
-  if (fases <= 0) return 0;
-  const vip = estado.vip ? 1 + CONFIG.vip.bonusEssencia : 1;   // VIP: +100%
-  // v0.21.1: depois de "faseDaVirada" (fim do Mundo 1) cada fase multiplica menos (ver config)
-  const R = BB.recompensa;
-  const antes = Math.min(fases, R.faseDaVirada);
-  const depois = Math.max(0, fases - R.faseDaVirada);
-  return Math.floor(R.base * fases * Math.pow(R.crescimento, antes) * Math.pow(R.crescimentoDepois, depois) * vip);
+// 1ª conquista: fracaoPrimeiraConquista × (E da fase − E da fase anterior). Igual para todos (sem VIP).
+export function essenciaDaPrimeiraConquista(indiceFase) {
+  const atual = lnEssenciaDeReferencia(indiceFase);
+  const anterior = lnEssenciaDeReferencia(indiceFase - 1);
+  return multiplicar(deLn(atual), ES.fracaoPrimeiraConquista * (1 - Math.exp(anterior - atual)));
 }
 
-// Só pode reencarnar de novo chegando pelo menos onde reencarnou da última vez
-// (ex.: reencarnou no Mapa 1 · Fase 11 → precisa vencer a Fase 11 do Mapa 1 ou ir além).
-// Decisão do dono. -1 = ainda não precisa chegar em lugar nenhum.
-// v0.30.2 (dono): a reencarnação libera ao CHEGAR no mapa onde você reencarnou da última vez (ou além) —
-// antes era preciso vencer a mesma fase. "Chegar" = o mapa já está aberto (o chefe do mapa anterior foi vencido).
-// (O mapa sai da conta pelo índice da fase — importar sistemas/mundo.js daqui criaria um ciclo de imports.)
-const FASES_POR_MAPA = CONFIG.combate.fasesPorMapa;
-const mapaDaFase = (indiceFase) => Math.floor(indiceFase / FASES_POR_MAPA);
-
-// Mapa da última reencarnação (0 = Mapa 1; nunca reencarnou = 0)
-export function mapaMinimoParaReencarnar(estado) {
-  const fase = estado.reencarnacao.faseDaUltima ?? -1;
-  return fase < 0 ? 0 : mapaDaFase(fase);
+// Horas de farm que "valem" a Essência de referência da fase (CONFIG.blackbook.essencia).
+// Fácil: horasDeReferencia. Da Normal em diante, a ponte min(horasDepoisDoFacil, horasDeReferencia × E/E0):
+// a conta é feita em ln (E passa de 1e308 no Infinito) — a razão só vira número enquanto a ponte não saturou.
+const LN_E0 = lnEssenciaDeReferencia(FASES_DO_FACIL - 1);
+const LN_FIM_DA_PONTE = Math.log(ES.horasDepoisDoFacil / ES.horasDeReferencia);
+export function horasDeReferencia(indiceFase) {
+  if (dificuldadeDoMapa(mapaDaFase(indiceFase)) === 0) return ES.horasDeReferencia;
+  const lnRazao = lnEssenciaDeReferencia(indiceFase) - LN_E0;
+  return lnRazao >= LN_FIM_DA_PONTE ? ES.horasDepoisDoFacil : ES.horasDeReferencia * Math.exp(lnRazao);
 }
 
-// Mapa mais longe aberto nesta vida (o da próxima fase a vencer)
-export function mapaAlcancadoNestaVida(estado) {
-  return mapaDaFase(estado.combate.fasesConcluidas + 1);
+// Farm: Essência por segundo de luta vencida nesta fase (VIP: + CONFIG.vip.bonusEssencia)
+export function essenciaPorSegundo(estado, indiceFase) {
+  const vip = estado.vip ? 1 + CONFIG.vip.bonusEssencia : 1;
+  return deLn(lnEssenciaDeReferencia(indiceFase) - Math.log(horasDeReferencia(indiceFase) * 3600 / vip));
 }
 
-export function chegouOndeReencarnou(estado) {
-  return mapaAlcancadoNestaVida(estado) >= mapaMinimoParaReencarnar(estado);
-}
-
-// Vida que começou no Mundo 2 (ou além): precisa vencer pelo menos 1 fase nova antes de
-// reencarnar — senão daria para reencarnar na hora, ganhando a Essência das fases do Mundo 1 de graça.
-export function venceuFaseNestaVida(estado) {
-  return estado.combate.fasesConcluidas > (estado.combate.inicioDaVida ?? -1);
-}
-
-export function podeReencarnar(estado) {
-  return essenciaAoReencarnar(estado) > 0 && chegouOndeReencarnou(estado) && venceuFaseNestaVida(estado);
-}
-
-// Onde a vida nova começa (Mundo 1 ou começo do Mundo 2...). Quem decide é sistemas/mundo.js,
-// que se registra aqui ao carregar (importar mundo.js daqui criaria um ciclo de imports).
-let comecarVidaNova = null;
-export function definirInicioDaVida(funcao) {
-  comecarVidaNova = funcao;
-}
-
-// Devolve um estado NOVO (vida nova), guardando só o que é permanente
-export function reencarnar(estado) {
-  const ganho = essenciaAoReencarnar(estado);
-  const novo = criarEstadoInicial();
-
-  // O que fica para sempre:
-  novo.personagem = estado.personagem;
-  novo.essencia = estado.essencia + ganho;
-  novo.blackbook = { ...estado.blackbook };
-  // v0.8.3 (decisão do dono): os itens que caíram ficam — vestidos e na mochila,
-  // COM o nível de melhoria (v0.8.6: o dono desfez a volta para +0 da v0.8.5).
-  // (Pedras Espirituais também ficam desde a v0.9.11.)
-  novo.boss = { ...estado.boss };                    // v0.11.0: o Evento de Boss continua
-  novo.vip = estado.vip;                             // o VIP continua ligado
-  novo.pedras = estado.pedras;                       // v0.9.11 (dono): Pedras Espirituais também ficam
-  novo.arranjo = estado.arranjo ?? 0;                // v0.21.0: o Arranjo de Reunião de Energia fica
-  novo.pilulas = { ...estado.pilulas };              // v0.21.0: as pílulas guardadas também
-  novo.efeitos.rompimento = estado.efeitos?.rompimento ?? 0;   // Pílula Quebra-Gargalo já tomada não se perde
-  novo.nucleos = { ...estado.nucleos };              // Núcleos guardados e pontos usados também ficam
-  novo.pontosNucleo = { ...estado.pontosNucleo };
-  novo.equipados = { ...estado.equipados };
-  novo.mochila = [...estado.mochila];
-  novo.proximoIdItem = estado.proximoIdItem;
-  novo.opcoes = { ...estado.opcoes };
-  novo.estatisticas = { ...estado.estatisticas };
-  // v0.27.1: registro das vidas (tela do Black Book) — guarda as últimas 20
-  const antiga = estado.reencarnacao;
-  const vida = {
-    numero: antiga.vezes + 1,
-    reino: estado.reino,
-    estagio: estado.estagio,
-    fase: estado.combate.fasesConcluidas,
-    // duração em segundos de jogo (inclui o offline); null = vida de antes do registro existir
-    segundos: antiga.tempoNoInicio === undefined && antiga.vezes > 0 ? null
-      : estado.estatisticas.tempoJogado - (antiga.tempoNoInicio ?? 0),
-    essencia: ganho,
-    quando: Date.now(),
-  };
-  novo.reencarnacao = {
-    historico: [...(antiga.historico ?? []), vida].slice(-20),
-    tempoNoInicio: estado.estatisticas.tempoJogado,
-    vezes: estado.reencarnacao.vezes + 1,
-    melhorFaseDeTodas: Math.max(estado.reencarnacao.melhorFaseDeTodas, estado.combate.fasesConcluidas),
-    faseDaUltima: estado.combate.fasesConcluidas,
-    essenciaTotal: estado.reencarnacao.essenciaTotal + ganho,
-  };
-  if (comecarVidaNova) comecarVidaNova(novo, estado);
-
-  return { estado: novo, ganho };
+// Chamado pelo combate a cada vitória. segundos = tempo real da luta (pausa + turnos); fuga pela Supressão de
+// Alma = só a pausa. Devolve { primeira, farm, total } e já soma no estado.
+export function receberEssenciaDaVitoria(estado, fase, primeiraVitoria, segundos) {
+  const primeira = primeiraVitoria ? essenciaDaPrimeiraConquista(fase.indice) : 0;
+  const farm = multiplicar(essenciaPorSegundo(estado, fase.indice), Math.max(0, segundos));
+  const total = somar(primeira, farm);
+  creditar(estado, 'essencia', total);
+  creditar(estado, 'estatisticas.essenciaConquistas', primeira);
+  creditar(estado, 'estatisticas.essenciaFarm', farm);
+  return { primeira, farm, total };
 }

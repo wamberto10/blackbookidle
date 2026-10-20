@@ -10,6 +10,7 @@ import * as CA from '../sistemas/cultivoAvancado.js';
 import { liberado } from '../sistemas/desbloqueios.js';
 import { REINOS } from '../dados/reinos.js';
 import { formatarNumero } from '../format.js';
+import { cabe } from '../saldos.js';
 import { icone } from './sprite.js';
 
 const $ = (id) => document.getElementById(id);
@@ -142,8 +143,8 @@ function atualizarArranjo(estado) {
   const custo = CA.custoDoArranjo(estado);
   texto($('arranjo-nivel'), `Nível ${nivel} · Cultivo +${porcento(P.bonusDoArranjo(estado))}`);
   html(botao, `${icone('pedra')} ${formatarNumero(custo)}`);
-  botao.classList.toggle('indisponivel', estado.pedras < custo);
-  texto($('arranjo-texto'), `Cada nível: +${porcento(CONFIG.arranjo.bonusPorNivel)} de Cultivo. Fica para sempre, também ao reencarnar.`);
+  botao.classList.toggle('indisponivel', !cabe(estado, 'pedras', custo));
+  texto($('arranjo-texto'), `Cada nível: +${porcento(CONFIG.arranjo.bonusPorNivel)} de Cultivo. Fica para sempre.`);
 }
 
 // ---- Bênçãos: Batismo Mundial, Sentido Divino e Mestre Estelar ----
@@ -161,13 +162,13 @@ function atualizarBencaos(estado) {
   const M = CONFIG.mestreEstelar;
   let estelar;
   if (estado.mestreEstelar) {
-    estelar = `Você refinou a Fonte Estelar: Cultivo +${porcento(M.bonusCultivo)} nesta vida`;
+    estelar = `Você refinou a Fonte Estelar: Cultivo +${porcento(M.bonusCultivo)} para sempre`;
   } else if (CA.fonteEstelarLiberada(estado)) {
     const pode = CA.podeRefinarFonteEstelar(estado);
-    estelar = `Refine a Fonte Estelar de uma estrela: Cultivo +${porcento(M.bonusCultivo)} nesta vida.` +
+    estelar = `Refine a Fonte Estelar de uma estrela: Cultivo +${porcento(M.bonusCultivo)} para sempre.` +
       `<button id="botao-fonte-estelar" class="botao-cult${pode ? '' : ' indisponivel'}">${icone('cultivo')} ${formatarNumero(CA.custoDaFonteEstelar(estado))}</button>`;
   } else {
-    estelar = `Libera no ${REINOS[P.REINO_DO_MESTRE_ESTELAR].nome}: refinar a Fonte Estelar dá Cultivo +${porcento(M.bonusCultivo)} na vida`;
+    estelar = `Libera no ${REINOS[P.REINO_DO_MESTRE_ESTELAR].nome}: refinar a Fonte Estelar dá Cultivo +${porcento(M.bonusCultivo)} para sempre`;
   }
   linhas.push(bencao('mestre_estelar', 'Mestre Estelar', estado.mestreEstelar, estelar));
   html($('bencaos'), linhas.join(''));

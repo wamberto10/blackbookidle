@@ -1,24 +1,24 @@
 // =============================================================
 // format.js — deixa números grandes legíveis: 1234567 → "1.23M"
+// v0.33.0: aceita os números grandes de numeros.js (1.23e5678); acima de Dc (1e33) usa "1.23e40"
 // =============================================================
+import { formatar, multiplicar, potencia } from './numeros.js';
 
 const SUFIXOS = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 
 export function formatarNumero(numero) {
-  if (numero < 1000) {
-    // Números pequenos: até 1 casa decimal (ex.: 12.5), sem ".0" sobrando
-    return Number(numero.toFixed(1)).toString();
-  }
+  return formatar(numero);
+}
 
-  // Cada sufixo vale 1000× o anterior
-  const indice = Math.floor(Math.log10(numero) / 3);
-
-  if (indice >= SUFIXOS.length) {
-    return numero.toExponential(2); // ex.: 1.23e+36
-  }
-
-  const valor = numero / Math.pow(1000, indice);
-  return valor.toFixed(2) + SUFIXOS[indice];
+// v0.33.0: lê um número digitado pelo jogador: "1500", "2.5M", "2,5M", "3e40", "1.2Qa", "4e5000".
+// Devolve um número grande (numeros.js) ou NaN se não der.
+export function lerNumero(texto) {
+  const t = String(texto).trim().replace(/\s/g, '').replace(',', '.');
+  const m = t.match(/^([0-9]*\.?[0-9]+)(?:e([+-]?[0-9]+))?([a-zA-Z]*)$/i);
+  if (!m) return NaN;
+  const sufixo = SUFIXOS.findIndex(s => s.toLowerCase() === m[3].toLowerCase());
+  if (sufixo < 0) return NaN;
+  return multiplicar(Number(m[1]), potencia(10, Number(m[2] ?? 0) + 3 * sufixo));
 }
 
 // Formata um atributo conforme seu tipo: 'numero', 'porcento' ou 'decimal'

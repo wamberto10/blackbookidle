@@ -10,7 +10,10 @@ import { REINOS, REGIOES } from '../dados/reinos.js';
 import * as P from '../sistemas/progressao.js';
 import { calcularAtributos, analisarPoder, ATRIBUTOS } from '../sistemas/atributos.js';
 import { liberado } from '../sistemas/desbloqueios.js';
-import { MUNDO, MAPAS, FASES, chefeDoMapa, mundoDoMapa } from '../sistemas/mundo.js';
+import { MUNDO, obterFase, mapaDesenhado, chefeDoMapa, mundoDoMapa, mapaDaFronteira } from '../sistemas/mundo.js';
+import { mapaDaFase, mapaVisual, nomeDaPosicao, numeroNaDificuldade, DIFICULDADES } from '../sistemas/escala.js';
+import { subtrair, multiplicar, maior, menorOuIgual, maximo, razao, arredondarParaBaixo } from '../numeros.js';
+import { cabe } from '../saldos.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
 import { desenharPersonagem, animarVivo } from './sprite.js';
 import { TEXTO_DO_SELO, TEXTO_CURTO_DO_SELO } from './poder.js';
@@ -31,6 +34,7 @@ import * as BB from '../sistemas/blackbook.js';
 import { podeLutar } from '../sistemas/boss.js';
 import * as CA from '../sistemas/cultivoAvancado.js';
 import { montarCultivoAvancado, atualizarCultivoAvancado } from './telaCultivoAvancado.js';
+import { montarTelaAutomacao, atualizarTelaAutomacao } from './telaAutomacao.js';
 
 // Atalho para pegar elementos pelo id
 const $ = (id) => document.getElementById(id);
@@ -47,7 +51,9 @@ const ICONE_ATRIBUTO = {
 const REGENERACAO = { id: 'regeneracao', nome: 'Recuperação de Vida', formato: 'numero' };
 const AJUDA = {
   vida: 'Vida do herói na luta de agora. O máximo é a Vitalidade; cada luta nova começa com a vida cheia.',
-  reencarnacoes: 'Quantas vezes você reencarnou pelo Black Book. A Essência da Alma e as melhorias ficam para sempre.',
+  // v0.32.0: a reencarnação saiu do jogo — este item mostra até onde a jornada contínua chegou
+  jornada: 'Até onde você chegou na jornada: Fácil → Normal → Difícil → Inferno → Infinito. Nada recomeça — ' +
+    'cultivo, equipamentos, Pedras e Black Book seguem com você. Os mapas anteriores continuam abertos para farmar.',
 };
 let ultimoNivelDesenhado = '';
 let fundoDesenhado = null;
@@ -129,6 +135,7 @@ export function montarInterface(acoes) {
   montarTelaMapa(acoes);
   montarTelaMochila(acoes);
   montarTelaBlackBook(acoes);
+  montarTelaAutomacao(acoes);   // v0.33.0: gerenciamento automático (Opções)
   montarCultivoAvancado(acoes, abrirPainel);   // v0.21.0: Reclusão, Pílulas, Arranjo, Bênçãos, Iluminação
 }
 
@@ -153,12 +160,12 @@ export function atualizarInterface(estado) {
   const producao = P.producaoPorSegundo(estado);
 
   // ---- Topo ----
-  $('topo-cultivo').textContent = formatarNumero(Math.floor(estado.cultivo));
+  $('topo-cultivo').textContent = formatarNumero(arredondarParaBaixo(estado.cultivo));
   $('topo-ps').textContent = formatarNumero(producao);
-  $('topo-pedras').textContent = formatarNumero(Math.floor(estado.pedras));
-  $('topo-essencia').textContent = formatarNumero(Math.floor(estado.essencia));
+  $('topo-pedras').textContent = formatarNumero(arredondarParaBaixo(estado.pedras));
+  $('topo-essencia').textContent = formatarNumero(arredondarParaBaixo(estado.essencia));
   // A Essência só aparece no topo depois que o jogador já teve alguma
-  $('topo-essencia-caixa').classList.toggle('escondido', estado.essencia <= 0 && estado.reencarnacao.vezes === 0);
+  $('topo-essencia-caixa').classList.toggle('escondido', menorOuIgual(estado.essencia, 0) && !liberado(estado, 'blackbook'));
 
   // Abas trancadas aparecem apagadas
   for (const sistema of ['combate', 'mapa', 'mochila', 'blackbook']) {
@@ -169,6 +176,7 @@ export function atualizarInterface(estado) {
   atualizarAvisos(estado);
   atualizarCultivo(estado, producao);
   atualizarCultivoAvancado(estado, painelAberto);
+  atualizarTelaAutomacao(estado, painelAberto === 'opcoes');   // v0.33.0
   atualizarPersonagem(estado);
   atualizarTelaMochila(estado);
 
@@ -202,7 +210,7 @@ function desenharEquipamentoDoHeroi(estado) {
       botao.title = item ? `${slot.nome}${item.nivel > 0 ? ` +${item.nivel}` : ''}` : `${slot.nome} (vazio)`;
       botao.innerHTML = item
         ? `<span class="moch-moldura moldura-${item.raridade}"><img class="item-ic" src="img/ui/item_${slot.id}.png" alt="">` +
-          `${item.nivel > 0 ? `<span class="moch-mais">+${item.nivel}</span>` : ''}<span class="moch-nv">Nv.${FASES[item.fase].mapa + 1}</span></span>`
+          `${item.nivel > 0 ? `<span class="moch-mais">+${item.nivel}</span>` : ''}<span class="moch-nv">Nv.${mapaDaFase(item.fase) + 1}</span></span>`
         : `<span class="moch-moldura moldura-comum"><img class="item-ic fantasma" src="img/ui/item_${slot.id}.png" alt=""></span>`;
       botao.addEventListener('click', () => abrirPainel('mochila'));
       coluna.appendChild(botao);
@@ -236,16 +244,16 @@ function atualizarAvisos(estado) {
   const mochilaLiberada = liberado(estado, 'mochila');
   let melhor = false;
   if (mochilaLiberada && !estado.opcoes.autoEquipar && estado.mochila.length) {
-    // v0.22.1: compara a força cheia dos itens (sem o limite do reino), igual ao Auto-vestir
-    const poderAtual = analisarPoder(calcularAtributos(estado, { semLimite: true })).poder;
+    // igual ao Auto-vestir: compara fora do Selo (v0.32.0: sem o limite do reino, que saiu)
+    const poderAtual = analisarPoder(calcularAtributos(estado, { selado: false })).poder;
     melhor = estado.mochila.slice(0, 60).some(item =>
-      analisarPoder(calcularAtributos({ ...estado, equipados: { ...estado.equipados, [item.slot]: item } }, { semLimite: true })).poder > poderAtual);
+      maior(analisarPoder(calcularAtributos({ ...estado, equipados: { ...estado.equipados, [item.slot]: item } }, { selado: false })).poder, poderAtual));
   }
   marcar('[data-aba="mochila"]', melhor || (mochilaLiberada && EQ.temAlgoParaMesclar(estado)),
     melhor ? 'Item melhor na mochila' : 'Itens para mesclar');
   // Black Book: dá para comprar alguma melhoria
   const livro = liberado(estado, 'blackbook') && CONFIG.blackbook.melhorias
-    .some(m => !BB.noMaximo(estado, m.id) && estado.essencia >= BB.custoMelhoria(estado, m.id));
+    .some(m => !BB.noMaximo(estado, m.id) && cabe(estado, 'essencia', BB.custoMelhoria(estado, m.id)));
   marcar('[data-aba="blackbook"]', livro, 'Melhoria disponível');
   // Boss do evento disponível
   marcar('#botao-boss', podeLutar(estado), 'O boss está esperando');
@@ -258,8 +266,9 @@ FUNDO_DA_RECLUSAO.src = 'img/fundos/reclusao.jpg';
 FUNDO_DA_RECLUSAO.addEventListener('load', () => { fundoDesenhado = null; });
 
 function atualizarFundo(estado) {
-  const indiceMapa = liberado(estado, 'combate') ? FASES[estado.combate.faseAtual].mapa : 0;
-  const mapa = MAPAS[indiceMapa];
+  // v0.32.0: mapa GLOBAL (Normal, Difícil...); a arte e o nome são os do mapa desenhado (mapa visual)
+  const indiceMapa = liberado(estado, 'combate') ? mapaDaFase(estado.combate.faseAtual) : 0;
+  const mapa = mapaDesenhado(indiceMapa);
   const reclusao = estado.reclusao.ativa;
   const chave = `${indiceMapa}|${reclusao}`;
 
@@ -268,7 +277,7 @@ function atualizarFundo(estado) {
   // v0.17.4: antes "Mundo Inicial — Starting World · O Segredo do Mundo" quebrava em 3 linhas
   // v0.27.0 (layout novo): nome do mapa, mundo e "mapa-fase" em 3 linhas (a fase é atualizada a cada passo)
   $('inicio-local').innerHTML = reclusao
-    ? `<b>Em Reclusão</b><small>${mapa.nome}</small><small>Mapa ${indiceMapa + 1}</small>`
+    ? `<b>Em Reclusão</b><small>${mapa.nome}</small><small>${nomeDaPosicao(indiceMapa)}</small>`
     : `<b>${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))}</small><small id="inicio-local-fase"></small>`;
   ajustarFonte($('inicio-local').querySelector('b'), $('inicio-local').querySelector('b').textContent, 30, 20);
 
@@ -283,7 +292,7 @@ function atualizarFundo(estado) {
   } else {
     $('fundo-imagem').classList.add('escondido');      // saiu da Reclusão: volta a paisagem do mapa
     $('fundo-mundo').classList.remove('escondido');
-    desenharFundo($('fundo-mundo'), mapa.cena, indiceMapa + 1);
+    desenharFundo($('fundo-mundo'), mapa.cena, mapaVisual(indiceMapa) + 1);
   }
 }
 
@@ -311,8 +320,10 @@ function posicionarNoChao() {
 }
 
 // "Limite Estelar — Domínio dos Grandes Imperadores" → "Limite Estelar" (o nome completo fica só na aba Mapa)
+// v0.32.0: da Normal em diante vem o nome da dificuldade na frente ("Normal · Limite Estelar")
 export function nomeCurtoDoMundo(mundo) {
-  return mundo.nome.split(' — ')[0];
+  const curto = mundo.nome.split(' — ')[0];
+  return mundo.dificuldade ? `${mundo.dificuldade} · ${curto}` : curto;
 }
 
 // v0.27.0: nomes longos ("Meio-Passo do Céu Aberto") encolhem a letra para caber na moldura do layout novo.
@@ -353,15 +364,15 @@ function atualizarCultivo(estado, producao) {
   let textoRequisito = '';
   let temChefe = false;
   if (requisito && !requisito.cumprido) {
+    // v0.32.0: o mapa do requisito é GLOBAL (a Maestria pede chefes da Normal em diante) — sempre existe
     const chefe = chefeDoMapa(requisito.mapa - 1);
-    temChefe = Boolean(chefe);
-    const pronto = estado.cultivo >= P.custoParaAvancar(estado);
+    temChefe = true;
+    const pronto = cabe(estado, 'cultivo', P.custoParaAvancar(estado));
     // v0.22.0: o requisito pode ser de estágio (Céu Aberto: a 4ª Ordem só depois do Mapa 48)
     const alvo = requisito.rompimento ? 'o reino só se rompe' : `a ${P.nomeDoProximoNivel(estado).split(' — ')[1]} só abre`;
     const acao = requisito.rompimento ? 'romper o reino' : `chegar à ${P.nomeDoProximoNivel(estado).split(' — ')[1]}`;
-    textoRequisito = !chefe ? `🔒 ${requisito.rompimento ? 'O próximo reino' : 'O próximo estágio'} será liberado no próximo mundo (em breve).`
-      : pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas ${alvo} depois de derrotar ${chefe.inimigo.nome} (Mapa ${requisito.mapa}).`
-      : `🔒 Para ${acao}, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`;
+    textoRequisito = pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas ${alvo} depois de derrotar ${chefe.inimigo.nome} (${nomeDaPosicao(requisito.mapa - 1)}).`
+      : `🔒 Para ${acao}, derrote o chefe do ${nomeDaPosicao(requisito.mapa - 1)}: ${chefe.inimigo.nome}.`;
   }
   trocarTexto($('cult-requisito'), textoRequisito);
   // v0.27.0: na tela inicial o motivo vai na linha de dica e o botão "Ir ao chefe" só aparece quando há chefe
@@ -372,8 +383,10 @@ function atualizarCultivo(estado, producao) {
     `Seu cultivo cresce sozinho: +${formatarNumero(P.producaoPorSegundo(estado))}/s, também offline.`);
   const localFase = $('inicio-local-fase');
   if (localFase && estado.combate) {
-    const faseAgora = FASES[estado.combate.faseAtual];
-    trocarTexto(localFase, `${faseAgora.mapa + 1}-${faseAgora.numero}`);
+    // v0.32.0: "12-5" no Fácil; "Normal 12-5" da Normal em diante
+    const faseAgora = obterFase(estado.combate.faseAtual);
+    const dificuldade = faseAgora.dificuldade > 0 ? `${DIFICULDADES[faseAgora.dificuldade].nome} ` : '';
+    trocarTexto(localFase, `${dificuldade}${numeroNaDificuldade(faseAgora.mapa)}-${faseAgora.numero}`);
   }
   $('cult-ir-chefe').classList.toggle('escondido', !temChefe);
 
@@ -386,14 +399,15 @@ function atualizarCultivo(estado, producao) {
     textoBotao = '✨ Ápice';
   } else {
     const custo = P.custoParaAvancar(estado);
-    const falta = custo - estado.cultivo;
+    const falta = subtrair(custo, estado.cultivo);
     rompimento = P.proximoEhRompimento(estado);
     proximo = P.nomeDoProximoNivel(estado);
-    largura = Math.min(1, estado.cultivo / custo) * 100 + '%';
-    progressoTexto = `${formatarNumero(Math.floor(estado.cultivo))} / ${formatarNumero(custo)}`;
-    tempo = falta > 0 ? `≈ ${formatarTempo(falta / producao)}` : 'Pronto!';
-    if (requisito && !requisito.cumprido) textoBotao = rompimento ? '🔒 Romper Reino' : '🔒 Avançar Estágio';
-    else textoBotao = rompimento ? '⚡ Romper Reino' : '⬆️ Avançar Estágio';
+    largura = Math.min(1, razao(estado.cultivo, custo)) * 100 + '%';
+    progressoTexto = `${formatarNumero(arredondarParaBaixo(estado.cultivo))} / ${formatarNumero(custo)}`;
+    tempo = maior(falta, 0) ? `≈ ${formatarTempo(razao(falta, producao))}` : 'Pronto!';
+    const avancoNome = P.proximoEhMaestria(estado) ? 'Subir Maestria' : 'Avançar Estágio';   // v0.32.0
+    if (requisito && !requisito.cumprido) textoBotao = rompimento ? '🔒 Romper Reino' : `🔒 ${avancoNome}`;
+    else textoBotao = rompimento ? '⚡ Romper Reino' : `⬆️ ${avancoNome}`;
   }
 
   trocarTexto($('cult-proximo'), proximo);
@@ -401,6 +415,7 @@ function atualizarCultivo(estado, producao) {
   const reinoAgora = P.reinoAtual(estado);
   const [proximoReino, proximoEstagio] = proximo.split(' — ');
   trocarTexto($('inicio-proximo'), P.noNivelMaximo(estado) ? proximo
+    : P.proximoEhMaestria(estado) ? `${CONFIG.maestria.nome} · Próximo: ${proximoEstagio ?? proximo}`
     : `Estágio ${estado.estagio + 1}/${reinoAgora.estagios.length} · ${rompimento ? `Romper: ${proximoReino}` : `Próximo: ${proximoEstagio ?? proximo}`}`);
   trocarTexto($('inicio-progresso'), progressoTexto ? `${progressoTexto} (${Math.floor(parseFloat(largura))}%)` : '');
   $('topo-nivel-barra').style.width = largura;
@@ -426,7 +441,7 @@ function atualizarCultivo(estado, producao) {
 // ---- Personagem: atributos ----
 function atualizarPersonagem(estado) {
   const atributos = calcularAtributos(estado);
-  const valores = { ...atributos, regeneracao: atributos.vitalidade * (atributos.especial?.regeneracao ?? 0) };
+  const valores = { ...atributos, regeneracao: multiplicar(atributos.vitalidade, atributos.especial?.regeneracao ?? 0) };
   for (const atributo of [...ATRIBUTOS, REGENERACAO]) {
     const valor = valores[atributo.id];
     const bloqueado = atributo.id === 'sentidoDivino' && valor === 0;
@@ -441,24 +456,24 @@ function atualizarPersonagem(estado) {
       : atributo.id === 'regeneracao' ? (valor ? 'Por turno (Regeneração da classe)' : 'Só o Refinador Corporal regenera a cada turno') : '';
   }
   // Vida na luta de agora (fora da luta, cheia)
+  // (v0.33.0: a luta usa valores normalizados — × luta.escala volta ao valor real)
   const luta = lutaAtual();
-  const maxima = luta?.jogador.vitalidade ?? atributos.vitalidade;
-  trocarTexto($('pers-vida'), `${formatarNumero(Math.max(0, luta ? luta.vidaJogador : maxima))} / ${formatarNumero(maxima)}`);
-  const vezes = estado.reencarnacao.vezes;
-  trocarTexto($('pers-vidas'), `${vezes} ${vezes === 1 ? 'vez' : 'vezes'}`);
+  const maxima = luta ? multiplicar(luta.jogador.vitalidade, luta.escala) : atributos.vitalidade;
+  const atual = luta ? multiplicar(maximo(0, luta.vidaJogador), luta.escala) : maxima;
+  trocarTexto($('pers-vida'), `${formatarNumero(maximo(0, atual))} / ${formatarNumero(maxima)}`);
+  // v0.32.0: "Jornada" — o mapa mais longe já aberto (a reencarnação saiu do jogo)
+  trocarTexto($('pers-vidas'), nomeDaPosicao(mapaDaFronteira(estado)));
   atualizarNucleos(estado);
   desenharEquipamentoDoHeroi(estado);
   const analise = analisarPoder(atributos);
   trocarTexto($('pers-poder'), formatarNumero(analise.poder));
   trocarTexto($('pers-ofensa'), formatarNumero(analise.ofensa));
   trocarTexto($('pers-resistencia'), formatarNumero(analise.resistencia));
-  // v0.22.1: limite do equipamento pelo reino | v0.26.0: Selo do Mundo Primordial (tem prioridade)
-  const textoAviso = atributos.selado ? TEXTO_CURTO_DO_SELO + '.'
-    : atributos.equipamentoLimitado ? `Equipamentos limitados pelo reino ${P.reinoAtual(estado).nome}.` : '';
+  // v0.26.0: Selo do Mundo Primordial (v0.32.0: o limite do equipamento pelo reino saiu do jogo)
+  const textoAviso = atributos.selado ? TEXTO_CURTO_DO_SELO + '.' : '';
   $('pers-limite').classList.toggle('escondido', !textoAviso);
   trocarTexto($('pers-limite-texto'), textoAviso);
-  $('pers-limite').title = atributos.selado ? TEXTO_DO_SELO : 'Seus equipamentos são fortes demais para o seu reino: rendem no máximo ' +
-    `${CONFIG.equipamentos.limiteDoReino}× a força do reino. Suba de estágio para liberar mais.`;
+  $('pers-limite').title = atributos.selado ? TEXTO_DO_SELO : '';
   $('pers-avancar').classList.toggle('escondido', Boolean(atributos.selado));
 }
 
@@ -553,13 +568,11 @@ export function motivoParaNaoAvancar(estado) {
   if (requisito && !requisito.cumprido) {
     const chefe = chefeDoMapa(requisito.mapa - 1);
     const acao = requisito.rompimento ? 'romper o reino' : `chegar à ${P.nomeDoProximoNivel(estado).split(' — ')[1]}`;
-    return chefe
-      ? `🔒 Para ${acao}, derrote o chefe do Mapa ${requisito.mapa}: ${chefe.inimigo.nome}.`
-      : `🔒 ${requisito.rompimento ? 'O próximo reino' : 'O próximo estágio'} será liberado no próximo mundo (em breve).`;
+    return `🔒 Para ${acao}, derrote o chefe do ${nomeDaPosicao(requisito.mapa - 1)}: ${chefe.inimigo.nome}.`;
   }
-  const falta = P.custoParaAvancar(estado) - estado.cultivo;
+  const falta = subtrair(P.custoParaAvancar(estado), estado.cultivo);
   const producao = P.producaoPorSegundo(estado);
-  return `⏳ Falta ${formatarNumero(Math.ceil(falta))} de Cultivo (≈ ${formatarTempo(falta / producao)}).`;
+  return `⏳ Falta ${formatarNumero(falta)} de Cultivo (≈ ${formatarTempo(razao(falta, producao))}).`;
 }
 
 // ---- Efeitos ----

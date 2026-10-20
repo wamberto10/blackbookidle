@@ -1,16 +1,19 @@
 // =============================================================
 // sistemas/atributos.js — ATRIBUTOS E PODER TOTAL
-// Hoje os atributos vêm do reino/estágio + melhorias do Black Book.
-// Equipamentos e técnicas vão somar aqui nas próximas etapas.
+// v0.32.0 (progressão contínua): atributo = base do cultivo × fator dos equipamentos × bônus permanentes
+// (Black Book, classe, Núcleos, VIP, Batismos). Crítico, Dano Crítico e Esquiva somam pontos e têm teto próprio.
 // =============================================================
 import { CONFIG } from '../config.js';
 import { REINOS } from '../dados/reinos.js';
 import { MUNDOS } from '../dados/mundos.js';
-import { indiceNivel, producaoPorSegundo, batismosMundiais, inicioDoReino } from './progressao.js';
+import { indiceNivel, producaoPorSegundo, batismosMundiais, inicioDoReino, NIVEL_DO_FRUTO } from './progressao.js';
 import { multiplicadorMelhoria as mult, efeitoMelhoria as soma } from './blackbook.js';
 import { bonusEquipamentos } from './itens.js';
 import { classeDe } from './personagem.js';
 import { multiplicadorNucleo as nucleo } from './nucleos.js';
+import { somar, subtrair, multiplicar, dividir, raiz, maximo, maiorOuIgual, potencia, razao, comparar, menorOuIgual } from '../numeros.js';
+// v0.33.0: Ataque, Vitalidade, Defesa, Velocidade, Sentido Divino, Poder e a força dos inimigos são NÚMEROS GRANDES
+// (js/numeros.js). Crítico, Dano Crítico e Esquiva continuam números comuns (têm teto).
 
 const A = CONFIG.atributos;
 
@@ -39,7 +42,8 @@ const REINO_DO_SELO = REINOS.findIndex(r => r.id === CONFIG.selo.reino);
 export const SELO = { reino: REINO_DO_SELO, nivel: inicioDoReino(REINO_DO_SELO) + CONFIG.selo.estagio };
 const MAPA_SELADO = MUNDOS.flatMap(m => m.mapas).map(m => Boolean(m.selado));   // mesma ordem de MAPAS (mundo.js)
 
-// A fase atual do combate fica num mapa selado?
+// A fase atual do combate fica num mapa selado? (v0.32.0: só no Fácil — MAPA_SELADO tem os 96 mapas dele;
+// a Normal em diante reaproveita as artes dos Mapas 85–90 sem o Selo)
 export function estaSelado(estado) {
   const fase = estado.combate?.faseAtual;
   return fase != null && MAPA_SELADO[Math.floor(fase / CONFIG.combate.fasesPorMapa)] === true;
@@ -49,7 +53,7 @@ export function estaSelado(estado) {
 // o Sentido Divino guardado de saves antigos.
 export function sentidoDivinoNoNivel(nivel, indiceReino) {
   if (indiceReino < REINO_SENTIDO_DIVINO) return 0;
-  return atributosBase(nivel, indiceReino).sentidoDivino * Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, indiceReino);
+  return multiplicar(atributosBase(nivel, indiceReino).sentidoDivino, potencia(A.bonusPorReinoJogador / A.bonusPorReino, indiceReino));
 }
 
 export function sentidoDivinoLiberado(estado) {
@@ -58,19 +62,22 @@ export function sentidoDivinoLiberado(estado) {
 
 // Atributos de um cultivador "comum" em um nível, sem bônus.
 // Também é a base para calcular a força dos inimigos.
+// v0.32.0: acima do Fruto do Universo (nível 107) cada nível é de Maestria da Criação (CONFIG.maestria)
 export function atributosBase(nivel, indiceReino) {
-  const fator = Math.pow(A.crescimento, nivel) * Math.pow(A.bonusPorReino, indiceReino);
+  const maestria = Math.max(0, nivel - NIVEL_DO_FRUTO);
+  const M = CONFIG.maestria;
+  // (no Infinito o fator passa de 1e308: potencia/multiplicar viram número grande quando precisa)
+  const fator = multiplicar(multiplicar(potencia(A.crescimento, nivel - maestria), potencia(A.bonusPorReino, indiceReino)),
+    potencia(M.ganhoAtributos, maestria));
   return {
-    ataque: A.base.ataque * fator,
-    vitalidade: A.base.vitalidade * fator,
-    defesa: A.base.defesa * fator,
-    velocidade: A.velocidadeBase * Math.pow(A.crescimentoVelocidade, nivel),
-    sentidoDivino: A.base.sentidoDivino * fator,
+    ataque: multiplicar(A.base.ataque, fator),
+    vitalidade: multiplicar(A.base.vitalidade, fator),
+    defesa: multiplicar(A.base.defesa, fator),
+    velocidade: multiplicar(A.velocidadeBase, multiplicar(potencia(A.crescimentoVelocidade, nivel - maestria), potencia(M.ganhoVelocidade, maestria))),
+    sentidoDivino: multiplicar(A.base.sentidoDivino, fator),
   };
 }
 
-// opcoes.semLimite: ignora o limite do equipamento pelo reino (usado para COMPARAR itens: o melhor item fica
-// vestido mesmo quando o reino ainda não libera toda a força dele)
 // opcoes.selado: true/false força o Selo do Mundo Primordial (padrão: selado se a fase atual for de um mapa selado)
 export function calcularAtributos(estado, opcoes = {}) {
   // v0.26.0: selado, vale o reino/estágio do selo (Elemento Verdadeiro) em vez do seu
@@ -81,44 +88,38 @@ export function calcularAtributos(estado, opcoes = {}) {
   // Bônus EXTRA de reino só do jogador (os inimigos usam atributosBase puro).
   // Faz cada rompimento valer mais que o ganho dos inimigos (v0.9.16, pedido do dono).
   const extraReino = Math.pow(A.bonusPorReinoJogador / A.bonusPorReino, reino);
-  for (const atributo of ['ataque', 'vitalidade', 'defesa', 'sentidoDivino']) base[atributo] *= extraReino;
+  for (const atributo of ['ataque', 'vitalidade', 'defesa', 'sentidoDivino']) base[atributo] = multiplicar(base[atributo], extraReino);
 
-  // eq = soma dos equipamentos vestidos
+  // eq = soma dos equipamentos vestidos (v0.32.0: Ataque, Vitalidade, Defesa e Velocidade em %)
   // mult(...) = melhoria de "+X%" do Black Book | soma(...) = melhoria de "+X pontos"
   // classe(...) = bônus/penalidade da classe (dados/classes.js)
-  // Valores fixos: (base + equipamentos) × Black Book × classe × Núcleos (+1% por ponto)
-  const eq = { ...bonusEquipamentos(estado) };
-  // v0.22.1: o equipamento rende no máximo K × a força do seu reino (CONFIG.equipamentos.limiteDoReino)
-  // — "um cultivador fraco não libera todo o poder de um tesouro forte"
-  const limite = opcoes.semLimite ? null : CONFIG.equipamentos.limiteDoReino;
-  let equipamentoLimitado = false;
-  if (limite) {
-    for (const atributo of ['ataque', 'vitalidade', 'defesa', 'velocidade']) {
-      if (eq[atributo] > base[atributo] * limite) { eq[atributo] = base[atributo] * limite; equipamentoLimitado = true; }
-    }
-  }
+  // Valores fixos: base × (1 + % dos equipamentos) × Black Book × classe × Núcleos (+1% por ponto)
+  // (v0.22.1–0.31.0 os itens SOMAVAM valores fixos à base, limitados a 3× a força do reino)
+  const eq = bonusEquipamentos(estado);
+  const itens = (atributo) => somar(1, dividir(eq[atributo], 100));
   const c = classeDe(estado);
   const classe = (atributo) => 1 + (c.multiplicar[atributo] ?? 0);
   const somaClasse = (atributo) => c.somar[atributo] ?? 0;
   const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +25% (CONFIG.vip.atributos)
   // v0.21.0: Batismo Mundial — +3% Ataque, Vitalidade e Defesa por rompimento desde a Transformação do Qi
   const batismo = 1 + batismosMundiais(selado ? { reino } : estado) * CONFIG.batismo.bonusPorBatismo;
+  // base × itens × Black Book × (classe × Núcleos × VIP × Batismo — números comuns)
+  const total = (atributo, comum) => multiplicar(multiplicar(base[atributo], itens(atributo)), multiplicar(mult(estado, atributo), comum));
   return {
-    ataque: (base.ataque + eq.ataque) * mult(estado, 'ataque') * classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo,
+    ataque: total('ataque', classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo),
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
     danoCritico: Math.min(A.danoCriticoMaximo, A.danoCriticoBase + A.danoCriticoPorNivel * nivel + soma(estado, 'danoCritico') + eq.danoCritico + somaClasse('danoCritico')),
-    velocidade: (base.velocidade + eq.velocidade) * mult(estado, 'velocidade') * classe('velocidade') * nucleo(estado, 'velocidade'),
-    vitalidade: (base.vitalidade + eq.vitalidade) * mult(estado, 'vitalidade') * classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade') * batismo,
-    defesa: (base.defesa + eq.defesa) * mult(estado, 'defesa') * classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo,
+    velocidade: total('velocidade', classe('velocidade') * nucleo(estado, 'velocidade')),
+    vitalidade: total('vitalidade', classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade') * batismo),
+    defesa: total('defesa', classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo),
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado (selado, não vale)
-    sentidoDivino: Math.max(reino >= REINO_SENTIDO_DIVINO ? base.sentidoDivino * classe('sentidoDivino') : 0,
+    sentidoDivino: maximo(reino >= REINO_SENTIDO_DIVINO ? multiplicar(base.sentidoDivino, classe('sentidoDivino')) : 0,
       selado ? 0 : estado.reencarnacao?.sentidoDivinoMaximo ?? 0),
     // Habilidade da classe (usada pelo combate e pela previsão de luta; não entra no Poder)
     especial: c.especial,
     tecnica: c.tecnica,
-    equipamentoLimitado,   // v0.22.1: true = algum item rende menos que o normal (limite do reino)
     selado,                // v0.26.0: true = lutando sob o Selo do Mundo Primordial
   };
 }
@@ -146,17 +147,61 @@ const GOLPE_DE_REFERENCIA = 0.6;   // a Defesa é medida contra um golpe de 60% 
 
 // Mesma fórmula do combate: Dano = Ataque² / (Ataque + Defesa)
 // v0.8.1: todo golpe tira pelo menos 10% do Ataque (Defesa nunca deixa ninguém imune)
+// v0.32.0: escrito como Ataque × (Ataque / (Ataque + Defesa)) — o Ataque² passava do limite dos números no Infinito
+// v0.33.0: aceita números grandes (o combate usa os valores já normalizados — ver normalizarLuta)
 export function dano(ataque, defesa) {
-  return Math.max(ataque * CONFIG.combate.danoMinimo, (ataque * ataque) / (ataque + defesa));
+  if (comparar(ataque, 0) === 0) return 0;
+  if (typeof ataque === 'number' && typeof defesa === 'number') {
+    const soma = ataque + defesa;
+    if (Number.isFinite(soma)) return Math.max(ataque * CONFIG.combate.danoMinimo, ataque * (ataque / soma));
+  }
+  return maximo(multiplicar(ataque, CONFIG.combate.danoMinimo), multiplicar(ataque, dividir(ataque, somar(ataque, defesa))));
 }
 
 export function analisarPoder(a) {
   const critico = 1 + (Math.min(a.critico, 100) / 100) * (a.danoCritico / 100 - 1);
-  const ofensa = a.ataque * critico;
-  const golpe = Math.max(1e-9, a.ataque * GOLPE_DE_REFERENCIA);
-  const protecao = 1 + a.defesa / golpe;                // quanto a Defesa reduz cada golpe
-  const resistencia = (a.vitalidade * protecao) / (1 - Math.min(a.esquiva, 95) / 100);
-  return { ofensa, resistencia, poder: Math.sqrt(ofensa * resistencia) };
+  const ofensa = multiplicar(a.ataque, critico);
+  const golpe = maximo(1e-9, multiplicar(a.ataque, GOLPE_DE_REFERENCIA));
+  const protecao = somar(1, dividir(a.defesa, golpe));                // quanto a Defesa reduz cada golpe
+  const resistencia = dividir(multiplicar(a.vitalidade, protecao), 1 - Math.min(a.esquiva, 95) / 100);
+  return { ofensa, resistencia, poder: multiplicar(raiz(ofensa), raiz(resistencia)) };
+}
+
+// =============================================================
+// v0.33.0: NORMALIZAÇÃO DE UMA LUTA — os dois lados divididos pela MESMA escala (o maior valor ÷ 1e100), para que
+// o caminho comum use Number. Razões extremas permanecem Grande, sem piso nem perda de proporção.
+// Dano = A × A/(A + D) e as vidas
+// mudam na mesma proporção, então o resultado é o mesmo da conta "de verdade". Velocidade e Sentido Divino têm
+// escalas próprias (só se comparam entre si: quem ataca primeiro, ataque duplo, Supressão de Alma).
+// Não arredonda valores positivos para um mínimo: isso igualaria HP, Ataque e Defesa pequenos distintos.
+// =============================================================
+const TOPO_DA_LUTA = 1e100;
+function escalaDe(valores) {
+  let maior = 0;
+  for (const v of valores) if (comparar(v, maior) > 0) maior = v;
+  return comparar(maior, 0) > 0 ? dividir(maior, TOPO_DA_LUTA) : 1;
+}
+const normal = (v, escala) => (comparar(v, 0) <= 0 ? 0 : dividir(v, escala));
+// jogador: atributos do herói (calcularAtributos) | inimigo: { vida, ataque, defesa, velocidade, sentidoDivino, ... }
+// Devolve { escalas: { escala, escalaVel, escalaSentido }, jogador, inimigo } em Number/Grande.
+export function normalizarLuta(jogador, inimigo) {
+  const escalas = {
+    escala: escalaDe([jogador.ataque, jogador.vitalidade, jogador.defesa, inimigo.vida, inimigo.ataque, inimigo.defesa]),
+    escalaVel: escalaDe([jogador.velocidade, inimigo.velocidade]),
+    escalaSentido: escalaDe([jogador.sentidoDivino ?? 0, inimigo.sentidoDivino ?? 0]),
+  };
+  return { escalas, jogador: normalizarJogador(jogador, escalas), inimigo: normalizarInimigo(inimigo, escalas) };
+}
+// Com escalas já escolhidas (luta em andamento, luta carregada do save)
+export function normalizarJogador(jogador, { escala, escalaVel, escalaSentido }) {
+  return { ...jogador, ataque: normal(jogador.ataque, escala), vitalidade: normal(jogador.vitalidade, escala),
+    defesa: normal(jogador.defesa, escala), velocidade: normal(jogador.velocidade, escalaVel),
+    sentidoDivino: normal(jogador.sentidoDivino ?? 0, escalaSentido) };
+}
+export function normalizarInimigo(inimigo, { escala, escalaVel, escalaSentido }) {
+  return { ...inimigo, vida: normal(inimigo.vida, escala), ataque: normal(inimigo.ataque, escala),
+    defesa: normal(inimigo.defesa, escala), velocidade: normal(inimigo.velocidade, escalaVel),
+    sentidoDivino: normal(inimigo.sentidoDivino ?? 0, escalaSentido) };
 }
 
 export function poderTotal(a) {
@@ -180,25 +225,31 @@ export function poderDoInimigo(fase) {
 // resultado: 'facil' | 'segura' | 'arriscada' | 'derrota' | 'tempo'
 // v0.9.12 (dono): Velocidade do dobro (ou mais) da do inimigo = 2 ataques por turno
 export function golpesPorTurno(jogador, inimigo) {
-  return jogador.velocidade >= 2 * inimigo.velocidade ? 2 : 1;
+  return maiorOuIgual(jogador.velocidade, multiplicar(inimigo.velocidade, 2)) ? 2 : 1;
 }
 
-export function preverLuta(jogador, fase, turnosMaximos) {
-  const i = fase.inimigo;
+export function preverLuta(jogadorReal, fase, turnosMaximos) {
+  // v0.33.0: mesma normalização da luta (números grandes → números comuns, mesma proporção)
+  const { jogador, inimigo: i } = normalizarLuta(jogadorReal, fase.inimigo);
   const esp = jogador.especial ?? {};
   const critico = 1 + (Math.min(jogador.critico, 100) / 100) * (jogador.danoCritico / 100 - 1);
   const explosao = esp.explosaoACada ? 1 + esp.bonusExplosao / esp.explosaoACada : 1;
   const tec = jogador.tecnica;   // técnica da classe: em média +(multiplicador − 1)/aCada por ataque
   const media = tec ? 1 + (tec.multiplicador - 1) / tec.aCada : 1;
-  const meuDano = dano(jogador.ataque, i.defesa * (1 - (esp.penetracao ?? 0))) * critico * explosao * media * golpesPorTurno(jogador, i);
-  const turnosParaVencer = Math.ceil(i.vida / meuDano);
+  const meuDano = multiplicar(multiplicar(multiplicar(multiplicar(
+    dano(jogador.ataque, multiplicar(i.defesa, 1 - (esp.penetracao ?? 0))), critico), explosao), media), golpesPorTurno(jogador, i));
+  // Turnos são apenas uma previsão limitada para a interface. A decisão > limite é segura mesmo
+  // quando a razão verdadeira passa de Number; a luta real mantém HP e dano em Number/Grande.
+  const turnosParaVencer = menorOuIgual(meuDano, 0) ? 1e300 : Math.max(1, Math.ceil(razao(i.vida, meuDano)));
+  if (turnosParaVencer > turnosMaximos) return { resultado: 'tempo', turnosParaVencer, sobra: 0 };
 
-  const recebido = dano(i.ataque, jogador.defesa) * (1 - jogador.esquiva / 100);
-  const cura = jogador.vitalidade * (esp.regeneracao ?? 0);
+  const recebido = multiplicar(dano(i.ataque, jogador.defesa), 1 - jogador.esquiva / 100);
+  const cura = multiplicar(jogador.vitalidade, esp.regeneracao ?? 0);
   // Se eu ataco primeiro, no último turno ele nem chega a atacar
-  const golpesQueLevo = jogador.velocidade >= i.velocidade ? turnosParaVencer - 1 : turnosParaVencer;
-  const vidaQueSobra = jogador.vitalidade - golpesQueLevo * recebido + Math.max(0, golpesQueLevo - 1) * cura;
-  const sobra = Math.min(1, vidaQueSobra / jogador.vitalidade);
+  const golpesQueLevo = maiorOuIgual(jogador.velocidade, i.velocidade) ? turnosParaVencer - 1 : turnosParaVencer;
+  const vidaQueSobra = somar(subtrair(jogador.vitalidade, multiplicar(golpesQueLevo, recebido)),
+    multiplicar(Math.max(0, golpesQueLevo - 1), cura));
+  const sobra = Math.min(1, razao(vidaQueSobra, jogador.vitalidade));
 
   let resultado;
   if (turnosParaVencer > turnosMaximos) resultado = 'tempo';

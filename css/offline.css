@@ -1,0 +1,21 @@
+.offline-processando {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #f6e5b7;
+  background: rgba(10, 10, 16, .9);
+}
+.offline-processando > div {
+  display: grid;
+  gap: 16px;
+  width: min(340px, 100%);
+  padding: 28px;
+  text-align: center;
+  border: 1px solid #9e834a;
+  border-radius: 12px;
+  background: #201b23;
+}
+.offline-processando progress { width: 100%; accent-color: #d5b771; }

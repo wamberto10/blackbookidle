@@ -14,9 +14,14 @@
 import { CONFIG } from '../config.js';
 import * as P from '../sistemas/progressao.js';
 import { combateLiberado, lutaAtual, cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
-import { FASES, MAPAS, faseLiberada } from '../sistemas/mundo.js';
+import { obterFase, mapaDesenhado, faseLiberada } from '../sistemas/mundo.js';
+import { mapaVisual, nomeDaPosicao } from '../sistemas/escala.js';
 import { RARIDADE_POR_ID } from '../sistemas/itens.js';
 import { formatarNumero } from '../format.js';
+import { multiplicar, maximo, razao } from '../numeros.js';
+// v0.33.0: a luta roda normalizada (sistemas/combate.js) — valor real = valor da luta × escala (só para mostrar)
+const real = (valor, escala) => multiplicar(valor, escala ?? 1);
+let escalaMostrada = 1;
 import { personagemDe } from '../sistemas/personagem.js';
 import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
 import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
@@ -96,8 +101,8 @@ function agendar(funcao, intervalo = INTERVALO_ENTRE_GOLPES) {
 function desenharBarras() {
   for (const lado of ['jogador', 'inimigo']) {
     const { vida, maxima } = vidaMostrada[lado];
-    $(`cb-vida-${lado}`).style.width = Math.max(0, vida / maxima) * 100 + '%';
-    $(`cb-vida-${lado}-texto`).textContent = `${formatarNumero(Math.max(0, vida))} / ${formatarNumero(maxima)}`;
+    $(`cb-vida-${lado}`).style.width = Math.min(1, Math.max(0, razao(vida, maxima))) * 100 + '%';
+    $(`cb-vida-${lado}-texto`).textContent = `${formatarNumero(real(maximo(0, vida), escalaMostrada))} / ${formatarNumero(real(maxima, escalaMostrada))}`;
   }
 }
 
@@ -108,7 +113,7 @@ export function atualizarTelaCombate(estado) {
   if (!liberado) return;
 
   ultimoEstado = estado;
-  const fase = FASES[estado.combate.faseAtual];
+  const fase = obterFase(estado.combate.faseAtual);
   const luta = lutaAtual();
 
   // v0.15.2: enquanto o herói luta contra o boss do evento, a luta da fase fica PAUSADA — avisa,
@@ -128,15 +133,16 @@ export function atualizarTelaCombate(estado) {
   const chave = `${fase.indice}|${estado.reino}|${JSON.stringify(personagemDe(estado))}`;
   if (chave !== chaveDesenhada && inimigoLivre) {
     chaveDesenhada = chave;
-    const mapa = MAPAS[fase.mapa];
-    $('cb-mapa').innerHTML = `${iconeDoMapa(fase.mapa)} Mapa ${fase.mapa + 1}: ${mapa.nome}` +
+    // v0.32.0: mapa global ("Normal — Mapa 12"); nome, ícone e cenário do mapa desenhado
+    const mapa = mapaDesenhado(fase.mapa);
+    $('cb-mapa').innerHTML = `${iconeDoMapa(fase.mapa)} ${nomeDaPosicao(fase.mapa)}: ${mapa.nome}` +
       (fase.selado ? ` <span class="cb-selo" title="${TEXTO_DO_SELO}">${icone('cadeado')} Selado</span>` : '');   // v0.26.0
     $('cb-numero').textContent = `Fase ${fase.numero}/12`;
     $('cb-local').textContent = fase.local;
     $('cb-tipo').innerHTML = `${icone(fase.tipo.sprite)} ${fase.tipo.nome}`;
     $('cb-tipo').className = 'etiqueta tipo-' + fase.chaveTipo;
     $('cb-nome-inimigo').textContent = fase.inimigo.nome;
-    desenharFundo($('arena-fundo'), mapa.cena, fase.mapa + 1);
+    desenharFundo($('arena-fundo'), mapa.cena, mapaVisual(fase.mapa) + 1);
     desenharPersonagem($('cb-sprite-jogador'), P.reinoAtual(estado).id, 'combate', personagemDe(estado));
     desenharInimigo($('cb-sprite-inimigo'), fase);
     const primeira = fase.indice > estado.combate.fasesConcluidas;
@@ -150,21 +156,22 @@ export function atualizarTelaCombate(estado) {
   // Com o dobro da Velocidade do inimigo, ataca 2 vezes por turno: mostra "⚡×2".
   if (luta && luta === lutaMostrada) {
     const duplo = golpesPorTurno(luta.jogador, luta.inimigo) > 1;
-    $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade) + (duplo ? ' ⚡×2' : '');
+    $('cb-vel-jogador').textContent = formatarNumero(real(luta.jogador.velocidade, luta.escalaVel)) + (duplo ? ' ⚡×2' : '');
     $('cb-vel-jogador').parentElement.title = duplo
       ? 'Ataque duplo: você ataca 2 vezes por turno'
-      : `Velocidade · com ${formatarNumero(2 * luta.inimigo.velocidade)} ou mais, você ataca 2 vezes por turno`;
-    $('cb-vel-inimigo').textContent = formatarNumero(luta.inimigo.velocidade);
+      : `Velocidade · com ${formatarNumero(real(multiplicar(2, luta.inimigo.velocidade), luta.escalaVel))} ou mais, você ataca 2 vezes por turno`;
+    $('cb-vel-inimigo').textContent = formatarNumero(real(luta.inimigo.velocidade, luta.escalaVel));
   }
 
   // Começou uma luta nova: barras cheias (depois que as animações da anterior terminarem)
   if (luta && luta !== lutaMostrada && pendentes === 0 && inimigoLivre) {
     lutaMostrada = luta;
+    escalaMostrada = luta.escala;
     vidaMostrada.jogador = { vida: luta.vidaJogador, maxima: luta.jogador.vitalidade };
     vidaMostrada.inimigo = { vida: luta.vidaInimigo, maxima: luta.inimigo.vida };
-    $('cb-vel-jogador').textContent = formatarNumero(luta.jogador.velocidade) +
+    $('cb-vel-jogador').textContent = formatarNumero(real(luta.jogador.velocidade, luta.escalaVel)) +
       (golpesPorTurno(luta.jogador, luta.inimigo) > 1 ? ' ⚡×2' : '');
-    $('cb-vel-inimigo').textContent = formatarNumero(luta.inimigo.velocidade);
+    $('cb-vel-inimigo').textContent = formatarNumero(real(luta.inimigo.velocidade, luta.escalaVel));
     // Poder dos dois lados (mesma conta). A previsão da luta e o aviso de quem é mais
     // rápido foram tirados da tela a pedido do dono.
     const previsao = previsaoDaFase(estado, luta.fase);
@@ -307,7 +314,7 @@ export function mostrarGolpe(evento) {
       // Na técnica especial o nome já aparece no letreiro do alto da arena: o número mostra só o dano
       const prefixo = tecnica ? '' : (evento.segundo ? 'GOLPE DUPLO!\n' : '') +
         (evento.elemental ? `EXPLOSÃO DE ${elemento?.nome.toUpperCase() ?? 'QI'}!\n` : evento.critico ? 'CRÍTICO!\n' : '');
-      const numero = numeroFlutuante(alvo, prefixo + formatarNumero(evento.dano),
+      const numero = numeroFlutuante(alvo, prefixo + formatarNumero(real(evento.dano, evento.escala)),
         (forte ? 'critico' : '') + (evento.elemental ? ' elemental' : '') + (alvo === 'jogador' ? ' recebido' : ''));
       if (elemento && atacante === 'jogador') numero.style.color = elemento.cor;
 
@@ -328,7 +335,7 @@ export function mostrarCura(evento) {
   agendar(() => {
     vidaMostrada.jogador = { vida: evento.vida, maxima: evento.vidaMaxima };
     desenharBarras();
-    numeroFlutuante('jogador', `+${formatarNumero(evento.valor)}`, 'cura');
+    numeroFlutuante('jogador', `+${formatarNumero(real(evento.valor, evento.escala))}`, 'cura');
     animarClasse($('cb-sprite-jogador'), 'curando', 800);   // aura verde contornando o personagem
     // Efeito visual da Regeneração: desligado (o dono não gostou da 1ª versão, verde com folhas).
     // Para ligar de novo depois de gerar um novo cura.png: troque false por true.
@@ -417,7 +424,7 @@ function mostrarTecnica(evento) {
   if (efeitos.cura) {
     vidaMostrada.jogador = { vida: evento.vidaJogador, maxima: evento.vidaMaximaJogador };
     desenharBarras();
-    numeroFlutuante('jogador', `+${formatarNumero(efeitos.cura)}`, 'cura');
+    numeroFlutuante('jogador', `+${formatarNumero(real(efeitos.cura, evento.escala))}`, 'cura');
     animarClasse($('cb-sprite-jogador'), 'curando', 800);
   }
   if (efeitos.congelou) setTimeout(() => numeroFlutuante('inimigo', '🔥 Atordoado!', 'elemental'), 250);

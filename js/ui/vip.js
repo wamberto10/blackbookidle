@@ -23,7 +23,7 @@ export function montarVip(acoes) {
     <li>🧘 <b>Meditar automático</b>: ${V.cliquesPorSegundo} ${V.cliquesPorSegundo === 1 ? 'clique' : 'cliques'} por segundo com o jogo aberto — o botão Meditar passa a ligar/desligar</li>
     <li>⚡ <b>Rompimento automático</b>: rompe o reino sozinho assim que cumprir os requisitos</li>
     <li>${icone('recompensa')} <b>Mais itens raros</b>: ${tiers}</li>
-    <li>${icone('essencia')} <b>+${Math.round(V.bonusEssencia * 100)}% de Essência da Alma</b> ao reencarnar</li>
+    <li>${icone('essencia')} <b>+${Math.round(V.bonusEssencia * 100)}% de Essência da Alma</b> no farm</li>
     <li>⚔️ <b>+${Math.round(V.atributos.ataque * 100)}% de Ataque</b>, 🛡️ <b>+${Math.round(V.atributos.defesa * 100)}% de Defesa</b> e
         ❤️ <b>+${Math.round(V.atributos.vitalidade * 100)}% de Vitalidade</b> (no total, com itens e tudo)</li>`;
 }

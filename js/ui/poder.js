@@ -16,7 +16,7 @@ const TEXTOS = {
 
 // v0.26.0: explicação do Selo do Mundo Primordial (Mapa, Combate e Personagem)
 export const TEXTO_DO_SELO = 'Selo do Mundo Primordial: aqui você luta com a força do Elemento Verdadeiro. ' +
-  'Black Book, Núcleos e itens (até o limite do reino selado) continuam valendo; subir de estágio não muda a luta.';
+  'Black Book, Núcleos e itens (em % do cultivo selado) continuam valendo; subir de estágio não muda a luta.';
 export const TEXTO_CURTO_DO_SELO = 'Selado: aqui você luta com a força do Elemento Verdadeiro';
 
 // Previsão da luta contra a fase, já com texto e cor
