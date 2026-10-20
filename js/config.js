@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.33.4',
+  versao: '0.34.0',
 
   // ---- v0.32.0: PROGRESSÃO CONTÍNUA (docs/PROGRESSAO_CONTINUA.md) ----
   // A campanha não recomeça mais: Fácil → Normal → Difícil → Inferno → Infinito são capítulos seguidos.
@@ -51,6 +51,23 @@ export const CONFIG = {
     ganhoProducao: 1.3,       // × Cultivo por segundo por nível
     custoInicial: 2.5,        // custo do nível 1 = custo de avançar no Fruto do Universo × isto
     crescimentoCusto: 1.577,  // × a cada nível
+  },
+
+  // v0.34.0: REENCARNAÇÃO OPCIONAL (sistemas/reencarnacao.js). Libera ao vencer o chefe do Mapa 12 (fim do 1º
+  // mundo). Recomeça o cultivo (reino, estágio, Maestria) e volta a jornada para o Fácil 1-1; todo o resto fica.
+  // Marca da Alma: nível 1 no Mapa 12 e +1 a cada "mapasPorMarca" mapas (pelo RECORDE de mapas vencidos, não pelo
+  // número de vidas — reencarnar sem ir mais longe não rende nada). Cada nível: +bonusPorMarca em Ataque,
+  // Vitalidade e Defesa, SOMANDO. Calibrado pelo robô (docs/REENCARNACAO.md): o ritmo da campanha é muito sensível
+  // a força que cresce com o avanço — reencarnando sempre, +0,25%/nível deixa a campanha até o Mapa 576 ~11% mais
+  // rápida (+5% já vem só da volta pelos mapas); +1%/nível = 18%, +5% = 44%, +10% = 57% (o jogo perderia o ritmo).
+  reencarnacao: {
+    mapaParaLiberar: 12,
+    mapasPorMarca: 12,
+    bonusPorMarca: 0.0025,
+    // A volta recomeça no máximo este número de mapas antes do recorde (no começo do jogo = Fácil 1-1). Sem limite, a
+    // caminhada pelas fases já conquistadas crescia sem fim (simulação até o Mapa 1218: ~5,6 h a cada reencarnação).
+    voltaMaximaEmMapas: 96,
+    vidasNoRegistro: 20,
   },
 
   // Salvar automaticamente a cada X milissegundos (10000 = 10 segundos)

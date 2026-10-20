@@ -15,6 +15,7 @@
 //   5. Equipamentos → melhora o item vestido mais barato de melhorar
 //   6. Núcleos      → usa os guardados no atributo com menos pontos
 //   7. Retomada     → religa o avanço do combate depois de uma derrota (intervalo mínimo + força maior)
+//   8. Reencarnação → v0.34.0: reencarna assim que a Marca da Alma subiria (sistemas/reencarnacao.js)
 // Reservas: a compra só acontece se o saldo DEPOIS do gasto ficar ≥ reserva.
 // =============================================================
 import { CONFIG } from '../config.js';
@@ -25,7 +26,8 @@ import * as NU from './nucleos.js';
 import { podeMelhorar, melhorar } from './equipamentos.js';
 import { custoMelhoria } from './itens.js';
 import { calcularAtributos, poderTotal } from './atributos.js';
-import { atualizarAtributosDaLuta } from './combate.js';
+import { atualizarAtributosDaLuta, reiniciarLuta } from './combate.js';
+import { podeReencarnar, reencarnar } from './reencarnacao.js';
 import { liberado } from './desbloqueios.js';
 import { somar, multiplicar, comparar, maiorOuIgual, maior } from '../numeros.js';
 import { cabe as sobraReserva } from '../saldos.js';
@@ -56,15 +58,17 @@ export function automacaoPadrao() {
     equipamentos: { ativo: false, reserva: 0 },
     nucleos: { ativo: false },
     retomada: { ativo: false, minutos: 10, melhoria: 0.02 },
+    reencarnacao: { ativo: false },   // v0.34.0
     ultima: null,   // resumo da última execução que fez alguma coisa (tela de Opções)
   };
 }
 
 const novoRelatorio = () => ({ blackbook: 0, essenciaGasta: 0, arranjo: 0, pedrasArranjo: 0, itens: 0, pedrasItens: 0,
-  nucleos: 0, pilulas: { acumulo: 0, fluxo: 0, rompimento: 0 }, cultivoDasPilulas: 0, fonteEstelar: false, retomou: false });
+  nucleos: 0, pilulas: { acumulo: 0, fluxo: 0, rompimento: 0 }, cultivoDasPilulas: 0, fonteEstelar: false, retomou: false,
+  reencarnou: 0 });   // reencarnou = nível da Marca da Alma recebido (0 = não reencarnou)
 
 export function relatorioVazio(r) {
-  return !r.blackbook && !r.arranjo && !r.itens && !r.nucleos && !r.retomou && !r.fonteEstelar &&
+  return !r.blackbook && !r.arranjo && !r.itens && !r.nucleos && !r.retomou && !r.fonteEstelar && !r.reencarnou &&
     !r.pilulas.acumulo && !r.pilulas.fluxo && !r.pilulas.rompimento;
 }
 
@@ -192,8 +196,12 @@ export function executarAutomacao(estado, aoRelatorio) {
     estado.combate.derrota = null;
     r.retomou = true;
   }
+  if (a.reencarnacao?.ativo && podeReencarnar(estado)) {
+    r.reencarnou = reencarnar(estado).marca;
+    reiniciarLuta();
+  }
   if (relatorioVazio(r)) return null;
-  if (r.blackbook || r.itens || r.nucleos || r.fonteEstelar) atualizarAtributosDaLuta(estado);   // vale na luta atual
+  if (!r.reencarnou && (r.blackbook || r.itens || r.nucleos || r.fonteEstelar)) atualizarAtributosDaLuta(estado);   // vale na luta atual
   r.em = estado.estatisticas.tempoJogado;
   a.ultima = r;
   if (aoRelatorio) aoRelatorio(r);

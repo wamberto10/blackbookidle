@@ -142,6 +142,12 @@ export function atualizarTelaAutomacao(estado, aberto) {
       ${numero('retomada.melhoria', retomada.melhoria, 'e o Poder ou a Velocidade subir pelo menos (%) desde a derrota', 'porcento')}
       <p class="pequeno">Mínimo: ${MINUTOS_MINIMOS_RETOMADA} minuto e ${MELHORIA_MINIMA_RETOMADA * 100}% de ganho.
         Perdeu de novo? Espera outra melhoria. "Farmar aqui" não é desfeito: o herói fica onde você mandou.</p>
+    </fieldset>
+
+    <fieldset><legend>${caixaDeMarcar('reencarnacao.ativo', a.reencarnacao?.ativo ?? false, '8. Reencarnar quando a Marca da Alma subir')}</legend>
+      <p class="pequeno">A cada 12 mapas novos do seu recorde. O cultivo recomeça e a jornada volta ao Fácil 1-1 (longe no
+        jogo, até 96 mapas antes do recorde); Black Book, Essência, itens, Pedras e fases conquistadas ficam. Também funciona
+        com o jogo fechado.</p>
     </fieldset>`;
 }
 
@@ -155,5 +161,6 @@ function resumo(r) {
   if (pilulas) p.push(`${pilulas} pílula(s)`);
   if (r.fonteEstelar) p.push('Fonte Estelar refinada');
   if (r.retomou) p.push('avanço do combate religado');
+  if (r.reencarnou) p.push(`reencarnou (Marca da Alma nível ${r.reencarnou})`);
   return p.join(', ');
 }

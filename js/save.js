@@ -177,7 +177,7 @@ function mesclarAutomacao(salva) {
   const p = automacaoPadrao();
   if (!salva || typeof salva !== 'object') return p;
   const a = { ...p, segundos: salva.segundos === undefined ? 0 : salva.segundos, ultima: salva.ultima ?? null };
-  for (const grupo of ['blackbook', 'cultivo', 'pilulas', 'arranjo', 'equipamentos', 'nucleos', 'retomada']) {
+  for (const grupo of ['blackbook', 'cultivo', 'pilulas', 'arranjo', 'equipamentos', 'nucleos', 'retomada', 'reencarnacao']) {
     a[grupo] = { ...p[grupo], ...(salva[grupo] ?? {}) };
   }
   a.pilulas.minimo = { ...p.pilulas.minimo, ...(salva.pilulas?.minimo ?? {}) };
@@ -248,6 +248,7 @@ function lerNumerosGrandes(estado, antesDeReparar = () => {}) {
   converter(estado.estatisticas, 'essenciaConquistas', 'estatisticas.essenciaConquistas');
   converter(estado.estatisticas, 'essenciaFarm', 'estatisticas.essenciaFarm');
   converter(estado.reencarnacao, 'essenciaTotal', 'reencarnacao.essenciaTotal');
+  converter(estado.reencarnacao, 'essenciaNoInicio', 'reencarnacao.essenciaNoInicio');   // v0.34.0
   converter(estado.reencarnacao, 'sentidoDivinoMaximo', 'reencarnacao.sentidoDivinoMaximo');
   (estado.reencarnacao.historico ?? []).forEach((v, i) => converter(v, 'essencia', `reencarnacao.historico[${i}].essencia`));
   const itens = [...Object.values(estado.equipados), ...estado.mochila].filter(Boolean);

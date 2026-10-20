@@ -5,6 +5,7 @@
 // em linhas e o registro das últimas vidas (estado.reencarnacao.historico).
 // v0.32.0 (progressão contínua): a reencarnação saiu do jogo. Os cartões mostram a Essência guardada, de onde ela
 // vem (conquistas inéditas, farm da fase atual e VIP) e até onde a jornada chegou; as vidas antigas ficam como legado.
+// v0.34.0: a reencarnação voltou, opcional — Marca da Alma, botão Reencarnar e o registro das vidas.
 // =============================================================
 import { CONFIG } from '../config.js';
 import * as BB from '../sistemas/blackbook.js';
@@ -14,6 +15,7 @@ import { mapaDaFase, mapaVisual, nomeDaPosicao } from '../sistemas/escala.js';
 import { REINOS } from '../dados/reinos.js';
 import { formatarNumero } from '../format.js';
 import { somar, multiplicar, arredondarParaBaixo } from '../numeros.js';
+import * as RE from '../sistemas/reencarnacao.js';
 import { cabe } from '../saldos.js';
 
 const $ = (id) => document.getElementById(id);
@@ -42,6 +44,7 @@ function texto(el, valor) {
 }
 
 export function montarTelaBlackBook(acoes) {
+  $('bb-reencarnar').addEventListener('click', () => acoes.aoReencarnar());
   $('bb-ess-vip').parentElement.title = `VIP: +${Math.round(CONFIG.vip.bonusEssencia * 100)}% de Essência no farm`;
   const lista = $('lista-melhorias');
   const melhorias = [...CONFIG.blackbook.melhorias].sort((a, b) => ORDEM.indexOf(a.id) - ORDEM.indexOf(b.id));
@@ -133,7 +136,9 @@ export function atualizarTelaBlackBook(estado) {
     el.botao.disabled = maximo || !cabe(estado, 'essencia', custo);
   }
 
-  // ---- Resumo e vidas antigas (legado) ----
+  atualizarReencarnacao(estado);
+
+  // ---- Resumo e vidas anteriores ----
   const r = estado.reencarnacao;
   texto($('bb-recorde'), nomeDaFase(estado.combate.fasesConcluidas));
   texto($('bb-total'), formatarNumero(somar(somar(e.essenciaConquistas ?? 0, e.essenciaFarm ?? 0), r.essenciaTotal ?? 0)));
@@ -142,7 +147,30 @@ export function atualizarTelaBlackBook(estado) {
   desenharVidas(r);
 }
 
-// As 3 últimas vidas antigas, da mais nova para a mais antiga (o save guardava até 20)
+// Ex.: 0,0025 × 8 → "+2%" | × 9 → "+2,25%"
+export const porcentoDaMarca = (marca) => `+${Number((CONFIG.reencarnacao.bonusPorMarca * marca * 100).toFixed(2)).toString().replace('.', ',')}%`;
+
+// v0.34.0: Marca da Alma e botão Reencarnar
+function atualizarReencarnacao(estado) {
+  const atual = RE.marcaAtual(estado);
+  const possivel = RE.marcaPossivel(estado);
+  texto($('bb-marca'), `Nível ${atual}`);
+  texto($('bb-marca-bonus'), `${porcentoDaMarca(atual)} Ataque, Vitalidade e Defesa`);
+  const proximo = nomeDaPosicao(RE.mapaDaProximaMarca(estado) - 1);
+  let aviso;
+  if (possivel > atual) {
+    aviso = `Reencarnar agora dá a Marca nível ${possivel} (${porcentoDaMarca(possivel)}). O cultivo recomeça e a jornada volta ao ` +
+      `${nomeDaPosicao(Math.floor(RE.faseDaVolta(estado) / 12))}; Black Book, Essência, itens, Pedras e fases conquistadas ficam.`;
+  } else if (possivel === 0) {
+    aviso = `Libera ao vencer o chefe do ${proximo} (fim do 1º mundo).`;
+  } else {
+    aviso = `Próximo nível da Marca: vença o chefe do ${proximo}. Reencarnar sem ir mais longe não rende nada.`;
+  }
+  texto($('bb-reenc-texto'), aviso);
+  $('bb-reencarnar').disabled = !RE.podeReencarnar(estado);
+}
+
+// As 3 últimas vidas, da mais nova para a mais antiga (o save guarda até 20)
 function desenharVidas(r) {
   const vidas = [...(r.historico ?? [])].reverse();
   const chave = `${r.vezes}|${vidas.length}`;
@@ -160,7 +188,7 @@ function desenharVidas(r) {
         <span class="bb-vida-num"><b>${vida.numero}</b></span>
         <img class="bb-vida-mapa" src="img/fundos/mapa${String(mapaVisual(indiceMapa) + 1).padStart(2, '0')}.jpg" alt="" onerror="this.style.visibility='hidden'">
         <div class="bb-vida-info"><b>${reino?.nome ?? '—'}</b>
-          <small>${ultimoReino ? 'Alcançou o reino máximo' : `${nomeDaFase(vida.fase)} · ${mapaDesenhado(indiceMapa).nome}`}</small></div>
+          <small>${ultimoReino ? 'Alcançou o reino máximo' : `${nomeDaFase(vida.fase)} · ${mapaDesenhado(indiceMapa).nome}`}${vida.marca ? ` · Marca ${vida.marca}` : ''}</small></div>
         <span class="bb-vida-tempo"><img src="img/ui/bb_icone_relogio.png" alt="">${duracao(vida.segundos)}</span>
         <span class="bb-vida-ess"><img src="img/ui/icone_essencia.png" alt="">${formatarNumero(vida.essencia)}</span>
       </div>`;

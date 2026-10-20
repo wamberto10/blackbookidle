@@ -12,6 +12,7 @@ import * as NU from './sistemas/nucleos.js';
 import * as BOSS from './sistemas/boss.js';
 import * as CA from './sistemas/cultivoAvancado.js';
 import * as MOTOR from './sistemas/motor.js';
+import * as RE from './sistemas/reencarnacao.js';
 import { somar, subtrair, maior } from './numeros.js';
 import { instantaneo, variacaoDesde, saldo } from './saldos.js';
 import { mostrarGolpeBoss, animarDerrotaDoBoss } from './ui/telaBoss.js';
@@ -26,6 +27,7 @@ import { salvar as gravarEstado, carregar, apagarSave, segundosOffline } from '.
 import { montarInterface, atualizarInterface, mostrarMensagem, mostrarModal, animarRompimento, trocarAba, motivoParaNaoAvancar, mostrarGanhoMeditacao } from './ui/interface.js';
 import { mostrarGolpe, mostrarCura, animarVitoria, animarDerrota, registrarBatalha } from './ui/telaCombate.js';
 import { focarMapaDaFase } from './ui/telaMapa.js';
+import { porcentoDaMarca } from './ui/telaBlackBook.js';
 import { formatarNumero, formatarTempo } from './format.js';
 import { iniciarSite } from './site.js';
 
@@ -47,7 +49,8 @@ function salvar(estadoAtual) { return gravarEstado(estadoAtual, ultimoTick); }
 const novoResumo = () => ({ tempo: 0, cultivo: 0, estagios: 0, vitorias: 0, pedras: 0, essencia: 0, fasesNovas: 0, itens: 0, nucleos: 0, pilulas: 0,
   desmanchados: 0, mesclas: 0, pedrasMochila: 0, mundoConcluido: null, dificuldade: null,   // v0.26.0: Mochila automática
   // v0.33.0: o que a automação fez enquanto você estava fora
-  auto: { blackbook: 0, essenciaGasta: 0, arranjo: 0, pedrasArranjo: 0, itens: 0, pedrasItens: 0, nucleos: 0, pilulas: 0, retomadas: 0, fonteEstelar: false } });
+  auto: { blackbook: 0, essenciaGasta: 0, arranjo: 0, pedrasArranjo: 0, itens: 0, pedrasItens: 0, nucleos: 0, pilulas: 0, retomadas: 0, fonteEstelar: false,
+    reencarnacoes: 0, marca: 0 } });   // v0.34.0
 
 // v0.33.0: soma um relatório da automação (sistemas/automacao.js) no resumo
 function somarAutomacao(total, r) {
@@ -61,6 +64,7 @@ function somarAutomacao(total, r) {
   total.pilulas += r.pilulas.acumulo + r.pilulas.fluxo + r.pilulas.rompimento;
   if (r.retomou) total.retomadas += 1;
   if (r.fonteEstelar) total.fonteEstelar = true;
+  if (r.reencarnou) { total.reencarnacoes = (total.reencarnacoes ?? 0) + 1; total.marca = r.reencarnou; }
 }
 
 // Texto curto do que a automação fez (resumo offline e registro do combate)
@@ -75,6 +79,8 @@ function textoDaAutomacao(t) {
   if (t.fonteEstelar) partes.push('Fonte Estelar refinada');
   const retomadas = t.retomadas ?? (t.retomou ? 1 : 0);
   if (retomadas) partes.push(`avanço do combate religado ${retomadas}×`);
+  const vidas = t.reencarnacoes ?? (t.reencarnou ? 1 : 0);   // v0.34.0
+  if (vidas) partes.push(`reencarnou ${vidas}× (Marca da Alma nível ${t.marca ?? t.reencarnou})`);
   return partes.join(', ');
 }
 
@@ -440,6 +446,27 @@ montarInterface({
       atualizarInterface(estado);
     }
   },
+  // v0.34.0: reencarnação opcional (sistemas/reencarnacao.js)
+  aoReencarnar: () => {
+    if (!RE.podeReencarnar(estado)) return;
+    if (BOSS.lutaDoBoss()) return mostrarMensagem('Termine a luta contra o boss antes de reencarnar.');
+    const marca = RE.marcaPossivel(estado);
+    const certeza = confirm(
+      `Reencarnar e receber a Marca da Alma nível ${marca}?\n\n` +
+      'Recomeça: o Cultivo guardado, o reino, o estágio, a Maestria e a Fonte Estelar. A jornada volta ao ' +
+      `${nomeDaPosicao(Math.floor(RE.faseDaVolta(estado) / FASES_POR_MAPA))} e avança sozinha pelas fases que você já conquistou.\n\n` +
+      'Fica: Black Book, Essência, itens, Pedras, Arranjo, Núcleos, pílulas, fases conquistadas e dificuldades liberadas.');
+    if (!certeza) return;
+    const r = RE.reencarnar(estado);
+    C.reiniciarLuta();
+    salvar(estado);
+    atualizarInterface(estado);
+    mostrarModal(`🔄 Vida ${r.vida.numero} concluída`,
+      `Sua alma renasce com a Marca da Alma nível ${r.marca}: ${porcentoDaMarca(r.marca)} de Ataque, Vitalidade e Defesa para sempre.\n\n` +
+      'O cultivo recomeça do Corpo Temperado e a jornada volta até no máximo 96 mapas antes do seu recorde. Nos mundos que ' +
+      'você já zerou os inimigos comuns fogem, e o caminho até onde você parou é rápido. A próxima Marca vem a cada 12 mapas ' +
+      'além do seu recorde.');
+  },
   aoComprarMelhoria: (id) => {
     if (BB.comprarMelhoria(estado, id)) {
       C.atualizarAtributosDaLuta(estado);   // o bônus vale na hora, inclusive na luta atual
@@ -641,14 +668,14 @@ if (estado.avisoProgressao) {
   const recorde = m.recorde >= 0 ? `Sua maior conquista foi preservada: ${nomeDaPosicao(Math.floor(m.recorde / FASES_POR_MAPA))}, ` +
     `fase ${m.recorde % FASES_POR_MAPA + 1}. ` : '';
   mostrarModal('🌌 A jornada agora é contínua!',
-    'A reencarnação que recomeçava o cultivo e os mapas saiu do jogo. Agora você nunca volta ao começo:\n\n' +
+    'A reencarnação obrigatória saiu do jogo. Agora você nunca precisa voltar ao começo (reencarnar ficou opcional, no Black Book):\n\n' +
     '• Depois do Fácil vêm Normal, Difícil, Inferno e Infinito, com os mesmos mapas num patamar acima.\n' +
     '• Depois do Fruto do Universo, o cultivo continua na Maestria da Criação.\n' +
     '• A Essência da Alma vem das conquistas inéditas e do farm (tempo de luta vencida).\n' +
     '• Os equipamentos multiplicam o seu cultivo (Ataque, Vitalidade, Defesa e Velocidade em %), sem o limite do reino.\n\n' +
     recorde + (m.nivelDepois > m.nivelAntes ? 'Seu cultivo subiu para o nível comprovado nas vidas anteriores. ' : '') +
     'Itens, Pedras, Essência, Black Book, Núcleos, Arranjo e pílulas foram mantidos' +
-    (m.reencarnacoes > 0 ? `; o registro das suas ${m.reencarnacoes} reencarnações fica no Black Book como legado.` : '.'));
+    (m.reencarnacoes > 0 ? `; o registro das suas ${m.reencarnacoes} reencarnações fica no Black Book.` : '.'));
 }
 
 // v0.33.0: valores inválidos encontrados no save (não somem em silêncio: aviso + cópia de segurança)

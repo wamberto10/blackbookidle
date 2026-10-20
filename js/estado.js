@@ -63,9 +63,11 @@ export function criarEstadoInicial() {
       rank: [],         // [{ nome, dano }] dano em fração da vida total, nesta edição
       derrotas: 0,      // quantas vezes o boss já foi derrotado
     },
-    // Legado (v0.32.0): reencarnações dos saves antigos. Não acontecem mais; o histórico aparece no Black Book.
+    // Reencarnações (sistemas/reencarnacao.js). v0.32.0: saíram (as antigas viraram legado); v0.34.0: voltaram
+    // OPCIONAIS, com a Marca da Alma. O registro das vidas aparece no Black Book.
     reencarnacao: {
       vezes: 0,
+      marca: 0,                // v0.34.0: nível da Marca da Alma (+Ataque/Vitalidade/Defesa)
       melhorFaseDeTodas: -1,   // fase mais distante já vencida em qualquer vida
       faseDaUltima: -1,        // fase em que reencarnou da última vez (-1 = nunca)
       sentidoDivinoMaximo: 0,  // "a alma se lembra": maior Sentido Divino já alcançado (fica ao reencarnar)

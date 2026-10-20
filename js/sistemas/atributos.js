@@ -103,15 +103,17 @@ export function calcularAtributos(estado, opcoes = {}) {
   const vip = (atributo) => estado.vip ? 1 + (CONFIG.vip.atributos[atributo] ?? 0) : 1;   // VIP: +25% (CONFIG.vip.atributos)
   // v0.21.0: Batismo Mundial — +3% Ataque, Vitalidade e Defesa por rompimento desde a Transformação do Qi
   const batismo = 1 + batismosMundiais(selado ? { reino } : estado) * CONFIG.batismo.bonusPorBatismo;
+  // v0.34.0: Marca da Alma (sistemas/reencarnacao.js) — soma CONFIG.reencarnacao.bonusPorMarca por nível
+  const marca = 1 + CONFIG.reencarnacao.bonusPorMarca * (estado.reencarnacao?.marca ?? 0);
   // base × itens × Black Book × (classe × Núcleos × VIP × Batismo — números comuns)
   const total = (atributo, comum) => multiplicar(multiplicar(base[atributo], itens(atributo)), multiplicar(mult(estado, atributo), comum));
   return {
-    ataque: total('ataque', classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo),
+    ataque: total('ataque', classe('ataque') * nucleo(estado, 'ataque') * vip('ataque') * batismo * marca),
     critico: Math.min(A.criticoMaximo, A.criticoBase + A.criticoPorNivel * nivel + soma(estado, 'critico') + eq.critico + somaClasse('critico')),
     danoCritico: Math.min(A.danoCriticoMaximo, A.danoCriticoBase + A.danoCriticoPorNivel * nivel + soma(estado, 'danoCritico') + eq.danoCritico + somaClasse('danoCritico')),
     velocidade: total('velocidade', classe('velocidade') * nucleo(estado, 'velocidade')),
-    vitalidade: total('vitalidade', classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade') * batismo),
-    defesa: total('defesa', classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo),
+    vitalidade: total('vitalidade', classe('vitalidade') * nucleo(estado, 'vitalidade') * vip('vitalidade') * batismo * marca),
+    defesa: total('defesa', classe('defesa') * nucleo(estado, 'defesa') * vip('defesa') * batismo * marca),
     esquiva: Math.min(A.esquivaMaxima, A.esquivaBase + A.esquivaPorNivel * nivel + eq.esquiva),
     poderCultivo: producaoPorSegundo(estado),
     // v0.12.0 "a alma se lembra": vale o maior entre o desta vida e o maior já alcançado (selado, não vale)

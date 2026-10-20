@@ -488,19 +488,31 @@
             <img src="img/ui/bb_icone_montanha.png" alt="">
             <div class="bb-proxima-texto"><b id="bb-inicio-mundo"></b><small id="bb-inicio"></small></div>
           </div>
-          <p class="bb-continua">Nada recomeça: cultivo, reino, mapas, itens, Pedras e Black Book seguem com você.
-            Mais longe = mais Essência por segundo de farm.</p>
+          <p class="bb-continua">Nada recomeça se você não quiser: cultivo, reino, mapas, itens, Pedras e Black Book seguem
+            com você. Mais longe = mais Essência por segundo de farm.</p>
         </div>
 
+        <!-- v0.34.0: reencarnação opcional (js/sistemas/reencarnacao.js) -->
+        <div class="bb-secao"><span>Reencarnação</span></div>
+        <div class="bb-reenc bb-ciclo">
+          <div class="bb-card bb-marca" title="Sobe 1 nível a cada 12 mapas do seu recorde. Reencarnar sem ir mais longe não rende nada.">
+            <div class="bb-card-titulo">Marca da Alma</div>
+            <div class="bb-marca-valor"><b id="bb-marca">0</b><small id="bb-marca-bonus"></small></div>
+          </div>
+          <div class="bb-card bb-ciclo-acao">
+            <p id="bb-reenc-texto"></p>
+            <button class="ui ui-botao-dourado" id="bb-reencarnar">Reencarnar</button>
+          </div>
+        </div>
 
         <div class="bb-secao"><span>Melhorias permanentes</span></div>
         <div class="bb-melhorias" id="lista-melhorias"></div>
 
         <p class="bb-resumo">Mais longe: <b id="bb-recorde"></b> · Essência ganha no total: <b id="bb-total">0</b></p>
         <div id="bb-legado" class="escondido">
-          <div class="bb-secao"><span>Vidas antigas (legado)</span></div>
+          <div class="bb-secao"><span>Vidas anteriores</span></div>
           <div class="bb-vidas" id="bb-vidas"></div>
-          <p class="bb-resumo">Reencarnações antes da jornada contínua: <b id="bb-vezes">0</b></p>
+          <p class="bb-resumo">Reencarnações: <b id="bb-vezes">0</b></p>
         </div>
 
         <details class="recolhivel"><summary>ⓘ Como funciona</summary>
@@ -509,7 +521,12 @@
             A Essência da Alma vem de duas fontes: cada <b>fase vencida pela 1ª vez</b> (uma vez só, para sempre) e o
             <b>farm</b> — cada segundo de luta vencida rende Essência do patamar daquela fase (fases mais fáceis rendem
             menos; derrota não rende). Preso numa fase difícil? Farme a anterior, a mais difícil que você vence com
-            folga: ela paga quase o mesmo por segundo. Use a Essência aqui para fortalecer seus atributos para sempre.</p>
+            folga: ela paga quase o mesmo por segundo. Use a Essência aqui para fortalecer seus atributos para sempre.<br>
+            <b>Reencarnar é opcional.</b> Libera ao vencer o chefe do Mapa 12 e de novo a cada 12 mapas além do seu recorde:
+            o cultivo recomeça e a jornada volta ao Fácil 1-1, ou longe no jogo até 96 mapas antes do recorde (nos mundos já
+            zerados os inimigos comuns fogem), e a alma
+            ganha a <b>Marca da Alma</b> (+0,25% de Ataque, Vitalidade e Defesa por nível, para sempre). Quem não
+            reencarna não perde nada.</p>
         </details>
       </div>
     </div>
