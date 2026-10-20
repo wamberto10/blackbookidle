@@ -1,0 +1,141 @@
+/* =============================================================
+   css/bordas-finas.css — BORDAS FINAS E SIMPLES EM TODAS AS TELAS (v0.33.3, pedido do dono)
+   Carregado POR ÚLTIMO (depois de style.css, ui-kit.css e offline.css): troca as molduras enfeitadas (peças
+   9-slice de img/interface/ e do kit img/ui/) por linhas finas douradas, no mesmo estilo das telas que já
+   estavam assim (Black Book, Personagem e Mapa — essas não mudam). Os BOTÕES de imagem do kit (dourado,
+   verde, vermelho, Meditar/Avançar, chefe) continuam como estão; os botões comuns ficam simples.
+   ============================================================= */
+:root {
+  --fina: rgba(217, 173, 87, 0.75);      /* linha dourada */
+  --fina-forte: #d9ad57;
+  --fina-fraca: rgba(217, 173, 87, 0.35);
+  --fina-fundo: rgba(14, 11, 22, 0.92);  /* fundo dos cartões */
+  --fina-texto: #f3d58a;
+}
+
+/* ---------- Painéis antigos (Cultivo, Combate, Opções): título, cartões, barras, botões ---------- */
+.painel-topo { padding-top: 8px; padding-bottom: 8px; }
+.painel-topo h2 {
+  height: auto; padding: 0; border: none; border-image: none; color: var(--fina-texto); text-shadow: 0 2px 2px #000;
+}
+.painel-topo::after { left: 16px; right: 16px; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--fina), transparent); }
+
+.cartao {
+  border: 1px solid var(--fina); border-image: none; border-radius: 10px;
+  background: var(--fina-fundo); padding: 10px 12px;
+}
+
+.modal-caixa {
+  border: 1px solid var(--fina-forte); border-image: none; border-radius: 12px;
+  background: #0e0b16; padding: 20px; box-shadow: 0 0 30px rgba(217, 173, 87, 0.18);
+}
+.modal-caixa h2 { color: var(--fina-texto); }
+
+.barra {
+  height: 12px; padding: 0; border: 1px solid var(--fina); border-image: none; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5); overflow: hidden;
+}
+.barra-vida { height: 10px; padding: 0; }
+
+/* Botões comuns (o mesmo seletor da regra antiga, para valer por cima dela) */
+button:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo):not(.md-mundo):not(.md-zona):not(.md-no):not(.orbe-habilidade):not(.botao-atributos):not(.iluminacao):not(.ui) {
+  border: 1px solid var(--fina); border-image: none; border-radius: 8px;
+  background: rgba(28, 21, 36, 0.95); padding: 0 12px; min-height: 40px;
+}
+button.principal:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo):not(.md-mundo):not(.md-zona):not(.md-no):not(.orbe-habilidade):not(.botao-atributos):not(.iluminacao):not(.ui),
+button.botao-cult.ativo:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo):not(.md-mundo):not(.md-zona):not(.md-no):not(.orbe-habilidade):not(.botao-atributos):not(.iluminacao):not(.ui) {
+  border-color: #f3d58a; background: linear-gradient(#f6dc95, #d3a04a); color: #2a1a06; text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5);
+}
+button.perigo:not(.botao-icone):not(.carta-escolha):not(.cartao-mapa):not(.slot-item):not(.filtro):not(.celula-item):not([data-aba]):not(.botao-nucleo):not(.botao-imagem):not(.cb-registro-titulo):not(.md-mundo):not(.md-zona):not(.md-no):not(.orbe-habilidade):not(.botao-atributos):not(.iluminacao):not(.ui) { border-color: rgba(255, 130, 110, 0.7); color: #ff9a8a; }
+
+.barra-topo::after, .barra-abas::before { border: none; border-image: none; height: 1px; background: var(--fina); }
+
+/* ---------- Tela inicial: barra de cima, placa do lugar, painel de baixo e abas ---------- */
+.jogo .barra-topo { background: rgba(12, 9, 18, 0.95); border-bottom: 1px solid var(--fina); }
+.topo-retrato::after {
+  background: none; border: max(1.5px, calc(var(--u) * 2.5)) solid var(--fina-forte); border-radius: calc(var(--u) * 14);
+}
+.topo-retrato img { inset: 7%; width: 86%; height: 86%; border-radius: calc(var(--u) * 9); }
+.topo-nivel-barra {
+  padding: calc(var(--u) * 3); background: rgba(0, 0, 0, 0.55); border: 1px solid var(--fina); border-radius: 999px; box-sizing: border-box;
+}
+.topo-nivel-barra > div { border-radius: 999px; }
+.recurso { background: var(--fina-fundo); border: 1px solid var(--fina); border-radius: calc(var(--u) * 16); box-sizing: border-box; }
+
+.jogo .inicio-local {
+  height: calc(var(--u) * 92); padding: 0 calc(var(--u) * 30);
+  background: rgba(12, 9, 18, 0.82); border: 1px solid var(--fina); border-radius: calc(var(--u) * 14);
+}
+.jogo .inicio-cultivo {
+  background: linear-gradient(#15101c, #0c0911 60%, #0a0810);
+  border-top: max(1.5px, calc(var(--u) * 2.5)) solid var(--fina-forte);
+}
+.inicio-faixa {
+  height: calc(var(--u) * 50); margin-top: calc(var(--u) * 10); padding: 0 calc(var(--u) * 24);
+  background: rgba(10, 8, 15, 0.9); border: 1px solid var(--fina); border-radius: 999px; box-sizing: border-box;
+}
+.jogo .inicio-cultivo .barra.barra-inicio {
+  height: calc(var(--u) * 26); padding: calc(var(--u) * 4);
+  background: rgba(0, 0, 0, 0.55); border: 1px solid var(--fina); border-radius: 999px; box-sizing: border-box; overflow: hidden;
+}
+.jogo .barra-inicio .barra-preenchida { border-radius: 999px; background: linear-gradient(#ffe7a0, #d9a440); }
+
+.jogo .barra-abas { background: rgba(10, 8, 15, 0.97); border-top: 1px solid var(--fina); }
+.jogo .barra-abas button {
+  background: rgba(20, 15, 28, 0.92); border: 1px solid var(--fina-fraca); border-radius: calc(var(--u) * 12);
+}
+.jogo .barra-abas button.ativa {
+  background: rgba(217, 173, 87, 0.16); border-color: var(--fina-texto); color: var(--fina-texto); font-weight: normal;
+}
+.jogo .barra-abas button.ativa .icone-aba { filter: drop-shadow(0 0 4px rgba(243, 213, 138, 0.55)); }
+
+/* ---------- Mochila: placa do Poder, título, chaves Auto, detalhe do item ---------- */
+.moch-poder.ui-poder-placa {
+  background: var(--fina-fundo); border: max(1.5px, calc(var(--u) * 2.5)) solid var(--fina-forte); border-radius: calc(var(--u) * 14);
+  box-sizing: border-box;
+}
+.moch-poder.ui-poder-placa::before {
+  content: ''; position: absolute; left: calc(var(--u) * 14); top: 50%; width: calc(var(--u) * 46); height: calc(var(--u) * 46);
+  transform: translateY(-50%); background: url('../img/ui/icone_equipar.png') center / contain no-repeat;
+}
+.moch-titulo.ui-secao-titulo { background: none; padding-left: 0; gap: calc(var(--u) * 10); }
+.moch-titulo.ui-secao-titulo::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--fina), transparent); }
+.moch-chip.ui-chip-auto, .moch-chip.ui-chip-auto-ativo {
+  background: rgba(20, 15, 28, 0.92); border: 1px solid var(--fina-fraca); border-radius: 999px;
+}
+.moch-chip.ui-chip-auto-ativo { border-color: var(--fina-texto); background: rgba(217, 173, 87, 0.16); color: var(--fina-texto); }
+.moch-det-moldura.ui-painel-moldura {
+  border: 1px solid var(--fina); border-image: none; border-radius: calc(var(--u) * 14); background: var(--fina-fundo);
+}
+.moch-comparacao.ui-caixa-comparacao {
+  border: 1px solid var(--fina-fraca); border-image: none; border-radius: calc(var(--u) * 10);
+  background: rgba(8, 7, 14, 0.6); padding: calc(var(--u) * 10) calc(var(--u) * 12);
+}
+.moch-etiqueta.ui-etiqueta-moldura { background: rgba(10, 8, 15, 0.9); border: 1px solid var(--fina); border-radius: 999px; }
+
+/* ---------- Criação de personagem ---------- */
+.cri-subtitulo.ui-criacao-placa-subtitulo {
+  background: none; border-top: 1px solid var(--fina); border-bottom: 1px solid var(--fina); height: calc(var(--u) * 40);
+}
+.cri-nova .cri-passo {
+  background: rgba(10, 8, 15, 0.9); border: max(1.5px, calc(var(--u) * 2)) solid var(--fina-fraca); border-radius: 50%; box-sizing: border-box;
+}
+.cri-nova .cri-passo.ativo { background: rgba(217, 173, 87, 0.22); border-color: var(--fina-texto); }
+.cri-carta-moldura.ui-carta-moldura, .cri-carta-moldura.ui-carta-moldura-ativa {
+  border: max(1.5px, calc(var(--u) * 2.5)) solid var(--fina); border-image: none; border-radius: calc(var(--u) * 14);
+}
+.cri-carta-moldura.ui-carta-moldura-ativa { border-color: #f6dc95; box-shadow: 0 0 calc(var(--u) * 18) rgba(243, 213, 138, 0.45); }
+.cri-carta.selecionada .cri-carta-moldura { filter: none; }
+.cri-carta-arte { inset: calc(var(--u) * 6); width: calc(100% - var(--u) * 12); height: calc(100% - var(--u) * 12); border-radius: calc(var(--u) * 10); }
+.cri-carta-rotulo.ui-carta-rotulo { background: rgba(10, 8, 15, 0.88); border: 1px solid var(--fina); border-radius: 999px; padding-bottom: 0; }
+.cri-campo.ui-campo-nome { background: rgba(10, 8, 15, 0.9); border: 1px solid var(--fina); border-radius: calc(var(--u) * 14); box-sizing: border-box; }
+.cri-classe-moldura.ui-classe-linha, .cri-classe-moldura.ui-classe-linha-ativa {
+  border: 1px solid var(--fina); border-image: none; border-radius: calc(var(--u) * 14); background: var(--fina-fundo); overflow: hidden;
+}
+.cri-classe-moldura.ui-classe-linha-ativa { border: max(1.5px, calc(var(--u) * 2.5)) solid #f6dc95; box-shadow: 0 0 calc(var(--u) * 18) rgba(243, 213, 138, 0.4); }
+.cri-classe.selecionada .cri-classe-moldura { filter: none; }
+.cri-classe-icone { background: rgba(10, 8, 15, 0.9); border: 1px solid var(--fina); border-radius: calc(var(--u) * 12); box-sizing: border-box; }
+.mochila-nova .moch-filtro.ui-botao-escuro, .mochila-nova .moch-filtro.ui-botao-escuro-ativo {
+  background: rgba(20, 15, 28, 0.92); border: 1px solid var(--fina-fraca); border-radius: calc(var(--u) * 10);
+}
+.mochila-nova .moch-filtro.ativo { background: rgba(217, 173, 87, 0.16); border-color: var(--fina-texto); color: var(--fina-texto); }
