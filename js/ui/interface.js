@@ -4,7 +4,7 @@
 // atualizarInterface → roda 10×/segundo: só atualiza textos
 // As abas Combate e Mapa ficam em telaCombate.js e telaMapa.js
 // =============================================================
-import { montarTelaBoss, atualizarTelaBoss } from './telaBoss.js';
+import { montarTelaBoss, atualizarTelaBoss, fecharTelaBoss } from './telaBoss.js';
 import { CONFIG } from '../config.js';
 import { REINOS, REGIOES } from '../dados/reinos.js';
 import * as P from '../sistemas/progressao.js';
@@ -15,7 +15,7 @@ import { mapaDaFase, mapaVisual, nomeDaPosicao, numeroNaDificuldade, DIFICULDADE
 import { subtrair, multiplicar, maior, menorOuIgual, maximo, razao, arredondarParaBaixo } from '../numeros.js';
 import { cabe } from '../saldos.js';
 import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
-import { desenharPersonagem, animarVivo } from './sprite.js';
+import { desenharPersonagem, desenharMeditacaoViva, animarVivo } from './sprite.js';
 import { TEXTO_DO_SELO, TEXTO_CURTO_DO_SELO } from './poder.js';
 import { lutaAtual } from '../sistemas/combate.js';
 import { SLOTS } from '../dados/equipamentos.js';
@@ -103,8 +103,7 @@ export function montarInterface(acoes) {
     $('lista-atributos').appendChild(linha);
   }
   montarNucleos(acoes);
-  animarVivo($('sprite'));
-  animarVivo($('sprite-pers'));
+  animarVivo($('sprite-pers'));   // (a tela inicial usa os quadros desenhados — sprite.desenharMeditacaoViva)
   $('pers-avancar').addEventListener('click', () => abrirPainel('cultivo'));
   $('pers-pontos-ajuda').addEventListener('click', () => mostrarMensagem('Núcleos caem dos inimigos a partir do Mapa 3. ' +
     'Use no + de cada cartão do Núcleo de Cultivo: cada ponto dá +1% para sempre.'));
@@ -141,6 +140,7 @@ export function montarInterface(acoes) {
 
 // ---- Painéis em tela cheia ----
 export function abrirPainel(nome) {
+  fecharTelaBoss();   // v0.34.0: a tela do boss fica entre a barra de cima e as abas — tocar numa aba sai dela
   painelAberto = nome;
   document.querySelectorAll('.painel').forEach((p) => p.classList.toggle('aberto', p.id === 'aba-' + nome));
   document.querySelectorAll('#abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === nome));
@@ -264,6 +264,12 @@ function atualizarAvisos(estado) {
 const FUNDO_DA_RECLUSAO = new Image();
 FUNDO_DA_RECLUSAO.src = 'img/fundos/reclusao.jpg';
 FUNDO_DA_RECLUSAO.addEventListener('load', () => { fundoDesenhado = null; });
+// v0.34.0 (dono): a tela inicial tem um fundo FIXO (docs/layout/layout_inicio.png), em qualquer mapa. A Reclusão e a
+// arena do combate continuam com o fundo delas. PLATAFORMA = altura da plataforma redonda na imagem (o herói senta nela).
+const FUNDO_DA_INICIAL = new Image();
+FUNDO_DA_INICIAL.src = 'img/fundos/inicio.jpg';
+FUNDO_DA_INICIAL.addEventListener('load', () => { fundoDesenhado = null; });
+const PLATAFORMA = 0.755;
 
 function atualizarFundo(estado) {
   // v0.32.0: mapa GLOBAL (Normal, Difícil...); a arte e o nome são os do mapa desenhado (mapa visual)
@@ -281,10 +287,18 @@ function atualizarFundo(estado) {
     : `<b>${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))}</small><small id="inicio-local-fase"></small>`;
   ajustarFonte($('inicio-local').querySelector('b'), $('inicio-local').querySelector('b').textContent, 30, 20);
 
+  $('fundo-imagem').classList.remove('fundo-inicial');
+  $('fundo-imagem').style.backgroundSize = $('fundo-imagem').style.backgroundPosition = '';
   if (reclusao && FUNDO_DA_RECLUSAO.complete && FUNDO_DA_RECLUSAO.naturalWidth) {
     $('fundo-imagem').style.backgroundImage = `url("${FUNDO_DA_RECLUSAO.src}")`;
     $('fundo-imagem').classList.remove('escondido');
     $('fundo-mundo').classList.add('escondido');
+  } else if (!reclusao && FUNDO_DA_INICIAL.complete && FUNDO_DA_INICIAL.naturalWidth) {
+    $('fundo-imagem').style.backgroundImage = `url("${FUNDO_DA_INICIAL.src}")`;
+    $('fundo-imagem').classList.remove('escondido');
+    $('fundo-imagem').classList.add('fundo-inicial');
+    $('fundo-mundo').classList.add('escondido');
+    setTimeout(posicionarNoChao, 0);   // (setTimeout: o requestAnimationFrame para quando a aba está escondida)
   } else if (MUNDO.imagemFundo) {
     $('fundo-imagem').style.backgroundImage = `url("${MUNDO.imagemFundo}")`;
     $('fundo-imagem').classList.remove('escondido');
@@ -307,6 +321,7 @@ function posicionarNoChao() {
   const moldura = $('moldura-sprite');
   const painel = document.querySelector('.inicio-cultivo');
   if (!inicio || !moldura || !painel) return;
+  if ($('fundo-imagem').classList.contains('fundo-inicial')) return posicionarNaPlataforma(inicio, moldura, painel);
   const fundo = document.querySelector('.fundo-mundo:not(.escondido)') ?? $('fundo-mundo');
   const tela = fundo.getBoundingClientRect();
   const escala = Math.max(tela.width / 540, tela.height / 960);
@@ -317,6 +332,24 @@ function posicionarNoChao() {
   const minimo = $('inicio-local').getBoundingClientRect().bottom + moldura.offsetHeight + 8;
   const y = Math.max(minimo, Math.min(chao, limite)) - caixa.top + inicio.scrollTop;
   moldura.style.setProperty('--chao-y', `${Math.round(y)}px`);
+}
+
+// v0.34.0: fundo fixo da tela inicial — a plataforma redonda fica logo acima do painel de cultivo (como no mockup) e o
+// herói senta nela. A imagem cobre a tela toda: escala = a maior entre "cobrir a largura" e "chegar ao topo".
+function posicionarNaPlataforma(inicio, moldura, painel) {
+  const fundo = $('fundo-imagem');
+  const tela = fundo.getBoundingClientRect();
+  const largura = FUNDO_DA_INICIAL.naturalWidth, altura = FUNDO_DA_INICIAL.naturalHeight;
+  if (!largura || !tela.width) return;
+  const u = tela.width / 941;
+  const alvo = painel.getBoundingClientRect().top - tela.top - 34 * u;          // onde a plataforma fica na tela
+  const escala = Math.max(tela.width / largura, alvo / (PLATAFORMA * altura), tela.height / altura);
+  const topo = alvo - PLATAFORMA * altura * escala;
+  fundo.style.backgroundSize = `${largura * escala}px ${altura * escala}px`;
+  fundo.style.backgroundPosition = `center ${Math.round(Math.min(0, topo))}px`;
+  const plataforma = tela.top + Math.min(0, topo) + PLATAFORMA * altura * escala;
+  const caixa = inicio.getBoundingClientRect();
+  moldura.style.setProperty('--chao-y', `${Math.round(plataforma - caixa.top + inicio.scrollTop + 10 * u)}px`);
 }
 
 // "Limite Estelar — Domínio dos Grandes Imperadores" → "Limite Estelar" (o nome completo fica só na aba Mapa)
@@ -484,7 +517,7 @@ function atualizarNivel(estado) {
   // Personagem (tela inicial e painel)
   const personagem = personagemDe(estado);
   const classe = classeDe(estado);
-  desenharPersonagem($('sprite'), reino.id, 'meditando', personagem);
+  desenharMeditacaoViva($('sprite'), reino, personagem);   // v0.34.0: 4 quadros desenhados + faixa na cor do reino
   desenharPersonagem($('sprite-pers'), reino.id, 'combate', personagem);
   $('topo-retrato-img').src = `img/ui/retrato_${personagem.sexo}_${classe.id}.png`;   // v0.27.0: retrato no topo
   $('inicio-nome').textContent = personagem.nome;

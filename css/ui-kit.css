@@ -15,6 +15,10 @@
   url('../img/ui/botao_grande_dourado_e.png') left center / auto 100% no-repeat,
   url('../img/ui/botao_grande_dourado_d.png') right center / auto 100% no-repeat,
   url('../img/ui/botao_grande_dourado_m.png') left center / auto 100% repeat-x; }
+.ui-botao-grande-verde { background:
+  url('../img/ui/botao_grande_verde_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/botao_grande_verde_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/botao_grande_verde_m.png') left center / auto 100% repeat-x; }
 .ui-botao-reencarnar { background:
   url('../img/ui/botao_reencarnar_e.png') left center / auto 100% no-repeat,
   url('../img/ui/botao_reencarnar_d.png') right center / auto 100% no-repeat,
@@ -51,6 +55,10 @@
   url('../img/ui/carta_rotulo_e.png') left center / auto 100% no-repeat,
   url('../img/ui/carta_rotulo_d.png') right center / auto 100% no-repeat,
   url('../img/ui/carta_rotulo_m.png') left center / auto 100% repeat-x; }
+.ui-cb-faixa-tecnica { background:
+  url('../img/ui/cb_faixa_tecnica_e.png') left center / auto 100% no-repeat,
+  url('../img/ui/cb_faixa_tecnica_d.png') right center / auto 100% no-repeat,
+  url('../img/ui/cb_faixa_tecnica_m.png') left center / auto 100% repeat-x; }
 .ui-chip-auto { background:
   url('../img/ui/chip_auto_e.png') left center / auto 100% no-repeat,
   url('../img/ui/chip_auto_d.png') right center / auto 100% no-repeat,

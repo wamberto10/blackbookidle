@@ -62,6 +62,8 @@
     </button>
 
     <div class="moldura-sprite" id="moldura-sprite">
+      <!-- v0.33.4: círculo dourado de cultivo atrás do herói (como em docs/layout/layout_inicio.png) -->
+      <div class="circulos" aria-hidden="true"><div class="circulo"></div><div class="circulo interno"></div></div>
       <div class="aura-cultivo" aria-hidden="true"></div>
       <canvas id="sprite" width="32" height="32"></canvas>
     </div>
@@ -224,56 +226,48 @@
   </section>
 
   <!-- ===== Combate ===== -->
-  <section class="painel" id="aba-combate">
+  <section class="painel painel-novo" id="aba-combate">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_combate.png" alt=""> Combate</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
       <div class="bloqueado" id="combate-bloqueado">
         ⚔️ O combate será liberado no <b>5º estágio do Corpo Temperado</b>.
       </div>
-      <!-- v0.17.1: rework da aba Combate — arena grande com o placar (nome, vida, poder) por cima,
-           controles numa linha só e registro de batalha compacto -->
       <!-- v0.21.0: em Reclusão o combate fica pausado -->
       <div class="aviso-reclusao escondido" id="combate-reclusao">
         <img class="icone-px" src="img/icones/reclusao.png" alt="">
         <span><b>Em Reclusão</b> — o combate está pausado enquanto você cultiva.</span>
         <button id="combate-sair-reclusao">Sair</button>
       </div>
-      <div id="combate-conteudo" class="escondido combate-novo">
-        <div class="cb-cabecalho">
-          <div class="linha pequeno"><span id="cb-mapa"></span><span id="cb-numero"></span></div>
-          <h3 id="cb-local"></h3>
-        </div>
-
+      <!-- v0.33.4: layout novo (docs/layout/layout_combate.png) com BORDAS FINAS E SIMPLES: arena de ponta a ponta com a
+           placa do mapa, o selo do tipo da fase, nome/vida/⚡ de cada lutador e a faixa da técnica; embaixo as
+           recompensas, Fase Anterior / Avanço Automático / Próxima Fase, o registro e o aviso do Chefe de Evento -->
+      <div id="combate-conteudo" class="escondido combate-novo cb-nova">
         <div class="arena" id="arena">
           <canvas id="arena-fundo" class="arena-fundo"></canvas>
 
-          <!-- Placar por cima da arena (estilo jogo de luta) -->
+          <div class="cb-placa">
+            <small id="cb-mapa"></small>
+            <h3 id="cb-local"></h3>
+            <span><span id="cb-numero"></span> <span class="cb-tempo" id="cb-tempo"></span></span>
+          </div>
+          <span id="cb-tipo" class="cb-selo-tipo"></span>
+
           <div class="hud-luta">
             <div class="hud-lado hud-jogador">
-              <div class="lutador-nome" id="cb-nome-jogador">Você</div>
-              <div class="barra barra-vida"><div class="barra-preenchida vida" id="cb-vida-jogador"></div></div>
-              <div class="hud-numeros">
-                <span class="lutador-vida" id="cb-vida-jogador-texto"></span>
-              </div>
+              <div class="lutador-nome"><img class="cb-gema" src="img/ui/dif_facil.png" alt=""><span id="cb-nome-jogador">Você</span></div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida" id="cb-vida-jogador"></div><span class="lutador-vida" id="cb-vida-jogador-texto"></span></div>
               <div class="lutador-stats">
+                <span class="cb-golpes" id="cb-vel-jogador"></span>
                 <span class="poder-lutador">Poder <b id="cb-poder-jogador"></b></span>
-                <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-jogador"></span></span>
               </div>
             </div>
-            <div class="versus">
-              <div>VS</div>
-              <div class="pequeno" id="cb-tempo"></div>
-            </div>
+            <div></div>
             <div class="hud-lado hud-inimigo">
-              <div class="lutador-nome" id="cb-nome-inimigo"></div>
-              <div class="barra barra-vida"><div class="barra-preenchida vida inimigo" id="cb-vida-inimigo"></div></div>
-              <div class="hud-numeros">
-                <span class="lutador-vida" id="cb-vida-inimigo-texto"></span>
-              </div>
+              <div class="lutador-nome"><span id="cb-nome-inimigo"></span><img class="cb-gema inimigo" src="img/ui/dif_facil.png" alt=""></div>
+              <div class="barra barra-vida"><div class="barra-preenchida vida inimigo" id="cb-vida-inimigo"></div><span class="lutador-vida" id="cb-vida-inimigo-texto"></span></div>
               <div class="lutador-stats">
-                <span id="cb-tipo" class="etiqueta"></span>
                 <span class="poder-lutador">Poder <b id="cb-poder-inimigo"></b></span>
-                <span title="Velocidade"><img class="icone-px" src="img/icones/atr_velocidade.png" alt="Velocidade"> <span id="cb-vel-inimigo"></span></span>
+                <span class="cb-golpes" id="cb-vel-inimigo"></span>
               </div>
             </div>
           </div>
@@ -296,7 +290,7 @@
             </div>
           </div>
           <div class="aviso-chefe" id="aviso-chefe"></div>
-          <div class="aviso-tecnica" id="aviso-tecnica"></div>
+          <div class="aviso-tecnica ui-cb-faixa-tecnica" id="aviso-tecnica"></div>
           <!-- v0.15.2: o herói está lutando contra o boss do evento ("Atacar sozinho"): a fase fica pausada -->
           <div class="aviso-boss-ativo escondido" id="aviso-boss-ativo">
             <div><img class="icone-px" src="img/icones/boss.png" alt=""> Lutando contra o <b>Mestre do Salão Ying Yue</b></div>
@@ -306,21 +300,36 @@
           <div class="arena-clarao" id="arena-clarao"></div>
         </div>
 
-        <!-- Controles: fase anterior | recompensa | próxima fase -->
-        <div class="cb-controles">
-          <button id="cb-anterior" class="cb-seta" title="Fase anterior">◀</button>
-          <div class="cb-recompensa"><small>Recompensa por vitória</small><span id="cb-recompensa"></span></div>
-          <button id="cb-proxima" class="cb-seta" title="Próxima fase">▶</button>
-        </div>
-        <label class="chave-auto cb-chave">
-          <input type="checkbox" id="cb-auto"><span class="chave"></span>
-          <span>Avançar de fase sozinho ao vencer</span>
-        </label>
+        <div class="cb-painel">
+          <div class="cb-secao"><span>Recompensas por vitória</span></div>
+          <div class="cb-premios">
+            <div class="cb-premio"><img src="img/ui/icone_cultivo.png" alt=""><span><small>Cultivo</small><b id="cb-premio-cultivo"></b></span></div>
+            <div class="cb-premio"><img src="img/ui/icone_pedras.png" alt=""><span><small>Pedras Espirituais</small><b class="cb-verde" id="cb-premio-pedras"></b></span></div>
+          </div>
+          <p class="cb-premio-nota" id="cb-premio-nota"></p>
+          <div class="cb-botoes">
+            <button id="cb-anterior" class="ui ui-botao-grande-verde cb-botao" title="Fase anterior">‹ Fase Anterior</button>
+            <label class="cb-auto" title="Ao vencer, vai sozinho para a próxima fase">
+              <input type="checkbox" id="cb-auto"><span class="cb-chave"></span><span>Avanço Automático</span>
+            </label>
+            <button id="cb-proxima" class="ui ui-botao-grande-dourado cb-botao" title="Próxima fase">Próxima Fase ›</button>
+          </div>
 
-        <!-- Registro compacto: mostra as 3 últimas linhas; tocar no título mostra as 8 -->
-        <div class="cb-registro-caixa" id="cb-registro-caixa">
-          <button class="cb-registro-titulo" id="cb-registro-titulo">Registro de batalha <span>▾</span></button>
-          <ul class="registro" id="cb-registro"></ul>
+          <!-- Registro: mostra as 3 últimas linhas; "Últimas 3 ações" abre as 8 -->
+          <div class="cb-registro-caixa" id="cb-registro-caixa">
+            <div class="cb-registro-topo">
+              <span class="cb-registro-nome">Registro de Combate</span>
+              <button class="cb-registro-titulo" id="cb-registro-titulo"><span class="cb-check"></span> Últimas 3 ações</button>
+            </div>
+            <ul class="registro" id="cb-registro"></ul>
+          </div>
+        </div>
+
+        <!-- Chefe de Evento disponível (o boss está esperando) -->
+        <div class="cb-evento escondido" id="cb-evento">
+          <img src="img/ui/no_chefe.png" alt="">
+          <div><b>Chefe de Evento em andamento!</b><small>Derrote para obter recompensas raras.</small></div>
+          <button class="ui ui-botao-vermelho cb-evento-ver" id="cb-evento-ver">Ver Detalhes ›</button>
         </div>
       </div>
     </div>
@@ -483,6 +492,7 @@
             Mais longe = mais Essência por segundo de farm.</p>
         </div>
 
+
         <div class="bb-secao"><span>Melhorias permanentes</span></div>
         <div class="bb-melhorias" id="lista-melhorias"></div>
 
@@ -571,18 +581,23 @@
   <div id="flash" class="flash"></div>
   <!-- Tela do Evento de Boss (ui/telaBoss.js) — tela inteira só para o boss.
        Antes da luta: o boss no ambiente dele e a vida atual. Lutando: a arena (classe .lutando). -->
-  <div id="tela-boss" class="tela-boss escondido">
-    <div class="boss-cena" id="boss-arena">
-      <!-- Topo: nome, vida do boss e fechar -->
-      <div class="boss-topo">
-        <button class="boss-fechar" id="tela-boss-fechar" title="Voltar">✕</button>
-        <h2 class="boss-titulo"><img class="icone-px" src="img/icones/boss.png" alt=""> <span id="boss-nome"></span></h2>
-        <p class="boss-edicao" id="boss-edicao"></p>
+  <!-- v0.33.4: Evento de Boss no layout novo (docs/layout/layout_boss.png) com BORDAS FINAS E SIMPLES. Fica entre a
+       barra de cima e as abas (tocar numa aba fecha esta tela) -->
+  <div id="tela-boss" class="tela-boss boss-nova escondido">
+    <div class="boss-cabeca">
+      <h2 class="boss-titulo-evento">Chefe de Evento</h2>
+      <button class="boss-fechar" id="tela-boss-fechar" title="Voltar">✕</button>
+    </div>
+    <div class="boss-identidade">
+      <img class="boss-emblema" src="img/ui/no_chefe.png" alt="">
+      <div class="boss-nome-vida">
+        <div class="boss-nome-linha"><b id="boss-nome"></b><span class="boss-forca" id="boss-edicao"></span></div>
         <div class="boss-barra"><div class="boss-barra-cheia" id="boss-vida"></div><span id="boss-vida-texto"></span></div>
-        <p class="boss-tempo" id="boss-tempo"></p>
       </div>
+    </div>
 
-      <!-- Palco: o herói (só na luta) à esquerda e o boss -->
+    <!-- Arena: o herói à esquerda e o boss à direita -->
+    <div class="boss-cena" id="boss-arena">
       <div class="boss-palco">
         <div class="boss-lado boss-lado-jogador">
           <div class="boss-numeros" id="boss-numeros-jogador"></div>
@@ -601,32 +616,46 @@
           </div>
         </div>
       </div>
-
-      <!-- Embaixo (antes da luta): lutar, rank e recompensa -->
-      <div class="boss-rodape">
-        <button id="boss-lutar" class="principal largo"></button>
-        <label class="boss-auto chave-auto"><input type="checkbox" id="boss-auto"><span class="chave"></span><span>⚔️ Atacar sozinho <small>(quando ele voltar e depois de cada descanso)</small></span></label>
-        <details class="boss-info">
-          <summary><img class="icone-px" src="img/icones/trofeu.png" alt=""> Rank de dano e recompensa</summary>
-          <ol class="boss-rank" id="boss-rank"></ol>
-          <p class="pequeno" id="boss-recompensa"></p>
-          <p class="pequeno dica">O evento ainda é local: cada jogador enfrenta o seu boss. O rank entre jogadores chega quando o evento ficar online.</p>
-        </details>
-      </div>
-
       <div class="boss-aviso" id="boss-aviso"></div>
       <div class="boss-clarao" id="boss-clarao"></div>
+    </div>
+
+    <div class="boss-baixo">
+      <div class="boss-info-linha">
+        <div class="boss-caixa"><img src="img/icones/tempo.png" alt=""><span><small>Tempo de combate</small><b id="boss-tempo"></b></span></div>
+        <div class="boss-caixa"><img src="img/ui/boss_icone_descanso.png" alt=""><span><small id="boss-descanso-rotulo">Tempo de descanso</small><b id="boss-descanso"></b></span></div>
+        <label class="boss-caixa boss-auto" title="Começa as lutas sozinho quando o boss volta e depois de cada descanso (só com o jogo aberto)">
+          <input type="checkbox" id="boss-auto"><span class="cb-chave"></span><span>Atacar sozinho</span>
+        </label>
+      </div>
+      <button id="boss-lutar" class="ui ui-botao-grande-dourado boss-lutar"></button>
+
+      <details class="boss-secao" open>
+        <summary><img src="img/ui/boss_icone_ranking.png" alt=""> <span>Ranking de Dano</span><small class="boss-meu" id="boss-meu-rank"></small></summary>
+        <ol class="boss-rank" id="boss-rank"></ol>
+        <p class="pequeno dica">O evento ainda é local: cada jogador enfrenta o seu boss. O rank entre jogadores chega quando o evento ficar online.</p>
+      </details>
+      <details class="boss-secao" open>
+        <summary><img src="img/icones/recompensa.png" alt=""> <span>Recompensas do Evento</span></summary>
+        <div class="boss-premios" id="boss-premios"></div>
+        <p class="pequeno" id="boss-recompensa"></p>
+      </details>
     </div>
   </div>
 
   <!-- Tela do VIP (ui/vip.js) -->
-  <div id="tela-vip" class="tela-vip escondido">
+  <!-- v0.33.4: VIP no layout novo (docs/layout/layout_vip.png) com BORDAS FINAS E SIMPLES -->
+  <div id="tela-vip" class="tela-vip vip-nova escondido">
     <div class="tela-vip-caixa">
-      <h2><img class="icone-px" src="img/icones/vip.png" alt=""> VIP</h2>
+      <button class="vip-x" id="tela-vip-x" title="Fechar">✕</button>
+      <h2 class="vip-titulo">VIP</h2>
+      <div class="vip-cena">
+        <div class="vip-emblema"><img src="img/ui/vip_emblema.png" alt=""><span>VIP</span></div>
+      </div>
       <p id="tela-vip-estado" class="tela-vip-estado"></p>
       <ul id="tela-vip-lista" class="tela-vip-lista"></ul>
-      <button id="tela-vip-ativar" class="principal largo"></button>
-      <button id="tela-vip-fechar" class="largo">Fechar</button>
+      <button id="tela-vip-ativar" class="ui ui-botao-grande-dourado vip-ativar"></button>
+      <button id="tela-vip-fechar" class="ui ui-botao-escuro vip-fechar">Fechar</button>
     </div>
   </div>
 

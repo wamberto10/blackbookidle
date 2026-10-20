@@ -23,14 +23,14 @@ import { multiplicar, maximo, razao } from '../numeros.js';
 const real = (valor, escala) => multiplicar(valor, escala ?? 1);
 let escalaMostrada = 1;
 import { personagemDe } from '../sistemas/personagem.js';
-import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeDoMapa, iconeEquipamento, animarVivo } from './sprite.js';
+import { desenharPersonagem, desenharInimigo, spriteDoInimigo, mostrarQuadro, caminhoDoEfeito, icone, iconeEquipamento, animarVivo } from './sprite.js';
 import { EFEITO_POR_APARENCIA } from '../dados/aparencias.js';
 import { desenharFundo } from './fundo.js';
 import { previsaoDaFase, textoDoPoder, TEXTO_DO_SELO } from './poder.js';
 import { EFEITO_PROVISORIO } from '../dados/classes.js';
 import { SPRITES } from '../dados/sprites.js';
 import { golpesPorTurno } from '../sistemas/atributos.js';
-import { lutaDoBoss } from '../sistemas/boss.js';
+import { lutaDoBoss, podeLutar } from '../sistemas/boss.js';
 import { abrirTelaBoss } from './telaBoss.js';
 import * as FX from './efeitosArena.js';
 
@@ -65,6 +65,7 @@ export function montarTelaCombate(acoes) {
   $('cb-proxima').addEventListener('click', () => acoes.aoMudarFase(+1));
   $('cb-auto').addEventListener('change', (e) => acoes.aoMudarAutoCombate(e.target.checked));
   $('aviso-boss-ver').addEventListener('click', abrirTelaBoss);
+  $('cb-evento-ver').addEventListener('click', abrirTelaBoss);   // v0.34.0: faixa "Chefe de Evento em andamento!"
   animarVivo($('cb-sprite-jogador'));
   animarVivo($('cb-sprite-inimigo'));
   // v0.17.1: registro compacto (3 linhas); tocar no título abre as 8 mais recentes
@@ -120,6 +121,8 @@ export function atualizarTelaCombate(estado) {
   // senão parece que o jogo travou (dono achou que travou com o "Atacar sozinho" ligado)
   const lutaBoss = lutaDoBoss();
   $('aviso-boss-ativo').classList.toggle('escondido', !lutaBoss);
+  $('cb-evento').classList.toggle('escondido', Boolean(lutaBoss) || !podeLutar(estado));   // v0.34.0
+  $('arena').dataset.classe = personagemDe(estado).classe;   // cor da faixa da técnica (CSS)
   if (lutaBoss) {
     $('aviso-boss-ativo-texto').textContent = estado.opcoes.bossAuto
       ? '"Atacar sozinho" está ligado. A fase continua quando a luta do boss acabar (desligue na tela do boss se quiser só as fases).'
@@ -135,33 +138,28 @@ export function atualizarTelaCombate(estado) {
     chaveDesenhada = chave;
     // v0.32.0: mapa global ("Normal — Mapa 12"); nome, ícone e cenário do mapa desenhado
     const mapa = mapaDesenhado(fase.mapa);
-    $('cb-mapa').innerHTML = `${iconeDoMapa(fase.mapa)} ${nomeDaPosicao(fase.mapa)}: ${mapa.nome}` +
+    // v0.34.0 (layout novo): placa = posição ("Fácil — Mapa 17"), nome do mapa grande e "Fase 10/12 · lugar"
+    $('cb-mapa').innerHTML = nomeDaPosicao(fase.mapa) +
       (fase.selado ? ` <span class="cb-selo" title="${TEXTO_DO_SELO}">${icone('cadeado')} Selado</span>` : '');   // v0.26.0
-    $('cb-numero').textContent = `Fase ${fase.numero}/12`;
-    $('cb-local').textContent = fase.local;
-    $('cb-tipo').innerHTML = `${icone(fase.tipo.sprite)} ${fase.tipo.nome}`;
-    $('cb-tipo').className = 'etiqueta tipo-' + fase.chaveTipo;
+    $('cb-local').textContent = mapa.nome;
+    $('cb-numero').textContent = `Fase ${fase.numero}/12 · ${fase.local}`;
+    $('cb-tipo').innerHTML = `<span class="cb-orbe">${icone(fase.tipo.sprite)}</span><b>${fase.tipo.nome}</b>`;
+    $('cb-tipo').className = 'cb-selo-tipo tipo-' + fase.chaveTipo;
     $('cb-nome-inimigo').textContent = fase.inimigo.nome;
     desenharFundo($('arena-fundo'), mapa.cena, mapaVisual(fase.mapa) + 1);
     desenharPersonagem($('cb-sprite-jogador'), P.reinoAtual(estado).id, 'combate', personagemDe(estado));
     desenharInimigo($('cb-sprite-inimigo'), fase);
     const primeira = fase.indice > estado.combate.fasesConcluidas;
     const fraco = fatorDoInimigo(estado, fase) < 0.9;   // v0.21.1: inimigo fraco rende menos Cultivo
-    $('cb-recompensa').innerHTML =
-      `+${formatarNumero(cultivoDaVitoria(estado, fase))} ${icone('cultivo')} +${formatarNumero(fase.recompensa.pedras)} ${icone('pedra')}` +
-      (primeira ? ` (×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!)` : fraco ? ' (inimigo fraco: menos Cultivo)' : '');
+    $('cb-premio-cultivo').textContent = `+${formatarNumero(cultivoDaVitoria(estado, fase))}`;
+    $('cb-premio-pedras').textContent = `+${formatarNumero(fase.recompensa.pedras)}`;
+    $('cb-premio-nota').textContent = primeira ? `×${CONFIG.combate.bonusPrimeiraVitoria} na primeira vitória!`
+      : fraco ? 'Inimigo fraco: rende menos Cultivo.' : '';
   }
 
   // Velocidade dos dois (atualiza sempre: muda na hora ao melhorar Velocidade no Black Book).
   // Com o dobro da Velocidade do inimigo, ataca 2 vezes por turno: mostra "⚡×2".
-  if (luta && luta === lutaMostrada) {
-    const duplo = golpesPorTurno(luta.jogador, luta.inimigo) > 1;
-    $('cb-vel-jogador').textContent = formatarNumero(real(luta.jogador.velocidade, luta.escalaVel)) + (duplo ? ' ⚡×2' : '');
-    $('cb-vel-jogador').parentElement.title = duplo
-      ? 'Ataque duplo: você ataca 2 vezes por turno'
-      : `Velocidade · com ${formatarNumero(real(multiplicar(2, luta.inimigo.velocidade), luta.escalaVel))} ou mais, você ataca 2 vezes por turno`;
-    $('cb-vel-inimigo').textContent = formatarNumero(real(luta.inimigo.velocidade, luta.escalaVel));
-  }
+  if (luta && luta === lutaMostrada) mostrarGolpesPorTurno(luta);
 
   // Começou uma luta nova: barras cheias (depois que as animações da anterior terminarem)
   if (luta && luta !== lutaMostrada && pendentes === 0 && inimigoLivre) {
@@ -169,9 +167,7 @@ export function atualizarTelaCombate(estado) {
     escalaMostrada = luta.escala;
     vidaMostrada.jogador = { vida: luta.vidaJogador, maxima: luta.jogador.vitalidade };
     vidaMostrada.inimigo = { vida: luta.vidaInimigo, maxima: luta.inimigo.vida };
-    $('cb-vel-jogador').textContent = formatarNumero(real(luta.jogador.velocidade, luta.escalaVel)) +
-      (golpesPorTurno(luta.jogador, luta.inimigo) > 1 ? ' ⚡×2' : '');
-    $('cb-vel-inimigo').textContent = formatarNumero(real(luta.inimigo.velocidade, luta.escalaVel));
+    mostrarGolpesPorTurno(luta);
     // Poder dos dois lados (mesma conta). A previsão da luta e o aviso de quem é mais
     // rápido foram tirados da tela a pedido do dono.
     const previsao = previsaoDaFase(estado, luta.fase);
@@ -187,7 +183,7 @@ export function atualizarTelaCombate(estado) {
   desenharBarras();
 
   if (luta) {
-    const textoTempo = luta.pausa > 0 ? 'Preparando...' : `${icone('tempo')}${Math.ceil(CONFIG.combate.duracaoMaxima - luta.tempo)}s`;
+    const textoTempo = luta.pausa > 0 ? '· preparando' : `· ${icone('tempo')}${Math.ceil(CONFIG.combate.duracaoMaxima - luta.tempo)}s`;
     if ($('cb-tempo').dataset.html !== textoTempo) { $('cb-tempo').dataset.html = textoTempo; $('cb-tempo').innerHTML = textoTempo; }
   }
 
@@ -199,6 +195,20 @@ export function atualizarTelaCombate(estado) {
 // =============================================================
 // Animações dos eventos
 // =============================================================
+
+// v0.34.0: "⚡×2" / "⚡×1" com o ícone do raio (o mockup); a Velocidade de cada um fica na dica
+const RAIO = '<img src="img/ui/icone_raio.png" alt="">';
+function mostrarGolpesPorTurno(luta) {
+  const duplo = golpesPorTurno(luta.jogador, luta.inimigo) > 1;
+  const velJogador = formatarNumero(real(luta.jogador.velocidade, luta.escalaVel));
+  const html = (n) => `${RAIO}×${n}`;
+  if ($('cb-vel-jogador').dataset.html !== html(duplo ? 2 : 1)) { $('cb-vel-jogador').dataset.html = html(duplo ? 2 : 1); $('cb-vel-jogador').innerHTML = html(duplo ? 2 : 1); }
+  if ($('cb-vel-inimigo').dataset.html !== html(1)) { $('cb-vel-inimigo').dataset.html = html(1); $('cb-vel-inimigo').innerHTML = html(1); }
+  $('cb-vel-jogador').title = duplo
+    ? `Ataque duplo: você ataca 2 vezes por turno (Velocidade ${velJogador})`
+    : `Velocidade ${velJogador} · com ${formatarNumero(real(multiplicar(2, luta.inimigo.velocidade), luta.escalaVel))} ou mais, você ataca 2 vezes por turno`;
+  $('cb-vel-inimigo').title = `Velocidade ${formatarNumero(real(luta.inimigo.velocidade, luta.escalaVel))}`;
+}
 
 // Qual efeito aparece quando o INIMIGO ataca, conforme a forma dele
 const EFEITO_DO_INIMIGO = { humano: 'corte_inimigo', fera: 'garras', maligno: 'magia_roxa', guardiao: 'magia_azul' };
@@ -417,7 +427,7 @@ export function animarDerrota() {
 // Técnica especial da classe: nome grande na arena + o efeito extra dela
 function mostrarTecnica(evento) {
   const aviso = $('aviso-tecnica');
-  aviso.textContent = `✦ ${evento.tecnica.nome} ✦`;
+  aviso.textContent = evento.tecnica.nome;   // v0.34.0: o nome vai na faixa brilhante (ui-cb-faixa-tecnica)
   animarClasse(aviso, 'aparecendo', 1300);
   animarClasse($('arena-clarao'), 'clarao-critico', 300);
   const efeitos = evento.efeitos ?? {};

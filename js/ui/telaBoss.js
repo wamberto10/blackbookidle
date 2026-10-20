@@ -14,7 +14,7 @@ import { multiplicar, razao } from '../numeros.js';
 const danoReal = (evento) => multiplicar(evento.dano, evento.escala ?? 1);
 import { nomeDaPosicao } from '../sistemas/escala.js';
 import { formatarNumero, formatarTempo } from '../format.js';
-import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito, icone } from './sprite.js';
+import { desenharPersonagem, desenharSpriteDeInimigo, mostrarQuadro, caminhoDoEfeito } from './sprite.js';
 import { SPRITES } from '../dados/sprites.js';
 import { EFEITO_PROVISORIO } from '../dados/classes.js';
 
@@ -33,9 +33,14 @@ export function montarTelaBoss(acoes) {
   $('boss-auto').addEventListener('change', (e) => acoesGuardadas.aoMudarBossAuto(e.target.checked));
   $('boss-nome').textContent = B.nome;
   $('boss-recompensa').innerHTML =
-    `${icone('recompensa')} Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
+    `Ao derrotá-lo, todos que causaram dano recebem <b>${B.nucleos} Núcleos</b> de rank aleatório ` +
     `e <b style="color:#ff6ad5">1 item Ancestral</b> (espaço aleatório, melhor que um Lendário do mapa seguinte ao seu). ` +
     `Ele volta ${B.renasceMinutos} minutos depois de derrotado.`;
+  // v0.34.0: os prêmios em quadradinhos — os Núcleos (rank aleatório: baixo, médio ou alto) e o item Ancestral
+  const nucleos = ['baixo', 'medio', 'alto'];
+  $('boss-premios').innerHTML = Array.from({ length: B.nucleos }, (_, i) =>
+    `<span class="boss-premio" title="Núcleo de rank aleatório"><img src="img/icones/nucleo_${nucleos[i % 3]}.png" alt=""><i>?</i></span>`).join('') +
+    `<span class="boss-premio boss-ancestral moldura-ancestral" title="Item Ancestral de espaço aleatório"><img src="img/ui/item_peitoral.png" alt=""><small>Ancestral</small></span>`;
   desenharSpriteDeInimigo($('boss-sprite'), B.aparencia);
   // Fundo próprio do evento (img/fundos/boss.jpg); se não existir, fica o fundo escuro do CSS
   const fundo = new Image();
@@ -48,12 +53,19 @@ export function abrirTelaBoss() {
   $('tela-boss').classList.remove('escondido');
 }
 
-// Sair no meio da luta interrompe a luta (o dano já causado fica)
-function fecharTelaBoss() {
+// Sair no meio da luta interrompe a luta (o dano já causado fica). v0.34.0: as abas também fecham esta tela
+export function fecharTelaBoss() {
+  if (!aberta) return;
   if (BOSS.lutaDoBoss()) acoesGuardadas.aoSairDaLutaBoss?.();
   aberta = false;
   $('tela-boss').classList.add('escondido');
 }
+
+const relogio = (segundos) => {
+  const s = Math.max(0, Math.ceil(segundos));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+};
+const COROAS = ['ouro', 'prata', 'bronze'];
 
 let personagemDesenhado = '';
 
@@ -75,9 +87,10 @@ export function atualizarTelaBoss(estado) {
   $('tela-boss').classList.toggle('lutando', !!luta);
   const boss = BOSS.atributosDoBoss(estado);
   const b = estado.boss;
-  $('boss-edicao').textContent = `Aparição nº ${b.edicao} · força do chefe do ${nomeDaPosicao(boss.mapa)} (${mapaDesenhado(boss.mapa).nome})`;
+  $('boss-edicao').textContent = `Aparição nº ${b.edicao} · chefe do ${nomeDaPosicao(boss.mapa)}`;
+  $('boss-edicao').title = `Força do chefe do ${nomeDaPosicao(boss.mapa)} (${mapaDesenhado(boss.mapa).nome}), o mais longe que você já chegou`;
   $('boss-vida').style.width = `${b.vida * 100}%`;
-  $('boss-vida-texto').textContent = presente ? `Vida: ${porcento(b.vida)}` : 'Derrotado!';
+  $('boss-vida-texto').textContent = presente ? porcento(b.vida) : 'Derrotado!';
   $('boss-arena').classList.toggle('boss-ausente', !presente);
   if (!presente && !derrotaMostrada) poseDeDerrota();
   if (presente && derrotaMostrada) { derrotaMostrada = false; mostrarQuadro($('boss-sprite'), 0, 1); }
@@ -88,28 +101,37 @@ export function atualizarTelaBoss(estado) {
     desenharPersonagem($('boss-jogador'), REINOS[estado.reino].id, 'combate', estado.personagem);
   }
 
-  if (luta) {
-    $('boss-minha-vida').style.width = `${Math.min(1, Math.max(0, razao(luta.vidaJogador, luta.jogador.vitalidade))) * 100}%`;
-    $('boss-tempo').textContent = `⏳ ${Math.max(0, Math.ceil(B.duracaoLuta - luta.tempo))}s · seu dano: ${porcento(luta.danoNestaLuta)}`;
-  } else {
-    $('boss-tempo').textContent = presente ? '' : `O boss volta em ${formatarTempo(BOSS.segundosParaVoltar(estado, agora))}`;
-  }
+  // v0.34.0: "Tempo de combate 00:42 / 01:00" e "Tempo de descanso" (ou quanto falta para o boss voltar)
+  const descanso = BOSS.segundosDeDescanso(estado, agora);
+  $('boss-minha-vida').style.width = luta ? `${Math.min(1, Math.max(0, razao(luta.vidaJogador, luta.jogador.vitalidade))) * 100}%` : '100%';
+  $('boss-tempo').textContent = `${relogio(luta ? luta.tempo : 0)} / ${relogio(B.duracaoLuta)}`;
+  $('boss-descanso-rotulo').textContent = presente ? 'Tempo de descanso' : 'O boss volta em';
+  $('boss-descanso').textContent = presente ? relogio(descanso) : formatarTempo(BOSS.segundosParaVoltar(estado, agora));
 
   // ---- Botão Lutar e "Atacar sozinho" ----
   if ($('boss-auto').checked !== !!estado.opcoes.bossAuto) $('boss-auto').checked = !!estado.opcoes.bossAuto;
   const lutar = $('boss-lutar');
-  const descanso = BOSS.segundosDeDescanso(estado, agora);
   lutar.disabled = !BOSS.podeLutar(estado, agora);
-  lutar.textContent = !presente ? '⏳ Aguardando o boss voltar'
-    : descanso > 0 ? `😮‍💨 Descansando... ${Math.ceil(descanso)}s`
-    : `⚔️ Lutar (${B.duracaoLuta} s)`;
+  const textoLutar = luta ? `Lutando... seu dano: ${porcento(luta.danoNestaLuta)}`
+    : !presente ? 'Aguardando o boss voltar'
+    : descanso > 0 ? 'Descansando...'
+    : 'Lutar';
+  const htmlLutar = `<img src="img/ui/icone_equipar.png" alt=""><span>${textoLutar}</span>`;
+  if (lutar.dataset.html !== htmlLutar) { lutar.dataset.html = htmlLutar; lutar.innerHTML = htmlLutar; }
 
   // ---- Rank de dano ----
+  // v0.34.0: coroas de ouro/prata/bronze no 1º–3º e a barra do dano (relativa ao 1º); a sua linha fica destacada
   const rank = BOSS.rankDeDano(estado);
+  const eu = estado.personagem?.nome ?? 'Você';
+  const topo = rank[0]?.dano || 1;
   const htmlRank = rank.length
-    ? rank.map((r, i) => `<li><span>${i + 1}. ${r.nome}</span><b>${porcento(r.dano)}</b></li>`).join('')
-    : '<li class="pequeno">Ninguém causou dano ainda nesta aparição.</li>';
+    ? rank.slice(0, 5).map((r, i) => `<li class="${r.nome === eu ? 'eu' : ''}">` +
+      (i < 3 ? `<img src="img/ui/boss_coroa_${COROAS[i]}.png" alt="${i + 1}º">` : `<em>${i + 1}</em>`) +
+      `<span>${r.nome}</span><i><u style="width:${Math.max(2, (r.dano / topo) * 100)}%"></u></i><b>${porcento(r.dano)}</b></li>`).join('')
+    : '<li class="vazio">Ninguém causou dano ainda nesta aparição.</li>';
   if ($('boss-rank').innerHTML !== htmlRank) $('boss-rank').innerHTML = htmlRank;
+  const posicao = rank.findIndex(r => r.nome === eu);
+  $('boss-meu-rank').textContent = posicao >= 0 ? `Meu rank: ${posicao + 1} · ${porcento(rank[posicao].dano)}` : '';
 }
 
 function formatarRelogio(segundos) {

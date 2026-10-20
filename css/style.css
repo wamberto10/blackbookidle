@@ -3592,3 +3592,347 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
 .auto-setas button { min-width: 28px; padding: 2px 6px; }
 .auto-pilula { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 .auto-ultima { color: #9ff0c4; }
+
+
+/* =============================================================
+   v0.33.4: tela inicial como docs/layout/layout_inicio.png — herói maior sentado logo acima do painel e o círculo
+   dourado de cultivo atrás do peito (os 2 anéis giram em sentidos opostos). Fundo fixo e QUADROS DESENHADOS do herói
+   e da aura (pedido do dono; docs/PROMPTS_TELA_INICIAL.md; importados por ferramentas/sprites/quadros_desenhados.py).
+   ============================================================= */
+.jogo .inicio > .moldura-sprite {
+  width: calc(var(--u) * 470); height: calc(var(--u) * 470);
+  --tamanho-circulo: calc(var(--u) * 560);
+  background: none; border-radius: 0;
+}
+.jogo .inicio > .moldura-sprite canvas { width: 100%; height: 100%; z-index: 2; }
+.jogo .inicio > .moldura-sprite .circulos { top: 47%; z-index: 0; filter: none; animation: circulo-dourado 4s ease-in-out infinite; }
+@keyframes circulo-dourado { 0%, 100% { opacity: 0.8; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }
+.jogo .inicio > .moldura-sprite .circulos::before {
+  content: ''; position: absolute; inset: -4%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.22) 0%, rgba(255, 200, 90, 0.08) 38%, transparent 48%,
+    rgba(255, 205, 100, 0.42) 60%, rgba(255, 190, 80, 0.16) 66%, transparent 72%);
+}
+.jogo .inicio > .moldura-sprite .circulo {
+  background: #ffe6a3; will-change: transform;
+  -webkit-mask-image: url('../img/efeitos/circulo_externo_hd.png'); mask-image: url('../img/efeitos/circulo_externo_hd.png');
+}
+.jogo .inicio > .moldura-sprite .circulo.interno {
+  background: #fff1c8;
+  -webkit-mask-image: url('../img/efeitos/circulo_interno_hd.png'); mask-image: url('../img/efeitos/circulo_interno_hd.png');
+}
+/* aura: os 8 quadros desenhados (img/efeitos/aura_quadros.png, grade 4×2), um depois do outro */
+.jogo .inicio > .moldura-sprite .aura-cultivo {
+  --tamanho-aura: calc(var(--u) * 800); bottom: calc(var(--u) * -70); z-index: 1;
+  -webkit-mask: url('../img/efeitos/aura_quadros.png') 0 0 / 400% 200% no-repeat;
+          mask: url('../img/efeitos/aura_quadros.png') 0 0 / 400% 200% no-repeat;
+  animation: aura-desenhada 1.04s steps(1, end) infinite;
+}
+.jogo .inicio > .moldura-sprite.rompendo .aura-cultivo { animation: aura-desenhada 0.4s steps(1, end) infinite, aura-romper 1.2s ease-out; }
+@keyframes aura-desenhada {
+  0% { -webkit-mask-position: 0% 0%; mask-position: 0% 0%; }
+  12.5% { -webkit-mask-position: 33.333% 0%; mask-position: 33.333% 0%; }
+  25% { -webkit-mask-position: 66.667% 0%; mask-position: 66.667% 0%; }
+  37.5% { -webkit-mask-position: 100% 0%; mask-position: 100% 0%; }
+  50% { -webkit-mask-position: 0% 100%; mask-position: 0% 100%; }
+  62.5% { -webkit-mask-position: 33.333% 100%; mask-position: 33.333% 100%; }
+  75% { -webkit-mask-position: 66.667% 100%; mask-position: 66.667% 100%; }
+  87.5% { -webkit-mask-position: 100% 100%; mask-position: 100% 100%; }
+}
+/* fundo fixo da tela inicial: tamanho e posição calculados em interface.posicionarNaPlataforma */
+.fundo-mundo.fundo-inicial { background-repeat: no-repeat; image-rendering: auto; }
+
+/* =============================================================
+   v0.33.4: COMBATE no layout novo (docs/layout/layout_combate.png) com BORDAS FINAS E SIMPLES (pedido do dono)
+   Imagens do kit só nos botões (Fase Anterior verde / Próxima Fase dourado / Ver Detalhes vermelho), na chave do
+   Avanço Automático, no raio do ⚡×N, nos ícones do registro e na faixa brilhante da técnica (cor da classe).
+   ============================================================= */
+#aba-combate.painel-novo { background: #0b0912; }
+#aba-combate .cb-nova { gap: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ui-marfim); }
+#aba-combate .cb-nova .arena {
+  height: calc(var(--u) * 700); min-height: 280px; margin: 0; border: none; border-bottom: 1px solid rgba(217, 173, 87, 0.75);
+  border-radius: 0; box-shadow: none;
+}
+#aba-combate .cb-nova .arena::after { background: linear-gradient(rgba(10, 8, 14, 0.55), rgba(10, 8, 14, 0) 32%, rgba(10, 8, 14, 0.05) 62%, rgba(10, 8, 14, 0.55)); }
+
+/* placa do mapa (posição · nome do mapa · fase) e selo do tipo da fase */
+.cb-placa {
+  position: absolute; z-index: 5; top: calc(var(--u) * 16); left: 50%; transform: translateX(-50%);
+  min-width: calc(var(--u) * 420); max-width: 88%; box-sizing: border-box; padding: calc(var(--u) * 6) calc(var(--u) * 34) calc(var(--u) * 8);
+  display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 2); text-align: center; line-height: 1.15;
+  background: rgba(12, 9, 18, 0.82); border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 14);
+}
+.cb-placa small { font-size: calc(var(--ut) * 19); color: #f3d58a; white-space: nowrap; }
+.cb-placa h3 {
+  max-width: 100%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: normal; font-size: calc(var(--ut) * 40); color: #fff3d0; text-shadow: 0 2px 2px #000;
+}
+.cb-placa > span { font-size: calc(var(--ut) * 20); white-space: nowrap; }
+.cb-placa .icone-px { width: calc(var(--u) * 20); height: calc(var(--u) * 20); vertical-align: -2px; }
+.cb-selo-tipo {
+  position: absolute; z-index: 5; right: calc(var(--u) * 22); top: calc(var(--u) * 150);
+  display: flex; align-items: center; gap: calc(var(--u) * 8); padding: calc(var(--u) * 4) calc(var(--u) * 16) calc(var(--u) * 4) calc(var(--u) * 4);
+  background: rgba(12, 9, 18, 0.82); border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 999px; font-size: calc(var(--ut) * 20);
+}
+.cb-selo-tipo b { font-weight: normal; }
+.cb-orbe { display: grid; place-items: center; width: calc(var(--u) * 44); height: calc(var(--u) * 44); border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 50%; background: rgba(0, 0, 0, 0.5); }
+.cb-orbe .icone-px { width: 72%; height: 72%; }
+.cb-selo-tipo.tipo-chefe, .cb-selo-tipo.tipo-miniChefe { border-color: rgba(255, 120, 100, 0.85); color: #ffb3a3; }
+
+/* lutadores: joia + nome, vida vermelha em borda fina com os números dentro, ⚡×N e Poder */
+#aba-combate .cb-nova .hud-luta { top: calc(var(--u) * 205); left: calc(var(--u) * 22); right: calc(var(--u) * 22); grid-template-columns: 1fr calc(var(--u) * 50) 1fr; }
+#aba-combate .cb-nova .hud-lado .lutador-nome { display: flex; align-items: center; gap: calc(var(--u) * 8); font-size: calc(var(--ut) * 27); color: #fff; }
+.cb-gema { flex: none; width: calc(var(--u) * 34); height: calc(var(--u) * 34); object-fit: contain; }
+.cb-gema.inimigo { filter: grayscale(1) brightness(1.15); }
+#aba-combate .cb-nova .hud-lado .barra.barra-vida {
+  position: relative; display: flex; height: calc(var(--u) * 30); min-height: 12px; margin: calc(var(--u) * 4) 0 0; padding: 0;
+  border: 1px solid #d9ad57; border-radius: 999px; background: rgba(0, 0, 0, 0.65); overflow: hidden; transform: none;
+}
+#aba-combate .cb-nova .hud-inimigo .barra-vida { justify-content: flex-end; }   /* a vida do inimigo esvazia em direção ao centro */
+#aba-combate .cb-nova .barra-vida .barra-preenchida { flex: none; height: 100%; border-radius: 999px; background: linear-gradient(#ff6a5a, #c41d1d); }
+#aba-combate .cb-nova .lutador-vida {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  font-size: calc(var(--ut) * 19); color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; font-variant-numeric: tabular-nums;
+}
+#aba-combate .cb-nova .hud-lado .lutador-stats { margin-top: calc(var(--u) * 4); gap: calc(var(--u) * 16); align-items: center; font-size: calc(var(--ut) * 18); }
+.cb-golpes { display: inline-flex; align-items: center; gap: 2px; font-size: calc(var(--ut) * 24); color: #ffe39a; }
+.cb-golpes img { width: auto; height: calc(var(--u) * 32); }
+
+/* faixa brilhante da técnica (azul na Espada; dourada no Refinador; laranja no Elemental) */
+#aba-combate .cb-nova .aviso-tecnica {
+  left: 0; right: 0; top: 47%; width: fit-content; min-width: calc(var(--u) * 420); height: calc(var(--u) * 72); margin: 0 auto; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; padding: 0 calc(var(--u) * 70);
+  font-style: italic; font-weight: normal; font-size: calc(var(--ut) * 30); color: #fff; letter-spacing: 0; white-space: nowrap;
+  text-shadow: 0 0 6px #6fb8ff, 0 2px 2px #000;
+}
+#arena[data-classe="corpo"] .aviso-tecnica { filter: hue-rotate(190deg) saturate(1.2); }
+#arena[data-classe="elemental"] .aviso-tecnica { filter: hue-rotate(165deg) saturate(1.4); }
+
+/* recompensas, botões e chave */
+.cb-painel {
+  margin: calc(var(--u) * 14) calc(var(--u) * 18) 0; padding: calc(var(--u) * 14) calc(var(--u) * 20) calc(var(--u) * 16);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 14); background: rgba(14, 11, 22, 0.92);
+}
+.cb-secao { display: flex; align-items: center; gap: calc(var(--u) * 14); font-size: calc(var(--ut) * 27); color: #f3d58a; }
+.cb-secao::before, .cb-secao::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(217, 173, 87, 0.85)); }
+.cb-secao::after { background: linear-gradient(90deg, rgba(217, 173, 87, 0.85), transparent); }
+.cb-premios { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 22); margin: calc(var(--u) * 12) calc(var(--u) * 40) 0; }
+.cb-premio {
+  display: flex; align-items: center; gap: calc(var(--u) * 14); min-width: 0; padding: calc(var(--u) * 8) calc(var(--u) * 16);
+  border: 1px solid rgba(217, 173, 87, 0.35); border-radius: calc(var(--u) * 10); background: rgba(8, 7, 14, 0.6);
+}
+.cb-premio img { flex: none; width: calc(var(--u) * 56); height: calc(var(--u) * 56); object-fit: contain; }
+.cb-premio span { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.cb-premio small { font-size: calc(var(--ut) * 20); }
+.cb-premio b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; font-size: calc(var(--ut) * 30); color: #fff; }
+.cb-premio b.cb-verde { color: #5fe0a0; }
+.cb-premio-nota { margin: calc(var(--u) * 6) 0 0; text-align: center; font-size: calc(var(--ut) * 18); color: #ffd36b; }
+.cb-premio-nota:empty { display: none; }
+.cb-botoes { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: calc(var(--u) * 14); margin-top: calc(var(--u) * 16); }
+#aba-combate .cb-botao {
+  height: calc(var(--u) * 76); min-height: 34px; padding: 0 calc(var(--u) * 28); border: none; cursor: pointer; white-space: nowrap;
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 27); color: #fff3d0; text-shadow: 0 1px 2px #000;
+}
+#aba-combate #cb-proxima.cb-botao { color: #3a2006; text-shadow: 0 1px 0 rgba(255, 232, 170, 0.6); }
+#aba-combate .cb-botao:disabled { filter: grayscale(0.75) brightness(0.65); cursor: default; }
+.cb-auto { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 4); cursor: pointer; font-size: calc(var(--ut) * 20); white-space: nowrap; }
+.cb-auto input { position: absolute; opacity: 0; pointer-events: none; }
+.cb-chave { width: calc(var(--u) * 100); height: calc(var(--u) * 40); background: url('../img/ui/chave_desligada.png') center / contain no-repeat; }
+.cb-auto input:checked + .cb-chave { background-image: url('../img/ui/chave_ligada.png'); }
+
+/* registro: linhas com ícone (espadas = vitória, caveira = derrota, engrenagem = automação, baú = item) */
+#aba-combate .cb-nova .cb-registro-caixa { margin-top: calc(var(--u) * 16); padding: 0; border: none; border-radius: 0; background: none; }
+.cb-registro-topo { display: flex; align-items: center; justify-content: space-between; padding-bottom: calc(var(--u) * 8); border-bottom: 1px solid rgba(217, 173, 87, 0.35); }
+.cb-registro-nome { font-size: calc(var(--ut) * 26); color: #f3d58a; }
+#aba-combate .cb-nova .cb-registro-titulo {
+  width: auto; gap: calc(var(--u) * 8); padding: 0; text-transform: none; letter-spacing: 0; font-family: inherit; font-size: calc(var(--ut) * 19); color: var(--ui-marfim);
+}
+.cb-check { display: inline-block; width: calc(var(--u) * 22); height: calc(var(--u) * 22); border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 3px; }
+.cb-registro-caixa.aberto .cb-check { background: rgba(217, 173, 87, 0.55); }
+#aba-combate .cb-nova .registro { display: flex; flex-direction: column; gap: calc(var(--u) * 8); margin: calc(var(--u) * 8) 0 0; font-size: calc(var(--ut) * 20); }
+#aba-combate .cb-nova .registro li {
+  display: flex; align-items: center; gap: calc(var(--u) * 14); padding: calc(var(--u) * 10) calc(var(--u) * 16); line-height: 1.3;
+  border: 1px solid rgba(217, 173, 87, 0.35); border-radius: calc(var(--u) * 8); background: rgba(8, 7, 14, 0.55);
+}
+#aba-combate .cb-nova .registro li::before {
+  content: ''; flex: none; width: calc(var(--u) * 34); height: calc(var(--u) * 34); background: url('../img/ui/icone_equipar.png') center / contain no-repeat;
+}
+#aba-combate .cb-nova .registro li.derrota::before { background-image: url('../img/ui/icone_caveira.png'); }
+#aba-combate .cb-nova .registro li.automacao::before { background-image: url('../img/ui/icone_engrenagem.png'); }
+#aba-combate .cb-nova .registro li.drop::before { background-image: url('../img/ui/icone_bau.png'); }
+
+/* aviso do Chefe de Evento (o boss está esperando) */
+.cb-evento {
+  display: flex; align-items: center; gap: calc(var(--u) * 16); margin: calc(var(--u) * 14) calc(var(--u) * 18) 0; padding: calc(var(--u) * 12) calc(var(--u) * 18);
+  border: 1px solid rgba(255, 110, 90, 0.75); border-radius: calc(var(--u) * 14); background: linear-gradient(90deg, rgba(90, 10, 14, 0.85), rgba(40, 8, 12, 0.85));
+}
+.cb-evento img { flex: none; width: calc(var(--u) * 84); height: calc(var(--u) * 84); object-fit: contain; }
+.cb-evento > div { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.cb-evento b { font-weight: normal; font-size: calc(var(--ut) * 27); color: #ffb37a; }
+.cb-evento small { font-size: calc(var(--ut) * 19); }
+#aba-combate .cb-evento-ver {
+  height: calc(var(--u) * 64); min-height: 30px; padding: 0 calc(var(--u) * 28); border: none; cursor: pointer; white-space: nowrap;
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 22); color: #fff3d0; text-shadow: 0 1px 2px #000;
+}
+
+/* registro fechado: só as 3 últimas linhas ("Últimas 3 ações" abre as 8) */
+#aba-combate .cb-nova .cb-registro-caixa:not(.aberto) .registro li:nth-child(n+4) { display: none; }
+#aba-combate .cb-nova .cb-registro-caixa:not(.aberto) .registro li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* =============================================================
+   v0.33.4: EVENTO DE BOSS no layout novo (docs/layout/layout_boss.png) com BORDAS FINAS E SIMPLES (pedido do dono)
+   Entre a barra de cima e as abas; arena com o herói e o boss sempre à vista; embaixo os tempos, a chave Atacar
+   sozinho, o Lutar (botão dourado do kit), o Ranking de Dano (coroas) e as Recompensas do Evento.
+   ============================================================= */
+.jogo .tela-boss.boss-nova {
+  top: var(--altura-topo); bottom: var(--altura-abas); overflow-y: auto; overflow-x: hidden;
+  background: #0b0912; font-family: Georgia, "Times New Roman", serif; color: var(--ui-marfim);
+}
+.boss-nova .boss-cabeca { position: relative; display: flex; align-items: center; justify-content: center; padding: calc(var(--u) * 14) calc(var(--u) * 80) calc(var(--u) * 6); }
+.boss-titulo-evento { margin: 0; font-weight: normal; font-size: calc(var(--ut) * 46); color: #f3d58a; text-shadow: 0 2px 3px #000; }
+.boss-nova #tela-boss-fechar {
+  top: 50%; right: calc(var(--u) * 22); width: calc(var(--u) * 60); height: calc(var(--u) * 60); min-width: 26px; min-height: 26px; transform: translateY(-40%);
+  border: 1px solid rgba(255, 120, 100, 0.85); border-radius: calc(var(--u) * 10); background: rgba(90, 14, 16, 0.85);
+  color: #ffe0c8; font-size: calc(var(--ut) * 30); line-height: 1;
+}
+.boss-identidade { display: flex; align-items: center; gap: calc(var(--u) * 12); padding: 0 calc(var(--u) * 22) calc(var(--u) * 10); }
+.boss-emblema { flex: none; width: calc(var(--u) * 110); height: calc(var(--u) * 110); object-fit: contain; }
+.boss-nome-vida { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(var(--u) * 6); }
+.boss-nome-linha { display: flex; align-items: baseline; justify-content: space-between; gap: calc(var(--u) * 10); min-width: 0; }
+.boss-nome-linha b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; font-size: calc(var(--ut) * 32); color: #fff3d0; }
+.boss-forca {
+  flex: none; padding: calc(var(--u) * 2) calc(var(--u) * 14); border: 1px solid rgba(183, 123, 255, 0.75); border-radius: 999px;
+  background: rgba(40, 20, 70, 0.7); font-size: calc(var(--ut) * 18); color: #e2ccff; white-space: nowrap;
+}
+.boss-nova .boss-barra { height: calc(var(--u) * 38); min-height: 14px; border: 1px solid #d9ad57; border-radius: 999px; background: rgba(0, 0, 0, 0.65); }
+.boss-nova .boss-barra span { display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: calc(var(--ut) * 24); line-height: 1; }
+.boss-nova .boss-minha-barra { width: 70%; height: calc(var(--u) * 16); min-height: 6px; }
+
+/* arena (boss.jpg): os dois lutadores sempre à vista */
+.boss-nova .boss-cena {
+  position: relative; inset: auto; height: calc(var(--u) * 540); min-height: 240px;
+  border-top: 1px solid rgba(217, 173, 87, 0.75); border-bottom: 1px solid rgba(217, 173, 87, 0.75);
+  background-size: cover; background-position: center 40%;
+}
+.boss-nova .boss-cena::before { background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.45)); }
+.boss-nova .boss-palco { position: absolute; inset: 0; align-items: flex-end; justify-content: space-between; padding: 0 calc(var(--u) * 20) calc(var(--u) * 26); }
+.boss-nova .boss-lado-jogador { display: flex; }
+.boss-nova #boss-jogador { width: calc(var(--u) * 300); height: calc(var(--u) * 300); }
+.boss-nova #boss-sprite { width: calc(var(--u) * 470); height: calc(var(--u) * 470); }
+.boss-nova.lutando #boss-sprite { width: calc(var(--u) * 470); height: calc(var(--u) * 470); }
+
+/* tempos, chave, Lutar */
+.boss-baixo { padding: calc(var(--u) * 14) calc(var(--u) * 18) calc(var(--u) * 20); }
+.boss-info-linha { display: grid; grid-template-columns: 1fr 1fr auto; gap: calc(var(--u) * 12); }
+.boss-caixa {
+  display: flex; align-items: center; gap: calc(var(--u) * 10); min-width: 0; padding: calc(var(--u) * 10) calc(var(--u) * 14);
+  border: 1px solid rgba(217, 173, 87, 0.45); border-radius: calc(var(--u) * 10); background: rgba(14, 11, 22, 0.92);
+}
+.boss-caixa > img { flex: none; width: calc(var(--u) * 52); height: calc(var(--u) * 52); object-fit: contain; }
+.boss-caixa > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.boss-caixa small { font-size: calc(var(--ut) * 19); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.boss-caixa b { font-weight: normal; font-size: calc(var(--ut) * 32); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.boss-nova .boss-auto { flex-direction: column; justify-content: center; gap: calc(var(--u) * 4); cursor: pointer; font-size: calc(var(--ut) * 20); white-space: nowrap; }
+.boss-nova .boss-auto input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+.boss-nova .boss-auto input:checked + .cb-chave { background-image: url('../img/ui/chave_ligada.png'); }
+.boss-nova .boss-lutar {
+  display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 16); width: 76%; height: calc(var(--u) * 100); min-height: 40px;
+  margin: calc(var(--u) * 16) auto 0; padding: 0 calc(var(--u) * 60); border: none; cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 38); color: #3a2006; text-shadow: 0 1px 0 rgba(255, 232, 170, 0.6);
+}
+.boss-nova .boss-lutar img { width: calc(var(--u) * 50); height: calc(var(--u) * 50); filter: brightness(0.35) sepia(0.6); }
+.boss-nova .boss-lutar:disabled { filter: grayscale(0.7) brightness(0.7); cursor: default; }
+
+/* ranking e recompensas (recolhíveis) */
+.boss-secao {
+  margin-top: calc(var(--u) * 16); padding: calc(var(--u) * 10) calc(var(--u) * 16) calc(var(--u) * 12);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 14); background: rgba(14, 11, 22, 0.92);
+}
+.boss-secao summary { display: flex; align-items: center; gap: calc(var(--u) * 12); cursor: pointer; list-style: none; font-size: calc(var(--ut) * 28); color: #f3d58a; }
+.boss-secao summary::-webkit-details-marker { display: none; }
+.boss-secao summary::after { content: '⌄'; margin-left: calc(var(--u) * 10); color: #f3d58a; transition: transform 0.2s; }
+.boss-secao[open] summary::after { transform: rotate(180deg); }
+.boss-secao summary img { width: auto; height: calc(var(--u) * 44); }
+.boss-secao summary span { flex: 1; }
+.boss-meu { font-size: calc(var(--ut) * 19); color: var(--ui-marfim); white-space: nowrap; }
+.boss-nova .boss-rank { margin: calc(var(--u) * 10) 0 0; gap: calc(var(--u) * 6); }
+.boss-nova .boss-rank li {
+  display: grid; grid-template-columns: calc(var(--u) * 60) minmax(0, 1fr) minmax(0, 1.3fr) calc(var(--u) * 90); align-items: center; gap: calc(var(--u) * 12);
+  padding: calc(var(--u) * 6) calc(var(--u) * 10); border-radius: calc(var(--u) * 8); background: none; font-size: calc(var(--ut) * 22);
+}
+.boss-nova .boss-rank li.eu { border: 1px solid rgba(217, 173, 87, 0.75); background: rgba(217, 173, 87, 0.1); }
+.boss-nova .boss-rank li.vazio { display: block; font-size: calc(var(--ut) * 19); color: #a99e88; }
+.boss-nova .boss-rank img { width: calc(var(--u) * 44); height: auto; justify-self: center; }
+.boss-nova .boss-rank em { font-style: normal; text-align: center; }
+.boss-nova .boss-rank span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.boss-nova .boss-rank i { height: calc(var(--u) * 18); border: 1px solid rgba(217, 173, 87, 0.35); border-radius: 999px; background: rgba(0, 0, 0, 0.5); overflow: hidden; }
+.boss-nova .boss-rank u { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8a5cf0, #d4a24a); }
+.boss-nova .boss-rank b { font-weight: normal; text-align: right; }
+.boss-secao .dica, .boss-secao > p { margin: calc(var(--u) * 8) 0 0; font-size: calc(var(--ut) * 18); color: #a99e88; }
+.boss-premios { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--u) * 76), 1fr)); gap: calc(var(--u) * 8); margin-top: calc(var(--u) * 10); }
+.boss-premio {
+  position: relative; display: grid; place-items: center; aspect-ratio: 1; border: 1px solid rgba(217, 173, 87, 0.45); border-radius: calc(var(--u) * 8);
+  background: rgba(8, 7, 14, 0.6);
+}
+.boss-premio img { width: 70%; height: 70%; object-fit: contain; }
+.boss-premio i { position: absolute; right: calc(var(--u) * 6); bottom: calc(var(--u) * 2); font-style: normal; font-size: calc(var(--ut) * 18); color: #f3d58a; }
+.boss-premio.boss-ancestral { grid-column: span 2; aspect-ratio: auto; border: 1px solid #ff6ad5; background: rgba(60, 10, 50, 0.55); }
+.boss-premio.boss-ancestral img { width: auto; height: calc(var(--u) * 56); }
+.boss-premio.boss-ancestral small { font-size: calc(var(--ut) * 18); color: #ffb8ec; }
+
+/* (a regra antiga .tela-boss.lutando .boss-palco subia os lutadores na luta) */
+.boss-nova.lutando .boss-palco, .tela-boss.boss-nova .boss-palco { justify-content: space-between; padding: 0 calc(var(--u) * 20) calc(var(--u) * 26); }
+
+/* =============================================================
+   v0.33.4: VIP no layout novo (docs/layout/layout_vip.png) com BORDAS FINAS E SIMPLES (pedido do dono)
+   Janela de borda fina sobre a tela inicial: título, a paisagem fixa com o emblema (as letras escritas pelo jogo),
+   a faixa Ativo/Inativo, as 6 vantagens com ícone e os botões do kit (dourado e escuro).
+   ============================================================= */
+.vip-nova.tela-vip { padding: calc(var(--u) * 24); background: rgba(0, 0, 0, 0.6); }
+.vip-nova .tela-vip-caixa {
+  position: relative; width: calc(var(--u) * 700); max-width: 100%; max-height: 100%; box-sizing: border-box; overflow-y: auto;
+  gap: calc(var(--u) * 14); padding: calc(var(--u) * 16) calc(var(--u) * 26) calc(var(--u) * 26);
+  border: max(1.5px, calc(var(--u) * 2.5)) solid #d9ad57; border-radius: calc(var(--u) * 16); background: #0e0b16;
+  font-family: Georgia, "Times New Roman", serif; color: var(--ui-marfim);
+}
+.vip-titulo { margin: 0; font-weight: normal; font-size: calc(var(--ut) * 64); color: #ffd56a; text-shadow: 0 2px 3px #000; }
+.vip-x {
+  position: absolute; top: calc(var(--u) * 18); right: calc(var(--u) * 18); width: calc(var(--u) * 56); height: calc(var(--u) * 56); min-width: 26px; min-height: 26px;
+  padding: 0; border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 10); background: rgba(14, 11, 22, 0.9);
+  color: #f3d58a; font-size: calc(var(--ut) * 28); line-height: 1; cursor: pointer;
+}
+.vip-cena {
+  display: grid; place-items: center; height: calc(var(--u) * 360); margin: 0 calc(var(--u) * -26); border-top: 1px solid rgba(217, 173, 87, 0.75);
+  border-bottom: 1px solid rgba(217, 173, 87, 0.75); background: url('../img/fundos/inicio.jpg') center 32% / cover no-repeat;
+}
+.vip-emblema { position: relative; width: calc(var(--u) * 280); height: calc(var(--u) * 280); filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)); }
+.vip-emblema img { width: 100%; height: 100%; object-fit: contain; }
+.vip-emblema span {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--ut) * 70); font-weight: bold; color: #ffe08a;
+  text-shadow: 0 3px 0 #6b3a08, 0 0 12px rgba(255, 210, 120, 0.8), 0 2px 4px #000;
+}
+.vip-nova .tela-vip-estado {
+  align-self: center; padding: calc(var(--u) * 6) calc(var(--u) * 40); border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 999px;
+  background: rgba(14, 11, 22, 0.92); font-weight: normal; font-size: calc(var(--ut) * 34); color: #fff3d0;
+}
+.vip-nova .tela-vip-estado.ativo { border-color: #6fe3b4; color: #b8ffd8; }
+.vip-nova .tela-vip-lista { gap: calc(var(--u) * 10); font-size: inherit; }
+.vip-nova .tela-vip-lista li {
+  display: flex; align-items: center; gap: calc(var(--u) * 18); padding: calc(var(--u) * 8) calc(var(--u) * 16) calc(var(--u) * 8) calc(var(--u) * 8);
+  border: 1px solid rgba(217, 173, 87, 0.45); border-radius: calc(var(--u) * 10); background: rgba(8, 7, 14, 0.6);
+}
+.vip-icone {
+  flex: none; display: grid; place-items: center; width: calc(var(--u) * 92); height: calc(var(--u) * 78);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: calc(var(--u) * 8); background: rgba(14, 11, 22, 0.92);
+}
+.vip-icone img { max-width: 76%; max-height: 80%; object-fit: contain; }
+.vip-nova .tela-vip-lista li > span:last-child { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.vip-nova .tela-vip-lista b { font-weight: normal; font-size: calc(var(--ut) * 27); color: #fff3d0; }
+.vip-nova .tela-vip-lista small { font-size: calc(var(--ut) * 20); color: #c9b8ff; }
+.vip-nova .vip-ativar {
+  align-self: center; width: 78%; height: calc(var(--u) * 100); min-height: 40px; margin-top: calc(var(--u) * 6); border: none; cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 40); color: #3a2006; text-shadow: 0 1px 0 rgba(255, 232, 170, 0.6);
+}
+.vip-nova .vip-fechar {
+  align-self: center; width: 46%; height: calc(var(--u) * 64); min-height: 30px; border: none; cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 28); color: #fff3d0;
+}
