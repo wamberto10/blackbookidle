@@ -7,6 +7,7 @@
 import { TIPOS_DE_NUCLEO, ATRIBUTOS_DE_NUCLEO, quantidade, pontosEm, temAlgumNucleo } from '../sistemas/nucleos.js';
 import { ATRIBUTOS } from '../sistemas/atributos.js';
 import { icone } from './sprite.js';
+import { formatarNumero } from '../format.js';
 
 const $ = (id) => document.getElementById(id);
 const NOME = Object.fromEntries(ATRIBUTOS.map(a => [a.id, a.nome]));
@@ -113,11 +114,14 @@ function desenharJanela(estado) {
   }).join('');
 }
 
+// v0.35.1: até 9999 o número inteiro; depois a forma curta com no máximo 1 casa ("12.3K", "10M")
+const nivelCurto = (n) => (n < 1e4 ? String(n) : formatarNumero(n).replace(/\.(\d)\d(?=\D)/, '.$1').replace(/\.0(?=\D)/, ''));
+
 export function atualizarNucleos(estado) {
   ultimoEstado = estado;
   const algum = temAlgumNucleo(estado);
   for (const atributo of ATRIBUTOS_DE_NUCLEO) {
-    const texto = `Nv. ${pontosEm(estado, atributo)}`;
+    const texto = `Nv. ${nivelCurto(pontosEm(estado, atributo))}`;   // v0.35.1: 9999999 → "10M" (cabe ao lado do +)
     if (rotulosPontos[atributo].textContent !== texto) rotulosPontos[atributo].textContent = texto;
     botoesMais[atributo].disabled = !algum;
   }

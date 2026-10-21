@@ -14,7 +14,8 @@ import { MUNDO, obterFase, mapaDesenhado, chefeDoMapa, mundoDoMapa, mapaDaFronte
 import { mapaDaFase, mapaVisual, nomeDaPosicao, numeroNaDificuldade, DIFICULDADES } from '../sistemas/escala.js';
 import { subtrair, multiplicar, maior, menorOuIgual, maximo, razao, arredondarParaBaixo } from '../numeros.js';
 import { cabe } from '../saldos.js';
-import { formatarNumero, formatarTempo, formatarAtributo } from '../format.js';
+import { formatarNumero, formatarCurto, formatarTempo, formatarAtributo } from '../format.js';
+import { iniciarEncaixe, marcarParaEncaixe } from './encaixe.js';
 import { desenharPersonagem, desenharMeditacaoViva, animarVivo } from './sprite.js';
 import { TEXTO_DO_SELO, TEXTO_CURTO_DO_SELO } from './poder.js';
 import { lutaAtual } from '../sistemas/combate.js';
@@ -140,6 +141,7 @@ export function montarInterface(acoes) {
   montarTelaBlackBook(acoes);
   montarTelaAutomacao(acoes);   // v0.33.0: gerenciamento automático (Opções)
   montarCultivoAvancado(acoes, abrirPainel);   // v0.21.0: Reclusão, Pílulas, Arranjo, Bênçãos, Iluminação
+  iniciarEncaixe(document.body);   // v0.35.1: texto de uma linha que não cabe encolhe (ui/encaixe.js)
 }
 
 // ---- Painéis em tela cheia ----
@@ -148,6 +150,7 @@ export function abrirPainel(nome) {
   painelAberto = nome;
   document.querySelectorAll('.painel').forEach((p) => p.classList.toggle('aberto', p.id === 'aba-' + nome));
   document.querySelectorAll('#abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === nome));
+  marcarParaEncaixe();   // v0.35.1: confere os textos que não cabem na tela que abriu
 }
 
 export function fecharPainel() {
@@ -164,10 +167,14 @@ export function atualizarInterface(estado) {
   const producao = P.producaoPorSegundo(estado);
 
   // ---- Topo ----
-  $('topo-cultivo').textContent = formatarNumero(arredondarParaBaixo(estado.cultivo));
+  // v0.35.1: no topo os números longos ficam com 1 casa decimal ("7.5e9999"); o valor inteiro fica na dica
+  trocarTexto($('topo-cultivo'), formatarCurto(arredondarParaBaixo(estado.cultivo)));
+  $('topo-cultivo').parentElement.parentElement.title = `Cultivo: ${formatarNumero(arredondarParaBaixo(estado.cultivo))}`;
   $('topo-ps').textContent = formatarNumero(producao);
-  $('topo-pedras').textContent = formatarNumero(arredondarParaBaixo(estado.pedras));
-  $('topo-essencia').textContent = formatarNumero(arredondarParaBaixo(estado.essencia));
+  trocarTexto($('topo-pedras'), formatarCurto(arredondarParaBaixo(estado.pedras)));
+  $('topo-pedras').parentElement.parentElement.title = `Pedras Espirituais: ${formatarNumero(arredondarParaBaixo(estado.pedras))}`;
+  trocarTexto($('topo-essencia'), formatarCurto(arredondarParaBaixo(estado.essencia)));
+  $('topo-essencia').parentElement.parentElement.title = `Essência da Alma: ${formatarNumero(arredondarParaBaixo(estado.essencia))}`;
   // A Essência só aparece no topo depois que o jogador já teve alguma
   $('topo-essencia-caixa').classList.toggle('escondido', menorOuIgual(estado.essencia, 0) && !liberado(estado, 'blackbook'));
 
@@ -289,7 +296,6 @@ function atualizarFundo(estado) {
   $('inicio-local').innerHTML = reclusao
     ? `<b>Em Reclusão</b><small>${mapa.nome}</small><small>${nomeDaPosicao(indiceMapa)}</small>`
     : `<b>${mapa.nome}</b><small>${nomeCurtoDoMundo(mundoDoMapa(indiceMapa))}</small><small id="inicio-local-fase"></small>`;
-  ajustarFonte($('inicio-local').querySelector('b'), $('inicio-local').querySelector('b').textContent, 30, 20);
 
   $('fundo-imagem').classList.remove('fundo-inicial');
   $('fundo-imagem').style.backgroundSize = $('fundo-imagem').style.backgroundPosition = '';
@@ -363,12 +369,8 @@ export function nomeCurtoDoMundo(mundo) {
   return mundo.dificuldade ? `${mundo.dificuldade} · ${curto}` : curto;
 }
 
-// v0.27.0: nomes longos ("Meio-Passo do Céu Aberto") encolhem a letra para caber na moldura do layout novo.
-// tamanho = em u (px do mockup) para até `cabe` letras; acima disso diminui na mesma proporção (mínimo 60%)
-function ajustarFonte(el, texto, tamanho, cabe) {
-  const u = Math.max(tamanho * 0.6, Math.min(tamanho, tamanho * cabe / Math.max(1, texto.length)));
-  el.style.fontSize = `calc(var(--ut) * ${u.toFixed(1)})`;   // v0.30.1: mesma unidade de texto do CSS
-}
+// v0.35.1: nomes longos ("Meio-Passo do Céu Aberto") e números gigantes encolhem a letra para caber pelo
+// ui/encaixe.js, que MEDE a caixa (antes ajustarFonte contava letras e podia descer a 60% do tamanho)
 
 // v0.20.2: só troca o texto quando ele muda de verdade (trocar 10×/s, no meio de um toque,
 // atrapalhava o clique dos botões Meditar e Avançar/Romper em alguns celulares)
@@ -476,7 +478,9 @@ function atualizarCultivo(estado, producao) {
     : requisito && !requisito.cumprido ? 'Falta vencer o chefe'
     : `Usa ${formatarNumero(P.custoParaAvancar(estado))} de Cultivo`);
   trocarTexto($('inicio-proximo'), P.noNivelMaximo(estado) ? proximo
-    : P.proximoEhMaestria(estado) ? `${CONFIG.maestria.nome} · Próximo: ${proximoEstagio ?? proximo}`
+    // v0.35.1: na Maestria a linha ficava longa demais ("Maestria da Criação · Próximo: Maestria 25000")
+    : P.proximoEhMaestria(estado) ? (P.nivelDaMaestria(estado) > 0
+      ? `Maestria ${P.nivelDaMaestria(estado)} · Próximo: ${P.nivelDaMaestria(estado) + 1}` : `${P.nomeDoEstagio(estado)} · Próximo: ${proximoEstagio ?? proximo}`)
     : `Estágio ${estado.estagio + 1}/${reinoAgora.estagios.length} · ${rompimento ? `Romper: ${proximoReino}` : `Próximo: ${proximoEstagio ?? proximo}`}`);
   trocarTexto($('inicio-progresso'), progressoTexto ? `${progressoTexto} (${Math.floor(parseFloat(largura))}%)` : '');
   $('topo-nivel-barra').style.width = largura;
@@ -570,9 +574,8 @@ function atualizarNivel(estado) {
   if (!dica.classList.contains('escondido')) dica.innerHTML = $(dica.dataset.orbe)?.dataset.dica ?? '';
   $('moldura-sprite').style.setProperty('--aura', regiao.corAura);
   $('inicio-reino').textContent = reino.nome;
-  ajustarFonte($('inicio-reino'), reino.nome, 22, 14);   // v0.30.1: nome longo do reino cabe no topo (celular)
+  $('inicio-reino').title = reino.nome;   // v0.35.1: no celular estreito o nome longo pode terminar em "…"
   $('inicio-faixa-reino').textContent = reino.nome;   // v0.27.0: faixa da tela inicial
-  ajustarFonte($('inicio-faixa-reino'), reino.nome, 33, 14);
   $('topo-nivel').textContent = `Nv. ${P.indiceNivel(estado) + 1}`;
   $('inicio-estagio').textContent = P.nomeDoEstagio(estado);
 

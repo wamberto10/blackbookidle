@@ -16,7 +16,7 @@ import { DIFICULDADES, MAPAS_POR_DIFICULDADE, FASES_POR_MAPA, ULTIMA_DIFICULDADE
   dificuldadeDoMapa, numeroNaDificuldade, nomeDaPosicao, primeiroMapaDaDificuldade } from '../sistemas/escala.js';
 import { cultivoDaVitoria, fatorDoInimigo } from '../sistemas/combate.js';
 import { essenciaPorSegundo, essenciaDaPrimeiraConquista } from '../sistemas/blackbook.js';
-import { formatarNumero } from '../format.js';
+import { formatarNumero, formatarCurto } from '../format.js';
 import { multiplicar } from '../numeros.js';
 import { desenharInimigo } from './sprite.js';
 import { calcularAtributos, poderTotal } from '../sistemas/atributos.js';
@@ -147,8 +147,9 @@ function desenharMundos(estado) {
     const botao = document.createElement('button');
     botao.className = 'ui mp-mundo' + (w === mundoAtual ? ' ativo' : '') + (aberto ? '' : ' trancado');
     botao.disabled = !aberto;
-    botao.innerHTML = `<img src="${aberto ? `img/ui/mundo_icone_${i + 1}.png` : 'img/icones/cadeado.png'}" alt=""><span>Mundo ${numero}</span>`;
-    botao.title = aberto ? `${DIFICULDADES[dificuldadeDoMapa(w * MAPAS_POR_MUNDO)].nome} — ${dadosDoMundo(w).nome}`
+    // v0.35.1: no Infinito o número passa de 100 — a aba mostra só o número ("Mundo 8304" fica na dica)
+    botao.innerHTML = `<img src="${aberto ? `img/ui/mundo_icone_${i + 1}.png` : 'img/icones/cadeado.png'}" alt=""><span>${numero < 100 ? 'Mundo ' : ''}${numero}</span>`;
+    botao.title = aberto ? `Mundo ${numero} · ${DIFICULDADES[dificuldadeDoMapa(w * MAPAS_POR_MUNDO)].nome} — ${dadosDoMundo(w).nome}`
       : 'Vença o chefe final do mundo anterior';
     if (aberto) botao.addEventListener('click', () => selecionarMapa(mapasDoMundo(w)[0]));
     caixa.appendChild(botao);
@@ -201,11 +202,14 @@ function desenharDesafio(estado) {
   const chanceItem = CONFIG.equipamentos.chanceDeDrop[fase.chaveTipo] ?? 0;
   const inedita = fase.indice > estado.combate.fasesConcluidas;
   const caixa = (icone, valor, titulo) => `<span class="mp-rec" title="${titulo}"><img src="img/ui/${icone}.png" alt=""><b>${valor}</b></span>`;
+  // v0.35.1: caixinhas estreitas — números com 1 casa decimal quando passam de 7 letras (o valor inteiro fica na dica)
+  const cultivo = cultivoDaVitoria(estado, fase);
+  const essenciaHora = multiplicar(essenciaPorSegundo(estado, fase.indice), 3600);
   $('mp-recompensas').innerHTML =
-    caixa('icone_cultivo', '+' + formatarNumero(cultivoDaVitoria(estado, fase)), 'Cultivo por vitória') +
-    caixa('icone_pedras', '+' + formatarNumero(fase.recompensa.pedras), 'Pedras Espirituais por vitória') +
-    caixa('icone_essencia', '+' + formatarNumero(multiplicar(essenciaPorSegundo(estado, fase.indice), 3600)) + '/h',
-      'Essência da Alma por hora de luta vencida aqui (farm)' + (inedita
+    caixa('icone_cultivo', '+' + formatarCurto(cultivo), `Cultivo por vitória: +${formatarNumero(cultivo)}`) +
+    caixa('icone_pedras', '+' + formatarCurto(fase.recompensa.pedras), `Pedras Espirituais por vitória: +${formatarNumero(fase.recompensa.pedras)}`) +
+    caixa('icone_essencia', '+' + formatarCurto(essenciaHora) + '/h',
+      `Essência da Alma por hora de luta vencida aqui (farm): +${formatarNumero(essenciaHora)}/h` + (inedita
         ? ` · 1ª vitória: +${formatarNumero(essenciaDaPrimeiraConquista(fase.indice))} (uma vez só)` : '')) +
     caixa('icone_bau', `${Math.round(chanceItem * 1000) / 10}%`, 'Chance de cair um equipamento a cada vitória');
   // v0.21.1: inimigo bem mais fraco que você rende menos Cultivo | v0.26.0: Selo do Mundo Primordial

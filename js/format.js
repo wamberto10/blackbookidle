@@ -10,6 +10,13 @@ export function formatarNumero(numero) {
   return formatar(numero);
 }
 
+// v0.35.1: versão curta para caixas bem estreitas (topo do celular): com mais de 7 letras fica com 1 casa decimal
+// ("7.54e9999" → "7.5e9999", "999.99Dc" → "999.9Dc"); o valor completo continua na dica e nas outras telas
+export function formatarCurto(numero) {
+  const texto = formatar(numero);
+  return texto.length > 7 ? texto.replace(/^(-?\d+)\.(\d)\d+/, '$1.$2') : texto;
+}
+
 // v0.33.0: lê um número digitado pelo jogador: "1500", "2.5M", "2,5M", "3e40", "1.2Qa", "4e5000".
 // Devolve um número grande (numeros.js) ou NaN se não der.
 export function lerNumero(texto) {

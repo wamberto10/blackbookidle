@@ -13,7 +13,7 @@ import { liberado } from '../sistemas/desbloqueios.js';
 import { obterFase, mapaDesenhado, mapaDaFronteira } from '../sistemas/mundo.js';
 import { mapaDaFase, mapaVisual, nomeDaPosicao } from '../sistemas/escala.js';
 import { REINOS } from '../dados/reinos.js';
-import { formatarNumero } from '../format.js';
+import { formatarNumero, formatarCurto } from '../format.js';
 import { somar, multiplicar, arredondarParaBaixo } from '../numeros.js';
 import * as RE from '../sistemas/reencarnacao.js';
 import { cabe } from '../saldos.js';
@@ -115,7 +115,9 @@ export function atualizarTelaBlackBook(estado) {
   // ---- Essência da Alma (v0.32.0) ----
   const e = estado.estatisticas;
   const fase = estado.combate.faseAtual;
-  texto($('bb-ganho'), formatarNumero(arredondarParaBaixo(estado.essencia)));
+  // v0.35.1: caixas estreitas usam 1 casa decimal quando o número passa de 7 letras (o valor inteiro fica na dica)
+  texto($('bb-ganho'), formatarCurto(arredondarParaBaixo(estado.essencia)));
+  $('bb-ganho').title = formatarNumero(arredondarParaBaixo(estado.essencia));
   texto($('bb-ess-conquistas'), '+' + formatarNumero(e.essenciaConquistas ?? 0));
   texto($('bb-ess-farm'), `+${formatarNumero(multiplicar(BB.essenciaPorSegundo(estado, fase), 3600))}/h`);
   texto($('bb-ess-vip'), estado.vip ? multiplicador(1 + CONFIG.vip.bonusEssencia) : '—');
@@ -131,7 +133,8 @@ export function atualizarTelaBlackBook(estado) {
     const maximo = BB.noMaximo(estado, melhoria.id);
     el.nivel.textContent = `Nv. ${BB.nivelMelhoria(estado, melhoria.id)}${melhoria.nivelMaximo !== undefined ? `/${melhoria.nivelMaximo}` : ''}`;
     el.efeito.textContent = `${textoDoEfeito(melhoria, BB.efeitoMelhoria(estado, melhoria.id))} de ${el.visual.alvo}`;
-    el.custo.textContent = maximo ? '—' : formatarNumero(custo);
+    el.custo.textContent = maximo ? '—' : formatarCurto(custo);
+    el.custo.title = maximo ? '' : `Custo: ${formatarNumero(custo)} de Essência`;
     el.botao.textContent = maximo ? 'Máximo' : 'Melhorar';
     el.botao.disabled = maximo || !cabe(estado, 'essencia', custo);
   }
