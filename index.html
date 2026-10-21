@@ -89,7 +89,8 @@
     <button data-aba="cultivo"><img class="icone-aba" src="img/ui/aba_icone_cultivo.png" alt="">Cultivo</button>
     <button data-aba="combate"><img class="icone-aba" src="img/ui/aba_icone_combate.png" alt="">Combate</button>
     <button data-aba="mochila"><img class="icone-aba" src="img/ui/aba_icone_mochila.png" alt="">Mochila</button>
-    <button data-aba="mapa"><img class="icone-aba" src="img/ui/aba_icone_mapa.png" alt="">Mapa</button>
+    <!-- v0.35.2: o Mapa virou um botão dentro do Combate; o lugar dele na barra é da Seita (em breve) -->
+    <button data-aba="seita" class="aba-em-breve" title="Seita — em breve"><img class="icone-aba" src="img/ui/botao_cadeado.png" alt="">Seita</button>
     <button data-aba="blackbook"><img class="icone-aba" src="img/ui/aba_icone_blackbook.png" alt="">Black Book</button>
   </nav>
 
@@ -294,7 +295,9 @@
         <div class="arena" id="arena">
           <canvas id="arena-fundo" class="arena-fundo"></canvas>
 
-          <div class="cb-placa">
+          <!-- v0.35.2: o Mapa abre daqui (botão no canto e a própria placa do mapa) -->
+          <button class="ui cb-botao-mapa" id="cb-abrir-mapa" title="Abrir o Mapa"><span class="cb-orbe"><img src="img/ui/aba_icone_mapa.png" alt=""></span><b>Mapa</b></button>
+          <div class="cb-placa cb-placa-clicavel" id="cb-placa" title="Abrir o Mapa">
             <small id="cb-mapa"></small>
             <h3 id="cb-local"></h3>
             <span><span id="cb-numero"></span> <span class="cb-tempo" id="cb-tempo"></span></span>
@@ -461,6 +464,8 @@
       <!-- v0.31.0 (layout novo — docs/layout/layout_mapa.png, com bordas finas e simples): abas dos mundos,
            carrossel dos mapas, painel do desafio, trilha das 12 fases e dificuldades -->
       <div id="mapa-conteudo" class="escondido mp-novo">
+        <!-- v0.35.2: o Mapa abre pelo Combate; este botão volta para ele -->
+        <div class="mp-topo"><button class="ui mp-voltar" id="mp-voltar">‹ Combate</button><h3>Mapa</h3></div>
         <div class="mp-mundos" id="mp-mundos"></div>
 
         <div class="mp-carrossel">

@@ -71,8 +71,13 @@ export function montarInterface(acoes) {
   }, true);
 
   // ---- Abas: clicar abre o painel; clicar de novo fecha ----
+  // v0.35.2: o Mapa abre pelo Combate (botão na arena, placa do mapa, e a placa da tela inicial) e volta por "‹ Combate"
+  for (const id of ['cb-abrir-mapa', 'cb-placa', 'inicio-local']) $(id).addEventListener('click', () => abrirPainel('mapa'));
+  $('mp-voltar').addEventListener('click', () => abrirPainel('combate'));
   document.querySelectorAll('[data-aba]').forEach((botao) => {
     botao.addEventListener('click', () => {
+      // v0.35.2: a Seita ainda não existe — o lugar na barra já é dela
+      if (botao.dataset.aba === 'seita') { mostrarMensagem('🏯 A Seita chega em breve.'); return; }
       if (painelAberto === botao.dataset.aba) fecharPainel();
       else abrirPainel(botao.dataset.aba);
     });
@@ -149,7 +154,9 @@ export function abrirPainel(nome) {
   fecharTelaBoss();   // v0.34.0: a tela do boss fica entre a barra de cima e as abas — tocar numa aba sai dela
   painelAberto = nome;
   document.querySelectorAll('.painel').forEach((p) => p.classList.toggle('aberto', p.id === 'aba-' + nome));
-  document.querySelectorAll('#abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === nome));
+  // v0.35.2: o Mapa é parte do Combate — com ele aberto, a aba Combate fica acesa
+  const aba = nome === 'mapa' ? 'combate' : nome;
+  document.querySelectorAll('#abas button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === aba));
   marcarParaEncaixe();   // v0.35.1: confere os textos que não cabem na tela que abriu
 }
 
@@ -179,7 +186,7 @@ export function atualizarInterface(estado) {
   $('topo-essencia-caixa').classList.toggle('escondido', menorOuIgual(estado.essencia, 0) && !liberado(estado, 'blackbook'));
 
   // Abas trancadas aparecem apagadas
-  for (const sistema of ['combate', 'mapa', 'mochila', 'blackbook']) {
+  for (const sistema of ['combate', 'mochila', 'blackbook']) {   // v0.35.2: o Mapa saiu da barra (abre pelo Combate)
     document.querySelector(`#abas [data-aba="${sistema}"]`).classList.toggle('trancada', !liberado(estado, sistema));
   }
 

@@ -4263,3 +4263,31 @@ button.botao-cult.indisponivel { opacity: 0.55; filter: grayscale(0.5); }
   .pers-info-item + .pers-info-item { padding-left: 0; margin-left: 0; border-left: none; padding-top: calc(var(--u) * 8); border-top: 1px solid rgba(217, 173, 87, 0.35); }
 }
 @container jogo (max-width: 440px) { .pers-info { height: auto; padding: calc(var(--u) * 10) calc(var(--u) * 22); } }
+
+/* =============================================================
+   v0.35.2: o MAPA abre pelo COMBATE (o lugar dele na barra de baixo agora é da Seita, em breve)
+   ============================================================= */
+/* botão "Mapa" no canto de cima à esquerda da arena — o espelho do selo do tipo da fase ("Chefe") */
+#aba-combate .cb-botao-mapa {
+  position: absolute; z-index: 6; left: calc(var(--u) * 22); top: calc(var(--u) * 150); cursor: pointer;
+  display: flex; align-items: center; gap: calc(var(--u) * 8); padding: calc(var(--u) * 4) calc(var(--u) * 18) calc(var(--u) * 4) calc(var(--u) * 4);
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 999px; background: rgba(12, 9, 18, 0.82);
+  font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--ut) * 21); color: #f3d58a;
+}
+#aba-combate .cb-botao-mapa b { font-weight: normal; }
+#aba-combate .cb-botao-mapa .cb-orbe img { width: 76%; height: 76%; object-fit: contain; }
+#aba-combate .cb-botao-mapa:active { transform: scale(0.96); }
+/* a placa do mapa também abre o Mapa */
+#aba-combate .cb-placa-clicavel { cursor: pointer; }
+#aba-combate .cb-placa-clicavel:active { filter: brightness(1.2); }
+/* topo do Mapa: voltar ao Combate */
+.mp-topo { display: flex; align-items: center; gap: calc(var(--u) * 18); margin: calc(var(--u) * 12) calc(var(--u) * 22) 0; }
+.mp-topo h3 { margin: 0; font-weight: normal; font-size: calc(var(--ut) * 32); color: #f0d48a; text-shadow: 0 2px 2px #000; }
+.mp-novo .mp-voltar {
+  height: calc(var(--u) * 56); min-height: 26px; padding: 0 calc(var(--u) * 22); cursor: pointer;
+  border: 1px solid rgba(217, 173, 87, 0.75); border-radius: 999px; background: rgba(20, 16, 30, 0.95);
+  font-family: inherit; font-size: calc(var(--ut) * 22); color: var(--ui-marfim);
+}
+/* aba da Seita (ainda não existe): apagada, com cadeado */
+.barra-abas .aba-em-breve { opacity: 0.6; }
+.barra-abas .aba-em-breve .icone-aba { filter: grayscale(0.6); }
