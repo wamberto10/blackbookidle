@@ -87,6 +87,10 @@ export function montarInterface(acoes) {
   $('botao-avancar').addEventListener('click', acoes.aoAvancar);
   $('inicio-avancar').addEventListener('click', acoes.aoAvancar);
   $('opcao-auto').addEventListener('change', (e) => acoes.aoMudarAuto(e.target.checked));
+  // v0.35.0: o "!" ao lado da chave explica o que ela faz (antes era um texto pequeno embaixo)
+  $('cult-auto-ajuda').addEventListener('click', () => mostrarModal('Avançar estágios sozinho',
+    'Com a chave ligada, os estágios sobem sozinhos assim que o Cultivo dá. Os rompimentos de reino e a Maestria ' +
+    'são configurados em Opções (automação). Com o VIP, os reinos também se rompem sozinhos.'));
 
   $('botao-salvar').addEventListener('click', acoes.aoSalvar);
   $('botao-resetar').addEventListener('click', acoes.aoResetar);
@@ -380,7 +384,6 @@ function atualizarCultivo(estado, producao) {
     ? `🧘 Meditar automático: ${auto ? 'LIGADO' : 'DESLIGADO'}`
     : `🧘 Meditar (+${formatarNumero(P.ganhoDaMeditacao(estado))})`;
   for (const id of ['botao-meditar', 'inicio-meditar']) {
-    if (id === 'botao-meditar') trocarTexto($(id), textoMeditar.replace('🧘 ', ''));   // o da tela inicial tem texto próprio (abaixo)
     $(id).classList.toggle('meditar-auto', auto);
     // Só o "auto DESLIGADO" do VIP fica apagado (sem VIP o botão medita por toque: fica colorido)
     $(id).classList.toggle('auto-desligado', estado.vip && !auto);
@@ -389,6 +392,10 @@ function atualizarCultivo(estado, producao) {
   // (o ganho e o estado do automático ficam na dica ao segurar o dedo; o automático do VIP aparece pelo brilho)
   trocarTexto($('inicio-meditar'), 'Meditar');
   $('inicio-meditar').title = textoMeditar;
+  // v0.35.0: aba Cultivo — "Meditar" grande e, embaixo, o ganho por toque (ou o estado do automático do VIP)
+  trocarTexto($('cult-meditar-sub'), estado.vip ? `Automático: ${auto ? 'ligado' : 'desligado'}`
+    : `+${formatarNumero(P.ganhoDaMeditacao(estado))} por toque`);
+  $('botao-meditar').title = textoMeditar.replace('🧘 ', '');
   $('opcao-auto').checked = estado.opcoes.autoAvancar;
 
   // Requisito de combate para romper o reino
@@ -396,6 +403,8 @@ function atualizarCultivo(estado, producao) {
   const requisito = P.requisitoDoRompimento(estado);
   let textoRequisito = '';
   let temChefe = false;
+  let requisitoCurto = 'Só Cultivo';   // v0.35.0: texto curto da aba Cultivo (o completo fica na dica)
+  let gargalo = false;
   if (requisito && !requisito.cumprido) {
     // v0.32.0: o mapa do requisito é GLOBAL (a Maestria pede chefes da Normal em diante) — sempre existe
     const chefe = chefeDoMapa(requisito.mapa - 1);
@@ -406,8 +415,13 @@ function atualizarCultivo(estado, producao) {
     const acao = requisito.rompimento ? 'romper o reino' : `chegar à ${P.nomeDoProximoNivel(estado).split(' — ')[1]}`;
     textoRequisito = pronto ? `⛰️ Gargalo! Seu cultivo está pronto, mas ${alvo} depois de derrotar ${chefe.inimigo.nome} (${nomeDaPosicao(requisito.mapa - 1)}).`
       : `🔒 Para ${acao}, derrote o chefe do ${nomeDaPosicao(requisito.mapa - 1)}: ${chefe.inimigo.nome}.`;
+    requisitoCurto = `Derrote ${chefe.inimigo.nome}\n${nomeDaPosicao(requisito.mapa - 1)}`;
+    gargalo = pronto;
   }
-  trocarTexto($('cult-requisito'), textoRequisito);
+  trocarTexto($('cult-requisito'), requisitoCurto);
+  $('cult-req-caixa').title = textoRequisito.replace(/^\S+\s/, '') || 'Para o próximo nível basta juntar o Cultivo.';
+  $('cult-req-caixa').classList.toggle('livre', !temChefe);
+  $('cult-req-caixa').classList.toggle('gargalo', gargalo);
   // v0.27.0: na tela inicial o motivo vai na linha de dica e o botão "Ir ao chefe" só aparece quando há chefe
   trocarTexto($('inicio-requisito'), temChefe ? 'Ir ao chefe' : '');
   $('inicio-requisito').title = textoRequisito;
@@ -443,10 +457,24 @@ function atualizarCultivo(estado, producao) {
     else textoBotao = rompimento ? '⚡ Romper Reino' : `⬆️ ${avancoNome}`;
   }
 
-  trocarTexto($('cult-proximo'), proximo);
   // v0.27.0: tela inicial — "Estágio 2/3 · Próximo: 3º Estágio" (ou "Romper: <reino>"), progresso com % e nível no topo
   const reinoAgora = P.reinoAtual(estado);
   const [proximoReino, proximoEstagio] = proximo.split(' — ');
+  // v0.35.0: aba Cultivo — rótulo, nome e descrição do próximo nível (reino novo, estágio ou Maestria)
+  const maestria = !P.noNivelMaximo(estado) && P.proximoEhMaestria(estado);
+  trocarTexto($('cult-rotulo'), P.noNivelMaximo(estado) ? 'Ápice' : maestria ? 'Próxima Maestria'
+    : rompimento ? 'Próximo Reino' : 'Próximo Estágio');
+  trocarTexto($('cult-proximo'), rompimento ? proximoReino : (proximoEstagio ?? proximo));
+  trocarTexto($('cult-proximo-desc'), P.noNivelMaximo(estado) ? ''
+    : maestria ? `Depois do ${reinoAgora.estagios.at(-1)}, a ${CONFIG.maestria.nome} sobe sem fim.`
+    : rompimento ? (REINOS[estado.reino + 1]?.descricao ?? '')
+    : `${reinoAgora.nome} · estágio ${estado.estagio + 2} de ${reinoAgora.estagios.length}`);
+  const porcentagem = Math.floor(parseFloat(largura));
+  trocarTexto($('cult-porcento'), `${porcentagem}%`);
+  trocarTexto($('cult-avancar-nome'), textoBotao.replace(/^\S+\s/, '').replace('Avançar Estágio', 'Avançar'));
+  trocarTexto($('cult-avancar-sub'), P.noNivelMaximo(estado) ? 'Você chegou ao ápice'
+    : requisito && !requisito.cumprido ? 'Falta vencer o chefe'
+    : `Usa ${formatarNumero(P.custoParaAvancar(estado))} de Cultivo`);
   trocarTexto($('inicio-proximo'), P.noNivelMaximo(estado) ? proximo
     : P.proximoEhMaestria(estado) ? `${CONFIG.maestria.nome} · Próximo: ${proximoEstagio ?? proximo}`
     : `Estágio ${estado.estagio + 1}/${reinoAgora.estagios.length} · ${rompimento ? `Romper: ${proximoReino}` : `Próximo: ${proximoEstagio ?? proximo}`}`);
@@ -456,7 +484,7 @@ function atualizarCultivo(estado, producao) {
   $('inicio-barra').style.width = largura;
   trocarTexto($('cult-progresso'), progressoTexto);
   trocarTexto($('cult-tempo'), tempo);
-  trocarTexto($('cult-producao'), `+${formatarNumero(producao)}/s`);
+  trocarTexto($('cult-producao'), `+${formatarNumero(producao)}`);
   trocarTexto($('inicio-tempo'), tempo);
 
   for (const id of ['botao-avancar', 'inicio-avancar']) {
@@ -464,7 +492,8 @@ function atualizarCultivo(estado, producao) {
     // Os botões têm imagem (avançar / romper), então o texto vai sem o emoji.
     // v0.16.4: bloqueado NÃO é mais "disabled" — o toque mostra o motivo (dono achou que o botão
     // não funcionava, porque o toque num botão desativado não fazia nada)
-    trocarTexto(botao, textoBotao.replace(/^\S+\s/, ''));
+    // (v0.35.0: o da aba Cultivo tem nome e linha de baixo próprios, preenchidos acima)
+    if (id === 'inicio-avancar') trocarTexto(botao, textoBotao.replace(/^\S+\s/, ''));
     botao.classList.toggle('rompimento', rompimento);
     botao.classList.toggle('indisponivel', !P.podeAvancar(estado));
     botao.classList.toggle('trancado', Boolean(requisito && !requisito.cumprido));
@@ -550,48 +579,37 @@ function atualizarNivel(estado) {
   // Descrição do reino no painel Cultivo
   $('cult-reino-nome').textContent = reino.nome;
   $('cult-reino-desc').textContent = reino.descricao;
-  $('cult-estagios').innerHTML = reino.estagios.map((_, i) =>
-    `<span class="${i < estado.estagio ? 'feito' : i === estado.estagio ? 'atual' : ''}" title="${reino.estagios[i]}"></span>`).join('') +
-    `<b>${P.nomeDoEstagio(estado)}</b>`;
+  // v0.35.0: bolinhas dos estágios no banner (feitos, atual e próximos); a cor da região pinta o brilho
+  const nivelMaestria = P.nivelDaMaestria(estado);
+  $('cult-estagios').innerHTML = reino.estagios.map((nome, i) =>
+    `<span class="${i < estado.estagio || nivelMaestria > 0 ? 'feito' : i === estado.estagio ? 'atual' : ''}" title="${nome}"></span>`).join('') +
+    (nivelMaestria > 0 ? `<b>${P.nomeDoEstagio(estado)}</b>` : '');
+  $('cult-nova').style.setProperty('--cor-regiao', regiao.corAura);
 
-  // Caminho do Cultivo: concluídos, atual, próximo e ocultos (???)
-  const lista = $('lista-caminho');
-  lista.innerHTML = '';
-  let regiaoAnterior = null;
-  REINOS.forEach((r, indice) => {
-    // v0.16.4: título da região quando ela muda (antes repetia em todas as linhas)
-    if (indice <= estado.reino + 1 && r.regiao !== regiaoAnterior) {
-      regiaoAnterior = r.regiao;
-      const titulo = document.createElement('li');
-      titulo.className = 'caminho-regiao';
-      titulo.textContent = REGIOES[r.regiao].nome;
-      lista.appendChild(titulo);
+  // Caminho do Cultivo: uma linha por região (paisagem img/ui/cult_regiao_N), um nó por reino:
+  // feito (✔), atual (dourado), próximo (com nome) e ocultos (???). A Maestria entra no fim da Criação.
+  $('lista-caminho').innerHTML = REGIOES.map((regiaoDaLinha, r) => {
+    const nos = [];
+    REINOS.forEach((reinoDoNo, i) => {
+      if (reinoDoNo.regiao !== r) return;
+      const noFim = i === REINOS.length - 1 && nivelMaestria > 0;   // Criação completa: a Maestria é o "atual"
+      if (i < estado.reino || noFim) nos.push(['feito', reinoDoNo.nome, reinoDoNo.nome]);
+      else if (i === estado.reino) nos.push(['atual', `${reinoDoNo.nome}<small>${estado.estagio + 1}/${reinoDoNo.estagios.length}</small>`, reinoDoNo.nome]);
+      else if (i === estado.reino + 1) nos.push(['proximo', reinoDoNo.nome, reinoDoNo.nome]);
+      else nos.push(['oculto', '???', 'Reino ainda oculto']);
+    });
+    if (r === REGIOES.length - 1) {
+      const naCriacao = estado.reino === REINOS.length - 1;
+      nos.push(nivelMaestria > 0 ? ['atual', `${CONFIG.maestria.nome}<small>${nivelMaestria}</small>`, CONFIG.maestria.nome]
+        : naCriacao && P.proximoEhMaestria(estado) ? ['proximo', CONFIG.maestria.nome, CONFIG.maestria.nome]
+        : ['oculto', '???', 'Ainda oculto']);
     }
-    const item = document.createElement('li');
-    let classe;
-    let texto;
-
-    if (indice < estado.reino) {
-      classe = 'concluido';
-      texto = r.nome;
-    } else if (indice === estado.reino) {
-      classe = 'atual';
-      texto = `${r.nome} <small>${estado.estagio + 1}/${r.estagios.length}</small>`;
-    } else if (indice === estado.reino + 1) {
-      classe = 'proximo';
-      texto = `${r.nome}`;
-    } else {
-      // v0.16.4: os reinos ocultos viram UMA linha só ("??? · mais N reinos ocultos")
-      if (indice > estado.reino + 2) return;
-      const ocultos = REINOS.length - indice;
-      classe = 'oculto';
-      texto = ocultos > 1 ? `??? <small>mais ${ocultos} reinos ocultos</small>` : '???';
-    }
-
-    item.className = classe;
-    item.innerHTML = `<i class="marcador"></i><span>${texto}</span>`;
-    lista.appendChild(item);
-  });
+    const alcancada = REINOS.some((x, i) => x.regiao === r && i <= estado.reino + 1);
+    return `<div class="cn-regiao cn-regiao-${r + 1}${alcancada ? '' : ' trancada'}">` +
+      `<span class="cn-regiao-nome">${regiaoDaLinha.nome}</span>` +
+      `<ol class="cn-nos">${nos.map(([classe, nome, dica]) => `<li class="cn-no ${classe}" title="${dica}"><i></i><span>${nome}</span></li>`).join('')}</ol>` +
+      '</div>';
+  }).join('');
 }
 
 // v0.16.4: por que o botão de avançar está bloqueado (mostrado ao tocar nele)

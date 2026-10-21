@@ -8,7 +8,7 @@
 const CUSTO_ALTO = { aPartirDoNivel: 50, crescimento: 1.07 };
 
 export const CONFIG = {
-  versao: '0.34.0',
+  versao: '0.35.0',
 
   // ---- v0.32.0: PROGRESSÃO CONTÍNUA (docs/PROGRESSAO_CONTINUA.md) ----
   // A campanha não recomeça mais: Fácil → Normal → Difícil → Inferno → Infinito são capítulos seguidos.

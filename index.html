@@ -161,67 +161,116 @@
   </section>
 
   <!-- ===== Cultivo ===== -->
-  <section class="painel painel-cultivo" id="aba-cultivo">
+  <section class="painel painel-novo" id="aba-cultivo">
     <header class="painel-topo"><h2><img class="icone-px" src="img/icones/aba_cultivo.png" alt=""> Cultivo</h2><button class="botao-icone" data-fechar>✕</button></header>
     <div class="painel-corpo">
-      <!-- v0.16.4: aba Cultivo nova — reino atual com os estágios, progresso, botões de imagem e caminho em linha do tempo -->
-      <div class="cult-reino">
-        <small class="cult-rotulo">Reino atual</small>
-        <h3 id="cult-reino-nome"></h3>
-        <div class="cult-estagios" id="cult-estagios"></div>
-        <p id="cult-reino-desc"></p>
-      </div>
-
-      <div class="cartao cult-progresso">
-        <div class="linha"><span class="cult-rotulo">Próximo</span><strong id="cult-proximo"></strong></div>
-        <div class="barra"><div class="barra-preenchida" id="cult-barra"></div></div>
-        <div class="linha pequeno"><span id="cult-progresso"></span><span id="cult-tempo"></span></div>
-        <div class="linha pequeno"><span>Produção</span><span id="cult-producao"></span></div>
-        <div class="requisito" id="cult-requisito"></div>
-        <button id="cult-ir-chefe" class="botao-ir-chefe escondido"><img class="icone-px" src="img/icones/aba_mapa.png" alt=""> Ir ao chefe</button>
-        <div class="cult-botoes">
-          <button id="botao-meditar" class="botao-imagem">Meditar</button>
-          <button id="botao-avancar" class="botao-imagem">Avançar</button>
+      <!-- v0.35.0: layout novo (docs/layout/layout_cultivo.png) com BORDAS FINAS E SIMPLES. Ilustrações e ícones do kit
+           (img/ui/cult_*); molduras, barras e bolinhas em CSS. Regras em sistemas/progressao.js e cultivoAvancado.js -->
+      <div class="cult-nova" id="cult-nova">
+        <!-- Banner do reino atual -->
+        <div class="cn-banner">
+          <div class="cn-titulo">
+            <img class="cn-ornamento" src="img/ui/titulo_ornamento.png" alt="">
+            <h3 id="cult-reino-nome"></h3>
+            <img class="cn-ornamento cn-ornamento-d" src="img/ui/titulo_ornamento.png" alt="">
+          </div>
+          <div class="cn-estagios" id="cult-estagios"></div>
+          <p class="cn-reino-desc" id="cult-reino-desc"></p>
         </div>
-        <label class="chave-auto cult-chave">
-          <input type="checkbox" id="opcao-auto"><span class="chave"></span>
-          <span>Avançar estágios sozinho <small>(configure rompimentos de reino e Maestria em Opções; o VIP já rompe reinos automaticamente)</small></span>
-        </label>
-      </div>
 
-      <!-- v0.21.0: melhorias do cultivo vindas da lore (ui/telaCultivoAvancado.js) -->
-      <div class="cartao cult-extra" id="cult-reclusao">
-        <div class="cult-cabeca"><img class="icone-px" src="img/icones/reclusao.png" alt="">
-          <div><b>Reclusão</b><small id="reclusao-estado"></small></div>
-          <button id="botao-reclusao" class="botao-cult"></button>
+        <!-- Próximo estágio, progresso, requisito, Meditar / Avançar -->
+        <div class="cn-caixa cn-proximo">
+          <span class="cn-rotulo" id="cult-rotulo">Próximo Estágio</span>
+          <div class="cn-prox-cabeca">
+            <img class="cn-emblema" src="img/ui/cult_icone_estagio.png" alt="">
+            <div class="cn-prox-texto"><b id="cult-proximo"></b><small id="cult-proximo-desc"></small></div>
+          </div>
+          <div class="cn-linha-barra">
+            <div class="cn-barra-coluna">
+              <div class="cn-barra"><div class="cn-barra-cheia" id="cult-barra"></div><span id="cult-porcento"></span></div>
+              <small class="cn-progresso" id="cult-progresso"></small>
+            </div>
+            <div class="cn-tempo"><small>Tempo restante</small><span><img src="img/icones/tempo.png" alt=""><b id="cult-tempo"></b></span></div>
+          </div>
+          <div class="cn-linha-info">
+            <div class="cn-producao">
+              <img src="img/ui/icone_seta_verde.png" alt="">
+              <div><small>Produção de cultivo</small><span><em id="cult-producao"></em> por segundo</span></div>
+            </div>
+            <div class="cn-requisito" id="cult-req-caixa">
+              <img src="img/ui/no_chefe.png" alt="">
+              <div><small>Requisito</small><span id="cult-requisito"></span></div>
+            </div>
+            <button id="cult-ir-chefe" class="ui ui-botao-dourado cn-botao-dourado escondido">Ir ao chefe ›</button>
+          </div>
+          <div class="cn-botoes">
+            <button id="botao-meditar" class="ui cn-botao-grande cn-meditar">
+              <span class="cn-botao-texto"><b>Meditar</b><small id="cult-meditar-sub"></small></span>
+            </button>
+            <button id="botao-avancar" class="ui cn-botao-grande cn-avancar">
+              <span class="cn-botao-texto"><b id="cult-avancar-nome">Avançar</b><small id="cult-avancar-sub"></small></span>
+            </button>
+          </div>
+          <div class="cn-linha-chave">
+            <label class="cb-auto cn-auto"><input type="checkbox" id="opcao-auto"><span class="cb-chave"></span><span>Avançar estágios sozinho</span></label>
+            <button class="ui cn-ajuda" id="cult-auto-ajuda" title="Como funciona">!</button>
+          </div>
         </div>
-        <p class="cult-explica" id="reclusao-texto"></p>
-      </div>
 
-      <div class="cartao cult-extra">
-        <div class="cult-cabeca"><img class="icone-px" src="img/icones/pilula_acumulo.png" alt="">
-          <div><b>Pílulas de Cultivo</b><small id="pilulas-info"></small></div>
+        <div class="cn-grade">
+          <!-- Reclusão -->
+          <div class="cn-caixa cn-cartao cn-reclusao" id="cult-reclusao">
+            <h4 class="cn-cartao-titulo">Reclusão</h4>
+            <div class="cn-cartao-corpo">
+              <div class="cn-arte cn-arte-reclusao"></div>
+              <div class="cn-cartao-info">
+                <p id="reclusao-texto"></p>
+                <ul class="cn-itens">
+                  <li><img src="img/ui/icone_seta_verde.png" alt=""><span id="reclusao-bonus"></span></li>
+                  <li><img src="img/ui/bb_icone_relogio.png" alt=""><span id="reclusao-estado"></span></li>
+                </ul>
+              </div>
+            </div>
+            <button id="botao-reclusao" class="ui ui-botao-dourado cn-botao-dourado cn-botao-largo"></button>
+          </div>
+
+          <!-- Pílulas de Cultivo -->
+          <div class="cn-caixa cn-cartao cn-pilulas">
+            <h4 class="cn-cartao-titulo">Pílulas de Cultivo</h4>
+            <div class="cn-pilulas-grade" id="pilulas-grade"></div>
+            <small class="cn-nota" id="pilulas-info"></small>
+          </div>
+
+          <!-- Arranjo de Reunião de Energia -->
+          <div class="cn-caixa cn-cartao cn-arranjo" id="cult-arranjo">
+            <h4 class="cn-cartao-titulo">Arranjo de Reunião de Energia</h4>
+            <div class="cn-cartao-corpo">
+              <div class="cn-arte cn-arte-arranjo"></div>
+              <div class="cn-cartao-info">
+                <div class="cn-nivel" id="arranjo-nivel"></div>
+                <small class="cn-rotulo-fraco">Bônus de produção</small>
+                <div class="cn-nivel" id="arranjo-texto"></div>
+              </div>
+            </div>
+            <button id="botao-arranjo" class="ui cn-aprimorar">
+              <span class="cn-custo"><img src="img/ui/icone_pedras.png" alt=""><b id="arranjo-custo"></b></span>
+              <span class="cn-aprimorar-texto">Aprimorar</span>
+            </button>
+          </div>
+
+          <!-- Bênçãos do Caminho -->
+          <div class="cn-caixa cn-cartao cn-bencaos">
+            <h4 class="cn-cartao-titulo">Bênçãos do Caminho</h4>
+            <div class="cn-bencaos-grade" id="bencaos"></div>
+          </div>
         </div>
-        <div class="pilulas-grade" id="pilulas-grade"></div>
-      </div>
 
-      <div class="cartao cult-extra" id="cult-arranjo">
-        <div class="cult-cabeca"><img class="icone-px" src="img/icones/arranjo.png" alt="">
-          <div><b>Arranjo de Reunião de Energia</b><small id="arranjo-nivel"></small></div>
-          <button id="botao-arranjo" class="botao-cult"></button>
+        <!-- Caminho do Cultivo: uma linha por região -->
+        <div class="cn-caixa cn-cartao cn-caminho">
+          <h4 class="cn-cartao-titulo">Caminho do Cultivo</h4>
+          <div class="cn-caminho-lista" id="lista-caminho"></div>
         </div>
-        <p class="cult-explica" id="arranjo-texto"></p>
       </div>
-
-      <div class="cartao cult-extra">
-        <div class="cult-cabeca"><img class="icone-px" src="img/icones/batismo.png" alt="">
-          <div><b>Bênçãos do Caminho</b><small>Ganhas ao avançar no cultivo</small></div>
-        </div>
-        <div class="bencaos" id="bencaos"></div>
-      </div>
-
-      <h3 class="cult-titulo">Caminho do Cultivo</h3>
-      <ol class="caminho caminho-tempo" id="lista-caminho"></ol>
     </div>
   </section>
 

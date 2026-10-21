@@ -110,25 +110,25 @@ export const APARENCIAS = {
   'Fera Corrompida': 'fera_corrompida',
   'Assassino das Sombras': 'assassino_sombra',
   'Morcego Demoníaco': 'morcego_demonio',
-  'Discípulo do Vale do Rei Fantasma': 'maligno_sangue',
+  'Discípulo do Vale do Rei Fantasma': 'discipulo_do_vale_do_rei_fantasma',   // v0.35.0: desenho novo
   'Sacerdote Maligno': 'sacerdote',
   'Rei Maligno do Norte': 'rei_norte',             // revisão: cada rei com sua cor (azul-gelo)
-  'Especialista Maligno': 'maligno',
+  'Especialista Maligno': 'especialista_maligno',   // v0.35.0: desenho novo
   'Rei Maligno do Sul': 'rei_sul',                 // (vermelho-fogo)
   'Rei Maligno Supremo': 'rei_supremo',            // (preto e dourado)
   'Mestre do Vale do Rei Fantasma': 'lider_maligno',
 
   // ---- Mapa 9: Guerra contra a Dinastia Tian Lang ----
-  'Batedor de Tian Lang': 'assassino_sombra',
-  'Soldado de Tian Lang': 'soldado_maligno',
+  'Batedor de Tian Lang': 'batedor_de_tian_lang',   // v0.35.0: desenho novo
+  'Soldado de Tian Lang': 'soldado_de_tian_lang',   // v0.35.0: desenho novo
   'Onda de Invasores': 'soldado_maligno',
   'Comandante de Vanguarda': 'maligno',
   'Cultivador de Guerra': 'maligno',
   'Emboscador Maligno': 'assassino_sombra',
-  'Esquadrão de Assalto': 'soldado_maligno',
+  'Esquadrão de Assalto': 'esquadrao_de_assalto',   // v0.35.0: desenho novo
   'Capitão de Tian Lang': 'capitao_de_tian_lang',
   'Especialista de Guerra': 'maligno_sangue',
-  'Feiticeiro de Batalha': 'sacerdote',
+  'Feiticeiro de Batalha': 'feiticeiro_de_batalha',   // v0.35.0: desenho novo
   'Senhor da Guerra de Tian Lang': 'senhor_da_guerra_de_tian_lang',      // mini-chefe: capitão da dinastia inimiga…
   'General da Dinastia Tian Lang': 'general_maligno', // …e o chefe com o desenho do general (v0.9.18: lore de Martial Peak)
 
@@ -1370,6 +1370,13 @@ export const EFEITO_POR_APARENCIA = {
   fera_ancestral_vazio: 'mordida', dragao_estelar: 'mordida', planta_vazio: 'mordida', serpente_gelo: 'mordida',
   crocodilo_ruinas: 'mordida', serpente_fogo: 'mordida', raiz_viva: 'mordida', crocodilo_monstro: 'mordida',
   dragao_ossos: 'mordida', aranha_osso: 'mordida',
+  // v0.35.0: desenhos novos de boca grande (devorador do vazio, verme do ninho, dragão da Tinta)
+  enguia_vazio: 'mordida', grande_devorador_vazio: 'mordida', verme_cinza: 'mordida', serpente_via_lactea:
+  'mordida', verme_ninho_tinta: 'mordida', larva_gigante_tinta: 'mordida', serpente_tinta_solida: 'mordida',
+  verme_gigante_ninho: 'mordida', larva_matriz_tinta: 'mordida', dragao_corrompido_jovem: 'mordida',
+  serpente_draconica_tinta: 'mordida', dragao_trovao_negro: 'mordida', dragao_ancestral_corrompido: 'mordida',
+  // v0.35.0: guardião que virou guerreiro dragão (lança)
+  guardiao_sangue_draconico: 'corte_inimigo',
 };
 
 export const APARENCIA_PADRAO = {

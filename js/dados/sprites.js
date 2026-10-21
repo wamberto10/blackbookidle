@@ -1155,6 +1155,12 @@ export const SPRITES = {
     "saqueador_de_tumbas",
     "lutador_do_bando_da_batalha_sangrenta",
     "campeao_da_arena",
+    "batedor_de_tian_lang",
+    "soldado_de_tian_lang",
+    "esquadrao_de_assalto",
+    "discipulo_do_vale_do_rei_fantasma",
+    "especialista_maligno",
+    "feiticeiro_de_batalha",
     "mestre_ying_yue"
   ],
   "icones": [
